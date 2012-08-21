@@ -157,6 +157,111 @@ Si esta aborda un caso de uso que es importante para ti, díselo al equipo del n
 
 
 
+
+<h1><abbr title="Events">Eventos</abbr></h1>
+
+<pre><code>Estabilidad: 4 — API congelada
+</code></pre>
+
+<!-- type=module -->
+
+<p>En Node muchos objetos emiten eventos: un <code>net.Server</code> emite un evento al abrir un archivo. Todos los objetos que emiten eventos son instancias de <code>events.EventEmitter</code>.
+Puedes acceder a este módulo invocando a: </p>
+
+<pre><code>var events = require('events');
+</code></pre>
+
+<p>Típicamente, los nombres de evento están representados por una cadena con mayúsculas intercaladas, sin embargo, no hay restricciones estrictas en ellas, dado que cualquier cadena será aceptada.</p>
+
+<p>Puedes adjuntar funciones a objetos, para ser ejecutadas cuando se emita un evento. Estas funciones se conocen como <em>escuchas</em>.</p>
+
+<h2>Clase: <code>events.EventEmitter</code></h2>
+
+<p>Para acceder a la clase <code>EventEmitter</code> usa:</p>
+
+<pre><code>var emisor = require('events').EventEmitter
+</code></pre>
+
+<p>Cuando una instancia de <code>EventEmitter</code> experimenta un error, la acción típica consiste en emitir un evento <code>'error'</code>.  En Node, los eventos de error se tratan como un caso especial.
+Si no hay escucha para él, entonces la acción predeterminada es imprimir el seguimiento de la pila y salir del programa.</p>
+
+<p>Todos los escuchas.</p>
+
+<h3><code>emisor.addListener(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+
+<h3><code>emisor.on(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+
+<p>Añade un escucha al final del arreglo de escuchas del evento especificado.</p>
+
+<pre><code>servidor.on('connection', function (flujo) {
+  console.log('¡alguien se ha conectado!');
+});
+</code></pre>
+
+<h3><code>emisor.once(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+
+<p>Agrega un escucha <strong>fugaz</strong> para el evento. Este escucha, es invocado únicamente la siguiente vez que se emita el evento, tras la cual se elimina.</p>
+
+<pre><code>servidor.once('connection', function (flujo) {
+  console.log('¡Ah, tenemos nuestro primer usuario!');
+});
+</code></pre>
+
+<h3><code>emisor.removeListener(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+
+<p>Quita un evento especificado.
+<strong>Precaución</strong>: esta cambia los índices del arreglo en la matriz de escuchas detrás del escucha.</p>
+
+<pre><code>var retrollamada = function (flujo) {
+  console.log('¡alguien se ha conectado!');
+};
+server.on('connection', retrollamada);
+// ...
+server.removeListener('connection', retrollamada);
+</code></pre>
+
+<h3><code>emisor.removeAllListeners([</code><abbr title="event"><code>evento</code></abbr><code>])</code></h3>
+
+<p>Quita todos los escuchas, o los relacionados al evento especificado.</p>
+
+<p>Ten en cuenta que esto <strong>invalidará</strong> algunos <a href="vocabulario.html#array">arreglos</a> que anteriormente fueron devueltos por <code>emisor.listeners(evento)</code>.</p>
+
+<h3><code>emisor.setMaxListeners(</code><abbr title="n"><code>cantidad</code></abbr><code>)</code></h3>
+
+<p>De manera predeterminada <code>EventEmitters</code> imprimirá una notificación si se añaden más de 10 escuchas a un evento en particular. Se trata de una utilidad predeterminada que te ayuda a encontrar fugas de memoria.
+Obviamente, no todos los emisores se deben limitar a 10. Esta función te permite incrementarlos. Ajústala a cero para ilimitados.</p>
+
+<h3><code>emisor.listeners(</code><abbr title="event"><code>evento</code></abbr><code>)</code></h3>
+
+<p>Devuelve un evento especificado.</p>
+
+<pre><code>servidor.on('connection', function (flujo) {
+  console.log('¡alguien se ha conectado!');
+});
+console.log(util.inspect(servidor.listeners('connection'))); // [ [Función] ]
+</code></pre>
+
+<p>Este <a href="vocabulario.html#array">arreglo</a> <strong>puede</strong> ser una referencia mutable a la misma lista de escuchas subyacente que utiliza el subsistema de eventos.  Sin embargo, ciertas acciones (específicamente, <code>removeAllListeners</code>) invalidarán esta referencia.</p>
+
+<p>Si quieres obtener una copia de los escuchas en un punto específico en el tiempo que te garantice que no cambiará, haz una copia, por ejemplo haciendo <code>emisor.listeners(evento).slice(0)</code>.</p>
+
+<p>En una futura versión de Node, este comportamiento <strong>puede</strong> cambiar para siempre devolver una copia, por consistencia.  En tus programas, por favor, no confíes en poder modificar los escuchas de <code>EventEmitter</code> utilizando métodos de <a href="vocabulario.html#array">arreglo</a>.
+Siempre utiliza el método 'on' para añadir nuevos escuchas.</p>
+
+<h3><code>emisor.emit(</code><abbr title="event"><code>evento</code></abbr><code>, [arg1], [arg2], [...])</code></h3>
+
+<p>Ejecuta cada uno de los escuchas en orden con los argumentos proporcionados.</p>
+
+<h3>Evento: <code>'newListener'</code></h3>
+
+<ul>
+<li><abbr title="event"><code>evento</code></abbr> {<abbr title="String">Cadena</abbr>} El nombre del evento</li>
+<li><abbr title="listener"><code>escucha</code></abbr> {<abbr title="Function">Función</abbr>} La función controladora del evento</li>
+</ul>
+
+<p>Este evento se emite al momento de agregar un nuevo escucha.</p>
+
+
   
 </div>
       </section>
