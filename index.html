@@ -108,6 +108,57 @@ $ git checkout gh-pages
 <h3>Support or Contact</h3>
 
 <p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+
+<div id="documentacion">
+  <h1>Sobre esta documentación</h1>
+
+<!-- type=misc -->
+
+<p>El objetivo de este documento es explicar integralmente la <abbr title="Interfaz para Programar la Aplicación">API</abbr> de Node.js, tanto desde un punto de vista conceptual como de referencia.  Cada sección describe un módulo integrado o un concepto de alto nivel.</p>
+
+<p>Dónde es apropiado, los tipos de las propiedades, argumentos de método y argumentos proporcionados a los controladores de eventos se detallan en una lista debajo del título del tema.</p>
+
+<p>Cada documento <code>.html</code> tiene su documento <code>.json</code> correspondiente que presenta la misma información de una manera estructurada.  Esta característica es experimental y se agregó para beneficio del <abbr title="Entorno de Desarrollo Integrado">IDE</abbr> y otros servicios públicos que desean hacer cosas programáticamente con la documentación.</p>
+
+<p>Cada archivo <code>.html</code> y <code>.json</code> se genera en base al archivo <code>.markdown</code> correspondiente en el directorio <code>doc/api/</code> del árbol de directorios fuente de Node.  La documentación se genera utilizando el programa <code>tools/doc/generate.js</code>.
+La plantilla HTML se encuentra en <code>doc/template.html</code>.</p>
+
+<h2>Índice de estabilidad</h2>
+
+<!-- type=misc -->
+
+<p>A lo largo de la documentación, verás las indicaciones de la estabilidad de una sección.  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> de Node.js todavía es algo cambiante y a medida que madura, ciertas partes son más confiables que otras.  Algunas están bastante probadas y se basan en lo que es poco probable que cambie en algún momento.  Otras son completamente nuevas y experimentales, o se considera que son peligrosas y están en proceso de rediseño.</p>
+
+<p>Los avisos tienen este aspecto:</p>
+
+<pre><code>Estabilidad: 1 — Experimental
+</code></pre>
+
+<p>Los índices de estabilidad son los siguientes:</p>
+
+<ul>
+<li><p><strong>0 — Desaconsejada</strong>  Esta característica se sabe que es problemática y se han previsto cambios.  No confíes en ella.  El uso de la característica puede provocar advertencias.  No debes esperar compatibilidad con versiones anteriores.</p></li>
+<li><p><strong>1 — Experimental</strong>  Esta característica se introdujo recientemente y puede cambiar o eliminarse en futuras versiones.  Por favor, pruébala y proporciona retroalimentación.
+Si esta aborda un caso de uso que es importante para ti, díselo al equipo del núcleo de Node.</p></li>
+<li><p><strong>2 — Inestable</strong>  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> se encuentra en el proceso de asentamiento, pero todavía no ha sido suficientemente probada en el mundo real para que se considere estable. Se mantendrá la compatibilidad con versiones anteriores, si es razonable.</p></li>
+<li><p><strong>3 — Estable</strong>  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> ha resultado satisfactoria, pero la limpieza en el código subyacente puede provocar cambios menores.  La compatibilidad con versiones anteriores está garantizada.</p></li>
+<li><p><strong>4 — <abbr title="Interfaz para Programar la Aplicación">API</abbr> congelada</strong>  Esta <abbr title="Interfaz para Programar la Aplicación">API</abbr> ha sido probada ampliamente en producción y es poco probable que alguna vez cambie.</p></li>
+<li><p><strong>5 — Cerrada</strong>  A menos que se encuentren errores graves, este código nunca cambiará.  Por favor, no sugieras cambios en esta área; porque serán rechazados.</p></li>
+</ul>
+
+<h2>Salida JSON</h2>
+
+<pre><code>Estabilidad: 1 — Experimental
+</code></pre>
+
+<p>Cada archivo HTML en formato <code>markdown</code> tiene su archivo JSON correspondiente con los mismos datos.</p>
+
+<p>Esta característica se introdujo a partir de Node v0.6.12.  Es experimental.</p>
+
+
+
+  
+</div>
       </section>
 
     </div>
