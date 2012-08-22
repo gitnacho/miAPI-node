@@ -1,90 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
     <title>Miapi-node by gitnacho</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
   </head>
+
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/gitnacho/miAPI-node">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/gitnacho/miAPI-node/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/gitnacho/miAPI-node/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
 
-    <div class="wrapper">
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node</h2>
 
-      <section>
-        <div id="title">
-          <h1>Miapi-node</h1>
-          <p>Mi interpretación de la API de Node</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/gitnacho">gitnacho</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
-        </div>
+        <section id="downloads">
+          <a href="https://github.com/gitnacho/miAPI-node/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/gitnacho/miAPI-node/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/gitnacho/miAPI-node" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
 
+    <div class="container">
+      <section id="main_content">
         <h3>Welcome to GitHub Pages.</h3>
-        
-        <div id="indice">
-          <ul>
-            <li><a href="documentation.html">Sobre la documentación</a></li>
-            <li><a href="synopsis.html">Sinopsis</a></li>
-            <li><a href="globals.html">Objetos globales</a></li>
-            <li><a href="stdio.html">Entrada y salida estándar —stdio</a></li>
-            <li><a href="timers.html">Temporizadores</a></li>
-            <li><a href="modules.html">Módulos</a></li>
-            <li><a href="addons.html">Agregados C/C++</a></li>
-            <li><a href="process.html">El objeto «process»</a></li>
-            <li><a href="util.html">Utilidades</a></li>
-            <li><a href="events.html">Eventos</a></li>
-            <li><a href="domain.html">Dominio</a></li>
-            <li><a href="buffer.html">Búfer</a></li>
-            <li><a href="stream.html">Flujo</a></li>
-            <li><a href="crypto.html">Criptografía</a></li>
-            <li><a href="tls.html">TLS/SSL</a></li>
-            <li><a href="string_decoder.html">Decodificador de cadenas</a></li>
-            <li><a href="fs.html">Sistema de archivos</a></li>
-            <li><a href="path.html">Ruta</a></li>
-            <li><a href="net.html">Red</a></li>
-            <li><a href="dgram.html">UDP/Datagrama</a></li>
-            <li><a href="dns.html">DNS</a></li>
-            <li><a href="http.html">El módulo <code>http</code></a></li>
-            <li><a href="https.html">HTTPS</a></li>
-            <li><a href="url.html"><abbr title="Localizador uniforme de recursos">URL</abbr></a></li>
-            <li><a href="querystring.html">Cadena de consulta</a></li>
-            <li><a href="punycode.html">Cifrado débil con «punycode»</a></li>
-            <li><a href="readline.html">El programa «readline»</a></li>
-            <li><a href="repl.html">El bucle de lectura, evaluación e impresión</a></li>
-            <li><a href="vm.html">El módulo «vm»</a></li>
-            <li><a href="child_process.html">Procesos hijo</a></li>
-            <li><a href="assert.html">Aserciones de prueba</a></li>
-            <li><a href="tty.html">TTY</a></li>
-            <li><a href="zlib.html">ZLIB</a></li>
-            <li><a href="os.html">Sistema operativo</a></li>
-            <li><a href="debugger.html">El depurador</a></li>
-            <li><a href="cluster.html">Agrupando</a></li>
-            <li>Apéndices
-            <ul><li><a href="appendix_1.html">Apéndice 1: Recomendables módulos de terceros</a></li>
-            <li><a href="glosario.html">Glosario</a></li></ul></li>
-          </ul>          
-        </div>
-        
-        <p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+
+<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
 
 <pre><code>$ cd your_repo_root/repo_name
 $ git fetch origin
@@ -109,61 +55,12 @@ $ git checkout gh-pages
 
 <p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
 
-<div id="documentacion">
-  <h1>Sobre esta documentación</h1>
-
-<!-- type=misc -->
-
-<p>El objetivo de este documento es explicar integralmente la <abbr title="Interfaz para Programar la Aplicación">API</abbr> de Node.js, tanto desde un punto de vista conceptual como de referencia.  Cada sección describe un módulo integrado o un concepto de alto nivel.</p>
-
-<p>Dónde es apropiado, los tipos de las propiedades, argumentos de método y argumentos proporcionados a los controladores de eventos se detallan en una lista debajo del título del tema.</p>
-
-<p>Cada documento <code>.html</code> tiene su documento <code>.json</code> correspondiente que presenta la misma información de una manera estructurada.  Esta característica es experimental y se agregó para beneficio del <abbr title="Entorno de Desarrollo Integrado">IDE</abbr> y otros servicios públicos que desean hacer cosas programáticamente con la documentación.</p>
-
-<p>Cada archivo <code>.html</code> y <code>.json</code> se genera en base al archivo <code>.markdown</code> correspondiente en el directorio <code>doc/api/</code> del árbol de directorios fuente de Node.  La documentación se genera utilizando el programa <code>tools/doc/generate.js</code>.
-La plantilla HTML se encuentra en <code>doc/template.html</code>.</p>
-
-<h2>Índice de estabilidad</h2>
-
-<!-- type=misc -->
-
-<p>A lo largo de la documentación, verás las indicaciones de la estabilidad de una sección.  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> de Node.js todavía es algo cambiante y a medida que madura, ciertas partes son más confiables que otras.  Algunas están bastante probadas y se basan en lo que es poco probable que cambie en algún momento.  Otras son completamente nuevas y experimentales, o se considera que son peligrosas y están en proceso de rediseño.</p>
-
-<p>Los avisos tienen este aspecto:</p>
-
-<pre><code>Estabilidad: 1 — Experimental
-</code></pre>
-
-<p>Los índices de estabilidad son los siguientes:</p>
-
-<ul>
-<li><p><strong>0 — Desaconsejada</strong>  Esta característica se sabe que es problemática y se han previsto cambios.  No confíes en ella.  El uso de la característica puede provocar advertencias.  No debes esperar compatibilidad con versiones anteriores.</p></li>
-<li><p><strong>1 — Experimental</strong>  Esta característica se introdujo recientemente y puede cambiar o eliminarse en futuras versiones.  Por favor, pruébala y proporciona retroalimentación.
-Si esta aborda un caso de uso que es importante para ti, díselo al equipo del núcleo de Node.</p></li>
-<li><p><strong>2 — Inestable</strong>  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> se encuentra en el proceso de asentamiento, pero todavía no ha sido suficientemente probada en el mundo real para que se considere estable. Se mantendrá la compatibilidad con versiones anteriores, si es razonable.</p></li>
-<li><p><strong>3 — Estable</strong>  La <abbr title="Interfaz para Programar la Aplicación">API</abbr> ha resultado satisfactoria, pero la limpieza en el código subyacente puede provocar cambios menores.  La compatibilidad con versiones anteriores está garantizada.</p></li>
-<li><p><strong>4 — <abbr title="Interfaz para Programar la Aplicación">API</abbr> congelada</strong>  Esta <abbr title="Interfaz para Programar la Aplicación">API</abbr> ha sido probada ampliamente en producción y es poco probable que alguna vez cambie.</p></li>
-<li><p><strong>5 — Cerrada</strong>  A menos que se encuentren errores graves, este código nunca cambiará.  Por favor, no sugieras cambios en esta área; porque serán rechazados.</p></li>
-</ul>
-
-<h2>Salida JSON</h2>
-
-<pre><code>Estabilidad: 1 — Experimental
-</code></pre>
-
-<p>Cada archivo HTML en formato <code>markdown</code> tiene su archivo JSON correspondiente con los mismos datos.</p>
-
-<p>Esta característica se introdujo a partir de Node v0.6.12.  Es experimental.</p>
-
-
-
-
-<h1><abbr title="Events">Eventos</abbr></h1>
+<h1>Eventos</h1>
 
 <pre><code>Estabilidad: 4 — API congelada
 </code></pre>
 
-<!-- type=module -->
+
 
 <p>En Node muchos objetos emiten eventos: un <code>net.Server</code> emite un evento al abrir un archivo. Todos los objetos que emiten eventos son instancias de <code>events.EventEmitter</code>.
 Puedes acceder a este módulo invocando a: </p>
@@ -175,7 +72,8 @@ Puedes acceder a este módulo invocando a: </p>
 
 <p>Puedes adjuntar funciones a objetos, para ser ejecutadas cuando se emita un evento. Estas funciones se conocen como <em>escuchas</em>.</p>
 
-<h2>Clase: <code>events.EventEmitter</code></h2>
+<h2>Clase: <code>events.EventEmitter</code>
+</h2>
 
 <p>Para acceder a la clase <code>EventEmitter</code> usa:</p>
 
@@ -187,9 +85,13 @@ Si no hay escucha para él, entonces la acción predeterminada es imprimir el se
 
 <p>Todos los escuchas.</p>
 
-<h3><code>emisor.addListener(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.addListener(</code><code>evento</code><code>,</code><code>escucha</code><code>)</code>
+</h3>
 
-<h3><code>emisor.on(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.on(</code><code>evento</code><code>,</code><code>escucha</code><code>)</code>
+</h3>
 
 <p>Añade un escucha al final del arreglo de escuchas del evento especificado.</p>
 
@@ -198,7 +100,9 @@ Si no hay escucha para él, entonces la acción predeterminada es imprimir el se
 });
 </code></pre>
 
-<h3><code>emisor.once(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.once(</code><code>evento</code><code>,</code><code>escucha</code><code>)</code>
+</h3>
 
 <p>Agrega un escucha <strong>fugaz</strong> para el evento. Este escucha, es invocado únicamente la siguiente vez que se emita el evento, tras la cual se elimina.</p>
 
@@ -207,7 +111,9 @@ Si no hay escucha para él, entonces la acción predeterminada es imprimir el se
 });
 </code></pre>
 
-<h3><code>emisor.removeListener(</code><abbr title="event"><code>evento</code></abbr><code>,</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.removeListener(</code><code>evento</code><code>,</code><code>escucha</code><code>)</code>
+</h3>
 
 <p>Quita un evento especificado.
 <strong>Precaución</strong>: esta cambia los índices del arreglo en la matriz de escuchas detrás del escucha.</p>
@@ -220,18 +126,22 @@ server.on('connection', retrollamada);
 server.removeListener('connection', retrollamada);
 </code></pre>
 
-<h3><code>emisor.removeAllListeners([</code><abbr title="event"><code>evento</code></abbr><code>])</code></h3>
+<h3>
+<code>emisor.removeAllListeners([</code><code>evento</code><code>])</code>
+</h3>
 
 <p>Quita todos los escuchas, o los relacionados al evento especificado.</p>
 
-<p>Ten en cuenta que esto <strong>invalidará</strong> algunos <a href="vocabulario.html#array">arreglos</a> que anteriormente fueron devueltos por <code>emisor.listeners(evento)</code>.</p>
-
-<h3><code>emisor.setMaxListeners(</code><abbr title="n"><code>cantidad</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.setMaxListeners(</code><code>cantidad</code><code>)</code>
+</h3>
 
 <p>De manera predeterminada <code>EventEmitters</code> imprimirá una notificación si se añaden más de 10 escuchas a un evento en particular. Se trata de una utilidad predeterminada que te ayuda a encontrar fugas de memoria.
 Obviamente, no todos los emisores se deben limitar a 10. Esta función te permite incrementarlos. Ajústala a cero para ilimitados.</p>
 
-<h3><code>emisor.listeners(</code><abbr title="event"><code>evento</code></abbr><code>)</code></h3>
+<h3>
+<code>emisor.listeners(</code><code>evento</code><code>)</code>
+</h3>
 
 <p>Devuelve un evento especificado.</p>
 
@@ -241,33 +151,24 @@ Obviamente, no todos los emisores se deben limitar a 10. Esta función te permit
 console.log(util.inspect(servidor.listeners('connection'))); // [ [Función] ]
 </code></pre>
 
-<p>Este <a href="vocabulario.html#array">arreglo</a> <strong>puede</strong> ser una referencia mutable a la misma lista de escuchas subyacente que utiliza el subsistema de eventos.  Sin embargo, ciertas acciones (específicamente, <code>removeAllListeners</code>) invalidarán esta referencia.</p>
-
-<p>Si quieres obtener una copia de los escuchas en un punto específico en el tiempo que te garantice que no cambiará, haz una copia, por ejemplo haciendo <code>emisor.listeners(evento).slice(0)</code>.</p>
-
-<p>En una futura versión de Node, este comportamiento <strong>puede</strong> cambiar para siempre devolver una copia, por consistencia.  En tus programas, por favor, no confíes en poder modificar los escuchas de <code>EventEmitter</code> utilizando métodos de <a href="vocabulario.html#array">arreglo</a>.
-Siempre utiliza el método 'on' para añadir nuevos escuchas.</p>
-
-<h3><code>emisor.emit(</code><abbr title="event"><code>evento</code></abbr><code>, [arg1], [arg2], [...])</code></h3>
+<h3>
+<code>emisor.emit(</code><code>evento</code><code>, [arg1], [arg2], [...])</code>
+</h3>
 
 <p>Ejecuta cada uno de los escuchas en orden con los argumentos proporcionados.</p>
 
-<h3>Evento: <code>'newListener'</code></h3>
+<h3>Evento: <code>'newListener'</code>
+</h3>
 
 <ul>
-<li><abbr title="event"><code>evento</code></abbr> {<abbr title="String">Cadena</abbr>} El nombre del evento</li>
-<li><abbr title="listener"><code>escucha</code></abbr> {<abbr title="Function">Función</abbr>} La función controladora del evento</li>
-</ul>
-
-<p>Este evento se emite al momento de agregar un nuevo escucha.</p>
-
-
-  
-</div>
+<li>
+<code>evento</code> {Cadena} El nombre del evento</li>
+<li>
+<code>escucha</code> {Función} La función controladora del evento</li>
+</ul><p>Este evento se emite al momento de agregar un nuevo escucha.</p>
       </section>
-
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+
     
   </body>
 </html>
