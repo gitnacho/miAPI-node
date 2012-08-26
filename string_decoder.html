@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="StringDecoder">DecodificadorDeCadena</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Para utilizar este módulo, usa:</p>
+
+<pre><code>var decodificadorDeCadena = require('string_decoder'); 
+</code></pre>
+
+<p><abbr title="StringDecoder">DecodificadorDeCadena</abbr> decodifica un búfer a una cadena. Se trata de una sencilla interfaz para <code>buffer.toString()</code>, pero ofrece compatibilidad adicional para UTF-8.</p>
+
+<pre><code>var decodificadorDeCadena = require('string_decoder').StringDecoder;
+var decodificadorDeCadena = new StringDecoder('utf8');
+
+var centavo = new Buffer([0xC2, 0xA2]);
+console.log(decodificadorDeCadena.write(centavo));
+
+var euro = new Buffer([0xE2, 0x82, 0xAC]);
+console.log(decodificadorDeCadena.write(euro));
+</code></pre>
+
+<h2>Clase: <code>StringDecoder</code></h2>
+
+<p>Acepta un sólo argumento, <abbr title="encoding"><code>codificacion</code></abbr> el cual de manera predeterminada es <code>utf8</code>.</p>
+
+<h3><abbr title="StringDecoder"><code>DecodificadorDeCadena</code></abbr><code>.write(</code><abbr title="buffer"><code>bufer</code></abbr><code>)</code></h3>
+
+<p>Devuelve una cadena decodificada.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

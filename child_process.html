@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Child Process">Proceso hijo</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Node proporciona una utilidad tridireccional <code>popen(3)</code> a través del módulo <code>child_process</code>.</p>
+
+<p>Es posible transmitir datos a través de procesos hijo <code>'stdin'</code>, <code>'stdout'</code> y <code>'stderr'</code> de una manera absolutamente libre de bloqueos.</p>
+
+<p>Para crear un proceso hijo usa:</p>
+
+<pre><code>var hijo = require('child_process').spawn()
+</code></pre>
+
+<p>o bien</p>
+
+<pre><code>var hijo = require('child_process').fork()  
+</code></pre>
+
+<p>La semántica de cada uno es ligeramente diferente, y se explica más adelante.</p>
+
+<h2>Clase: <code>ChildProcess</code></h2>
+
+<p><code>ChildProcess</code> es un <a href="events.html#events_class_events_eventemitter">EventEmitter</a>.</p>
+
+<p>Los procesos hijo siempre tienen tres flujos asociados a ellos. <abbr title="child"><code>hijo</code></abbr><code>.stdin</code>, <abbr title="child"><code>hijo</code></abbr><code>.stdout</code> e <abbr title="child"><code>hijo</code></abbr><code>.stderr</code>.  Estos se pueden compartir con el flujo <code>'stdio'</code> del proceso padre, o se pueden canalizar a y desde objetos <abbr title="stream">flujo</abbr> independientes.</p>
+
+<p>La clase <code>ChildProcess</code> no se pretende que se utilice directamente.  Usa los métodos <code>spawn()</code> o <code>fork()</code> para crear una instancia de proceso hijo.</p>
+
+<h3>Evento:  <code>'exit'</code></h3>
+
+<ul>
+<li><abbr title="code"><code>codigo</code></abbr> {<abbr title="Number">Número</abbr>} El código de salida, si sale normalmente.</li>
+<li><abbr title="signal"><code>senial</code></abbr> {<abbr title="String">Cadena</abbr>} La señal pasada para finalizar el proceso hijo, si lo termina el padre.</li>
+</ul>
+
+<p>Este evento se emite después de finalizar el proceso hijo. Si el proceso termina normalmente, <abbr title="code"><code>codigo</code></abbr> es el código de salida final del proceso, de lo contrario <abbr title="null"><code>nulo</code></abbr>. Si el proceso terminó debido a la recepción de una señal, <abbr title="signal"><code>senial</code></abbr> es la cadena con el nombre de la señal, de lo contrario <abbr title="null"><code>nulo</code></abbr>.</p>
+
+<p>Ten en cuenta que todavía pueden estar abiertos los flujos de los procesos <code>'stdio'</code>.</p>
+
+<p>Consulta <code>waitpid(2)</code>.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p>Este evento se emite cuando los flujos <code>'stdio'</code> de los procesos hijo han terminado.  Este es distinto de <code>'exit'</code>, ya que varios procesos pueden compartir los mismos flujos de entrada/salida estándar.</p>
+
+<h3>Evento: <code>'disconnect'</code></h3>
+
+<p>Este evento se emite después de usar el método <code>.disconnect()</code> en el padre o en el hijo. Después de desconectado ya no es posible enviar mensajes.
+Una forma alternativa para comprobar si puedes enviar mensajes es ver si la propiedad <abbr title="child"><code>hijo</code></abbr><code>.connected</code> es <code>true</code>.</p>
+
+<h3>Evento: <code>'message'</code></h3>
+
+<ul>
+<li><abbr title="message"><code>mensaje</code></abbr> {<abbr title="Object">Objeto</abbr>} un objeto JSON analizado o un valor primitivo</li>
+<li><abbr title="sendHandle"><code>gestionaEnvio</code></abbr> {<abbr title="Object">Objeto</abbr> Handle} un <abbr title="object"><code>objeto</code></abbr> <code>Socket</code> o <code>Servidor</code></li>
+</ul>
+
+<p>Los mensajes enviados por <code>.send(</code><abbr title="message"><code>mensaje</code></abbr><code>, [</code><abbr title="sendHandle"><code>gestionaEnvio</code></abbr><code>])</code> se obtienen usando el evento <code>'message'</code>.</p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.stdin</code></h3>
+
+<ul>
+<li>{<abbr title="Object"><code>Objeto</code></abbr> <abbr title="Stream"><code>Flujo</code></abbr>}</li>
+</ul>
+
+<p>Un <abbr title="Writable Stream"><code>Flujo de escritura</code></abbr> que representa el proceso hijo <code>'stdin'</code>.
+El cierre de este flujo vía <code>end()</code> a menudo hace que el proceso hijo termine.</p>
+
+<p>Si los flujos <code>'stdio'</code> hijos se comparten con el padre, entonces este no se debe ajustar.</p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.stdout</code></h3>
+
+<ul>
+<li>{<abbr title="Object"><code>Objeto</code></abbr> <abbr title="Stream"><code>Flujo</code></abbr>}</li>
+</ul>
+
+<p>Un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr> que representa el proceso <code>'stdout'</code> hijo.</p>
+
+<p>Si los flujos <code>'stdio'</code> hijos se comparten con el padre, entonces este no se debe ajustar.</p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.stderr</code></h3>
+
+<ul>
+<li>{<abbr title="Object"><code>Objeto</code></abbr> <abbr title="Stream"><code>Flujo</code></abbr>}</li>
+</ul>
+
+<p>Un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr> que representa el proceso <code>'stderr'</code> hijo.</p>
+
+<p>Si los flujos <code>'stdio'</code> hijos se comparten con el padre, entonces este no se debe ajustar.</p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.pid</code></h3>
+
+<ul>
+<li>{<abbr title="Integer">Entero</abbr>}</li>
+</ul>
+
+<p>El PID del proceso hijo.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var hijo = require('child_process').spawn,
+    grep  = hijo('grep', ['ssh']);
+
+console.log('pid del hijo generado: ' + grep.pid);
+grep.stdin.end();
+</code></pre>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.kill([</code><abbr title="signal"><code>senial</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="signal"><code>senial</code></abbr> {<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>Envía una señal al proceso hijo. Si no se dan argumentos, enviará <code>'SIGTERM'</code> al proceso. Consulta <code>signal(7)</code> para ver una lista de las señales disponibles.</p>
+
+<pre><code>var hijo = require('child_process').spawn,
+    grep  = hijo('grep', ['ssh']);
+
+grep.on('exit', function (codigo, senial) {
+  console.log('el proceso hijo terminó porque recibió la señal '
+              + senial);
+});
+
+// envía SIGHUP al proceso
+grep.kill('SIGHUP');
+</code></pre>
+
+<p>Ten en cuenta que si bien invocas a la función <code>kill</code>, la señal enviada al proceso hijo en realidad no lo puede finalizar.  De hecho, <code>kill</code> sólo envía una señal a un proceso.</p>
+
+<p>Ve <code>kill(2)</code></p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.send(</code><abbr title="message"><code>mensaje</code></abbr><code>, [</code><abbr title="sendHandle"><code>gestionaEnvio</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="message"><code>mensaje</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+<li><abbr title="sendHandle"><code>gestionaEnvio</code></abbr> {<abbr title="Object">Objeto</abbr> Handle}</li>
+</ul>
+
+<p>Cuando utilizas <code>child_process.fork()</code> puedes escribir a los hijos usando <abbr title="child"><code>hijo</code></abbr><code>.send(</code><abbr title="message"><code>mensaje</code></abbr><code>, [</code><abbr title="sendHandle"><code>gestionaEnvio</code></abbr><code>])</code> y los mensajes son recibidos por un evento <code>'message'</code> en el hijo.</p>
+
+<p>Por ejemplo:</p>
+
+<pre><code>var cp = require('child_process');
+
+var n = cp.fork(__dirname + '/sub.js');
+
+n.on('message', function (m) {
+  console.log('El PADRE tiene mensaje: ', m);
+});
+
+n.send({ hola: 'mundo' });
+</code></pre>
+
+<p>Y luego el guión hijo, <code>'sub.js'</code> podría tener este aspecto:</p>
+
+<pre><code>process.on('message', function (m) {
+  console.log('El Hijo tiene mensaje: ', m);
+});
+
+process.send({ loquesea: 'bar' });
+</code></pre>
+
+<p>En el hijo el objeto <code>process</code> debe tener un método <code>send()</code>, y <code>process</code> emitirá objetos cada vez que reciba un mensaje en su canal.</p>
+
+<p>Es un caso especial cuando se envía un mensaje <code>{cmd: 'NODE_loquesea'}</code> <abbr title="message"><code>mensaje</code></abbr> Todos los mensajes que contienen un prefijo <code>NODE_</code> en su propiedad <code>cmd</code> no se emitirán en caso de que el evento sea <abbr title="message"><code>mensaje</code></abbr> ya que son mensajes internos utilizados por el núcleo de Node.
+Los mensajes que contengan el prefijo se emiten en el evento <code>'internalMessage'</code>, debes evitar por todos los medios usar esta característica, pues está sujeta a cambios sin previo aviso.</p>
+
+<p>La opción <abbr title="sendHandle"><code>gestionaEnvio</code></abbr> de <abbr title="child"><code>hijo</code></abbr><code>.send()</code> es para enviar un objeto <code>servidor</code> <abbr title="Protocolo de control de transmisión">TCP</abbr> o una <abbr title="socket"><code>toma</code></abbr> a otro proceso. El hijo recibirá el objeto como segundo argumento del evento <code>'mensaje'</code>.</p>
+
+<p><strong>enviando un objeto servidor</strong></p>
+
+<p>Aquí tienes un ejemplo del envío de un servidor:</p>
+
+<pre><code>var hijo = require('child_process').fork('hijo.js');
+
+// Abre el objeto servidor y envía el controlador.
+var servidor = require('net').createServer();
+servidor.on('connection', function (toma) {
+  toma.end('Manipulada por el padre');
+});
+servidor.listen(1337, function () {
+  hijo.send('server', servidor);
+});
+</code></pre>
+
+<p>Y el hijo debe recibir el objeto servidor como:</p>
+
+<pre><code>process.on('message', function (m, servidor) {
+  if (m === 'server') {
+    servidor.on('connection', function (toma) {
+      toma.end('manipulada por el hijo');
+    });
+  }
+});
+</code></pre>
+
+<p>Ten en cuenta que ahora el servidor está compartido entre el padre y el hijo, esto significa que algunas conexiones estarán a cargo del padre y otras del hijo.</p>
+
+<p><strong>enviando el objeto <abbr title="socket"><code>toma</code></abbr></strong></p>
+
+<p>Aquí está un ejemplo del envío de una <abbr title="socket"><code>toma</code></abbr>. Este procrea dos hijos y maneja conexiones con la dirección remota <code>74.125.127.100</code> como una <abbr title="VIP"><code>VIP</code></abbr> enviando la toma a un proceso hijo «especial». Otras <abbr title="sockets"><code>tomas</code></abbr> irán a un proceso «normal».</p>
+
+<pre><code>var normal = require('child_process').fork('hijo.js', ['normal']);
+var especial = require('child_process').fork('hijo.js', ['special']);
+
+// Abre el servidor y envía tomas al hijo
+var servidor = require('net').createServer();
+servidor.on('connection', function (toma) {
+
+  // Si esta es una VIP
+  if (toma.remoteAddress === '74.125.127.100') {
+    especial.send('socket', toma);
+    return;
+  }
+  // Sólo los tipos habituales
+  normal.send('socket', toma);
+});
+servidor.listen(1337);
+</code></pre>
+
+<p>El archivo <code>hijo.js</code> podría tener este aspecto:</p>
+
+<pre><code>process.on('message', function (m, toma) {
+  if (m === 'socket') {
+    toma.end('Es donde lo manipulas como una ' + process.argv[2] + ' persona');
+  }
+});
+</code></pre>
+
+<p>Ten en cuenta que una vez que una sola <abbr title="socket"><code>toma</code></abbr> se ha enviado a un hijo, el padre ya no puede perder de vista cuando la <abbr title="socket"><code>toma</code></abbr> es destruida. Para indicar esta condición, la propiedad <code>.connections</code> se vuelve <abbr title="null"><code>nula</code></abbr>.
+También se recomienda no utilizar <code>.maxconnections</code> en esta condición.</p>
+
+<h3><abbr title="child"><code>hijo</code></abbr><code>.disconnect()</code></h3>
+
+<p>Para cerrar la conexión <abbr title="Inter-process communication">IPC</abbr> entre padre e hijos utiliza el método <abbr title="child"><code>hijo</code></abbr><code>.disconnect()</code>. Este permite al hijo salir elegantemente pues ya no se mantiene vivo el canal <abbr title="Inter-process communication">IPC</abbr>. Cuando se llama a este método, el evento <code>disconnect</code> será emitido en ambos, padre e hijo y el indicador <code>connected</code> se fija en <code>false</code>. Por favor, ten en cuenta que también puedes llamar a <code>process.disconnect()</code> en el proceso hijo.</p>
+
+<h2><code>child_process.spawn(</code><abbr title="command"><code>orden</code></abbr><code>, [args], [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="command"><code>orden</code></abbr> {<abbr title="String">Cadena</abbr>} La orden a ejecutar</li>
+<li><code>args</code> {<abbr title="Array">Arreglo</abbr>} Lista de argumentos cadena</li>
+<li><abbr title="options"><code>opciones</code></abbr> {<abbr title="Object">Objeto</abbr>}
+<ul><li><code>cwd</code> {<abbr title="String">Cadena</abbr>} El directorio de trabajo actual del proceso hijo</li>
+<li><code>stdio</code> {<abbr title="Array">Arreglo</abbr>|<abbr title="String">Cadena</abbr>} Configuración del <code>'stdio'</code> hijo. (Ver abajo)</li>
+<li><code>customFds</code> {<abbr title="Array">Arreglo</abbr>} <strong>Desaconsejado</strong> Descriptores de archivo que el hijo va a utilizar para <code>'stdio'</code>.  (Ver abajo)</li>
+<li><abbr title="env"><code>entorno</code></abbr> {<abbr title="Object">Objeto</abbr>} Pares clave-valor del entorno</li>
+<li><code>detached</code> {<abbr title="Boolean">Booleano</abbr>} El hijo será un proceso líder de grupo.  (Ver abajo)</li></ul></li>
+<li>Devuelve: {<abbr title="Object">Objeto</abbr> ChildProcess}</li>
+</ul>
+
+<p>Inicia un nuevo proceso con la <abbr title="command"><code>orden</code></abbr> dada, con argumentos para la línea de ordenes en <code>argumentos</code>.
+Si se omite, de manera predeterminada <code>args</code> es un arreglo vacío.</p>
+
+<p>El tercer argumento se utiliza para especificar opciones adicionales, cuyo valor predeterminado es:</p>
+
+<pre><code>{ cwd: undefined,
+  env: process.env
+}
+</code></pre>
+
+<p><code>cwd</code> te permite especificar el directorio de trabajo desde el que se genera el proceso.
+Usa <code>env</code> para especificar las variables de entorno que serán visibles para el nuevo proceso.</p>
+
+<p>Ejemplo de la ejecución de <code>ls -lh /usr</code>, capturando <code>'stdout'</code>, <code>'stderr'</code> y el código de salida:</p>
+
+<pre><code>var hijo = require('child_process').spawn,
+    ls    = hijo('ls', ['-lh', '/usr']);
+
+ls.stdout.on('data', function (datos) {
+  console.log('stdout: ' + datos);
+});
+
+ls.stderr.on('data', function (datos) {
+  console.log('stderr: ' + datos);
+});
+
+ls.on('exit', function (codigo) {
+  console.log('el proceso hijo terminó con el código ' + codigo);
+});
+</code></pre>
+
+<p>Ejemplo: Una forma muy elaborada para ejecutar <code>'ps ax | grep ssh'</code></p>
+
+<pre><code>var hijo = require('child_process').spawn,
+    ps    = hijo('ps', ['ax']),
+    grep  = hijo('grep', ['ssh']);
+
+ps.stdout.on('data', function (datos) {
+  grep.stdin.write(datos);
+});
+
+ps.stderr.on('data', function (datos) {
+  console.log('ps stderr: ' + datos);
+});
+
+ps.on('exit', function (codigo) {
+  if (codigo !== 0) {
+    console.log('el proceso ps terminó con el código ' + codigo);
+  }
+  grep.stdin.end();
+});
+
+grep.stdout.on('data', function (datos) {
+  console.log('' + datos);
+});
+
+grep.stderr.on('data', function (datos) {
+  console.log('grep stderr: ' + datos);
+});
+
+grep.on('exit', function (codigo) {
+  if (codigo !== 0) {
+    console.log('El proceso grep terminó con el código de salida ' + codigo);
+  }
+});
+</code></pre>
+
+<p>Ejemplo de la comprobación de ejecución fallida:</p>
+
+<pre><code>var prole = require('child_process').spawn,
+    hijo = prole('bad_command');
+
+hijo.stderr.setEncoding('utf8');
+hijo.stderr.on('data', function (datos) {
+  if (/^execvp\(\)/.test(datos)) {
+    console.log('Fallo al iniciar el proceso hijo.');
+  }
+});
+</code></pre>
+
+<p>Ten en cuenta que si al generarlo recibes un objeto <abbr title="options">opciones</abbr> vacío, resultará en la generación del proceso con un entorno vacío en lugar de utilizar <code>process.env</code>. Esto debido a problemas de compatibilidad hacia atrás con una <abbr title="Interfaz para Programar la Aplicación">API</abbr> en desuso.</p>
+
+<p>La opción <code>'stdio'</code> para <code>child_process.spawn()</code> es un arreglo en donde cada índice corresponde a un <abbr title="fd"><code>descriptorArchivo</code></abbr> en el hijo.  El valor es uno de los siguientes:</p>
+
+<ol>
+<li><code>'pipe'</code> — Crea una tubería entre el proceso hijo y el proceso padre.
+El padre final de la tubería está expuesto al padre como una propiedad en el objeto <code>child_process</code> como <code>ChildProcess.stdio[</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>]</code>. Las tuberías creadas para los <abbr title="fds"><code>descriptoresDeArchivo</code></abbr> 0 — 2 también están disponibles como <code>ChildProcess.stdin</code>, <code>ChildProcess.stdout</code> y <code>ChildProcess.stderr</code>, respectivamente.</li>
+<li><code>'ipc'</code> — Crea un canal <abbr title="Inter-process communication">IPC</abbr> para transmitir mensajes o descriptores de archivo entre padre e hijos. Un <code>ChildProcess</code> debe tener cuando menos <em>un</em> descriptor de archivo <code>'stdio'</code> <abbr title="Inter-process communication">IPC</abbr>. Al establecer esta opción habilitas el método <code>ChildProcess.send()</code>.
+Si el hijo escribe mensajes JSON para este descriptor de archivo, entonces este desencadenará <code>ChildProcess.on('message')</code>.  Si el hijo es un programa Node.js, entonces la presencia de un canal <abbr title="Inter-process communication">IPC</abbr> habilitará <code>process.send()</code> y <code>process.on('message')</code>.</li>
+<li><code>'ignore'</code> — No ajustes este descriptor de archivo en el hijo. Ten en cuenta que Node siempre abre el <abbr title="fd"><code>descriptorArchivo</code></abbr> 0 — 2 para los procesos que procrea. Cuando alguno de estos no se tiene en cuenta Node abrirá <code>/dev/null</code> y lo adjuntará al <abbr title="fd"><code>descriptorArchivo</code></abbr> del hijo.</li>
+<li>Objeto <abbr title="Stream"><code>Flujo</code></abbr> — Comparte un flujo de lectura o escritura que se refiera a un <abbr title="teletypewriter">tty</abbr>, archivo, <abbr title="socket">toma</abbr> o a una tubería con el proceso hijo. El descriptor de archivo del flujo subyacente se duplica en el proceso hijo al <abbr title="fd"><code>descriptorArchivo</code></abbr> que corresponde al índice del arreglo <code>'stdio'</code>.</li>
+<li>Entero positivo — El valor entero se interpreta como un descriptor de archivo que se encuentra abierto actualmente en el proceso padre. Este se comparte con el proceso hijo, de manera similar a cómo se pueden compartir los objetos <abbr title="Stream"><code>Flujo</code></abbr>.</li>
+<li><abbr title="null"><code>nulo</code></abbr>, <abbr title="undefined"><code>indefinido</code></abbr> — Usa el valor predeterminado. Para los descriptores de archivo de la salida estándar <code>'stdio'</code> 0, 1 y 2  (en otras palabras, <code>'stdin'</code>, <code>'stdout'</code> y <code>'stderr'</code>) se crea una tubería. Para descriptores de archivo a partir del 3 en adelante, el valor predeterminado es <code>'ignore'</code>.</li>
+</ol>
+
+<p>Como acceso directo, el argumento <code>'stdio'</code> también puede ser una de las siguientes cadenas de texto, en lugar de un arreglo:</p>
+
+<ul>
+<li><code>ignore</code> — <code>['ignore', 'ignore', 'ignore']</code></li>
+<li><code>pipe</code> — <code>['pipe', 'pipe', 'pipe']</code></li>
+<li><code>inherit</code> — <code>[process.stdin, process.stdout, process.stderr]</code> o <code>[0, 1, 2]</code></li>
+</ul>
+
+<p>Ejemplo:</p>
+
+<pre><code>var hijo = require('child_process').spawn;
+
+// El hijo usará la stdio del padre
+hijo('prg', [], { stdio: 'inherit' });
+
+// Procrea el hijo compartiendo sólo stderr
+hijo('prg', [], { stdio: ['pipe', 'pipe', process.stderr] });
+
+// Abre un descriptor de archivo = 4 extra, para interactuar
+// con programas presentando una interfaz estilo estándar.
+hijo('prg', [], { stdio: ['pipe', null, null, null, 'pipe'] });
+</code></pre>
+
+<p>Si la opción <code>detached</code> está configurada, el proceso hijo se volvió el líder de un nuevo grupo de procesos.  Esto hace que sea posible que el hijo continúe su ejecución tras la salida del padre.</p>
+
+<p>De forma predeterminada, el padre esperará a que el hijo disociado salga.  Para evitar que el padre espere por un determinado <abbr title="child"><code>hijo</code></abbr>, utiliza el método <abbr title="child"><code>hijo</code></abbr><code>.unref()</code>, y el bucle de eventos del padre no incluye al hijo en su cuenta de referencia.</p>
+
+<p>Ejemplo de separar un largo proceso y reorientar su salida a un archivo:</p>
+
+<pre><code> var sistemaDeArchivos = require('fs'),
+     prole = require('child_process').spawn,
+     salida = descriptorArchivo.openSync('./salida.log', 'a'),
+     error = descriptorArchivo.openSync('./salida.log', 'a');
+
+ var hijo = prole('prg', [], {
+   detached: true,
+   stdio: [ 'ignore', out, err ]
+ });
+
+ hijo.unref();
+</code></pre>
+
+<p>Cuando utilizas la opción <code>detached</code> para iniciar un largo proceso, el proceso no se queda funcionando en segundo plano a menos que esté provisto de una configuración <code>'stdio'</code> que no esté conectada al padre.  Si la <code>'stdio'</code> del padre es heredada, el hijo permanecerá unido al control paterno.</p>
+
+<p>Hay una opción en desuso llamada <code>customFds</code> que te permite determinar los descriptores de archivo específicos para la <code>'stdio'</code> del proceso hijo. Esta <abbr title="Interfaz para Programar la Aplicación">API</abbr> no era portable a todos los ambientes, y por lo tanto, se eliminó.
+Con <code>customFds</code> es posible conectar el nuevo proceso <code>[stdin, stdout, stderr]</code> a flujos existentes; <code>-1</code> significa que se debe crear un nuevo flujo.
+Úsalo bajo tu propio riesgo.</p>
+
+<p>Hay varias opciones internas. En particular, <code>stdinStream</code>, <code>stdoutStream</code>, <code>stderrStream</code>. Son para USO INTERNO EXCLUSIVAMENTE. Al igual que con todas las <abbr title="Interfaz para Programar la Aplicación">API</abbr> indocumentadas en Node, no se debe utilizar.</p>
+
+<p>Ve también: <code>child_process.exec()</code> y <code>child_process.fork()</code></p>
+
+<h2><code>child_process.exec(</code><abbr title="command"><code>orden</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>],</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<ul>
+<li><abbr title="command"><code>orden</code></abbr> {<abbr title="String">Cadena</abbr>} La orden a ejecutar, con argumentos separados por espacios</li>
+<li><abbr title="options"><code>opciones</code></abbr> {<abbr title="Object">Objeto</abbr>}
+<ul><li><code>cwd</code> {<abbr title="String">Cadena</abbr>} El directorio de trabajo actual del proceso hijo</li>
+<li><code>stdio</code> {<abbr title="Array">Arreglo</abbr>|<abbr title="String">Cadena</abbr>} Configuración del <code>'stdio'</code> hijo. (Revisa arriba)</li>
+<li><code>customFds</code> {<abbr title="Array">Arreglo</abbr>} <strong>Desaconsejado</strong> Descriptores de archivo que el hijo va a utilizar para <code>'stdio'</code>.  (Revisa arriba)</li>
+<li><abbr title="env"><code>entorno</code></abbr> {<abbr title="Object">Objeto</abbr>} Pares clave-valor del entorno</li>
+<li><abbr title="encoding"><code>codificacion</code></abbr> {<abbr title="String">Cadena</abbr>} (Predefinido: 'utf8')</li>
+<li><abbr title="timeout"><code>tiempoDeEspera</code></abbr> {<abbr title="Number">Número</abbr>} (Predefinido: 0)</li>
+<li><code>maxBuffer</code> {<abbr title="Number">Número</abbr>} (Predefinido: 200*1024)</li>
+<li><code>killSignal</code> {<abbr title="String">Cadena</abbr>} (Predefinido: 'SIGTERM')</li></ul></li>
+<li><abbr title="callback"><code>retrollamada</code></abbr> {<abbr title="Function">Función</abbr>} llamada en la salida cuando el proceso termina
+<ul><li><code>error</code> {Error}</li>
+<li><code>stdout</code> {<abbr title="Buffer">Búfer</abbr>}</li>
+<li><code>stderr</code> {<abbr title="Buffer">Búfer</abbr>}</li></ul></li>
+<li>Devuelve: Un objeto <code>ChildProcess</code></li>
+</ul>
+
+<p>Ejecuta una orden en un intérprete y almacena el resultado.</p>
+
+<pre><code>var exec = require('child_process').exec,
+    hijo;
+
+hijo = exec('cat *.js bad_file | wc -l',
+  function (error, stdout, stderr) {
+    console.log('stdout: ' + stdout);
+    console.log('stderr: ' + stderr);
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    }
+});
+</code></pre>
+
+<p>La retrollamada recibe los argumentos (<code>error</code>, <code>stdout</code>, <code>stderr</code>). En caso de éxito, <code>error</code> será <abbr title="null"><code>nulo</code></abbr>.  En caso de error, el <code>error</code> será una instancia de <code>Error</code> y <code>error.code</code> será el código de salida del proceso hijo, y <code>error.signal</code> se establecerá en la señal que puso fin al proceso.</p>
+
+<p>Hay un segundo argumento opcional para especificar varias opciones. Las opciones predefinidas son:</p>
+
+<pre><code>{ encoding: 'utf8',
+  timeout: 0,
+  maxBuffer: 200*1024,
+  killSignal: 'SIGTERM',
+  cwd: null,
+  env: null }
+</code></pre>
+
+<p>Si <abbr title="timeout"><code>tiempoDeEspera</code></abbr> es mayor que 0, entonces se terminará el proceso hijo si su ejecución tarda más del <abbr title="timeout"><code>tiempoDeEspera</code></abbr> supuesto en milisegundos. El proceso hijo es finalizado con <code>killSignal</code> (de manera predeterminada: <code>'SIGTERM'</code>). <code>maxbuffer</code> especifica la mayor cantidad de datos que se pueden introducir en <code>'stdout'</code> o <code>'stderr'</code> — si se supera este valor, entonces se pone punto final al proceso hijo.</p>
+
+<h2><code>child_process.execFile(</code><abbr title="file"><code>archivo</code></abbr><code>, args, </code><abbr title="options"><code>opciones</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<ul>
+<li><abbr title="file"><code>archivo</code></abbr> {<abbr title="String">Cadena</abbr>} El nombre de archivo del programa a ejecutar</li>
+<li><code>args</code> {<abbr title="Array">Arreglo</abbr>} Lista de argumentos cadena</li>
+<li><abbr title="options"><code>opciones</code></abbr> {<abbr title="Object">Objeto</abbr>}
+<ul><li><code>cwd</code> {<abbr title="String">Cadena</abbr>} El directorio de trabajo actual del proceso hijo</li>
+<li><code>stdio</code> {<abbr title="Array">Arreglo</abbr>|<abbr title="String">Cadena</abbr>} Configuración del <code>'stdio'</code> hijo. (Revisa arriba)</li>
+<li><code>customFds</code> {<abbr title="Array">Arreglo</abbr>} <strong>Desaconsejado</strong> Descriptores de archivo que el hijo va a utilizar para <code>'stdio'</code>.  (Revisa arriba)</li>
+<li><abbr title="env"><code>entorno</code></abbr> {<abbr title="Object">Objeto</abbr>} Pares clave-valor del entorno</li>
+<li><abbr title="encoding"><code>codificacion</code></abbr> {<abbr title="String">Cadena</abbr>} (Predefinido: 'utf8')</li>
+<li><abbr title="timeout"><code>tiempoDeEspera</code></abbr> {<abbr title="Number">Número</abbr>} (Predefinido: 0)</li>
+<li><code>maxBuffer</code> {<abbr title="Number">Número</abbr>} (Predefinido: 200*1024)</li>
+<li><code>killSignal</code> {<abbr title="String">Cadena</abbr>} (Predefinido: 'SIGTERM')</li></ul></li>
+<li><abbr title="callback"><code>retrollamada</code></abbr> {<abbr title="Function">Función</abbr>} llamada en la salida cuando el proceso termina
+<ul><li><code>error</code> {Error}</li>
+<li><code>stdout</code> {<abbr title="Buffer">Búfer</abbr>}</li>
+<li><code>stderr</code> {<abbr title="Buffer">Búfer</abbr>}</li></ul></li>
+<li>Devuelve: Un objeto <code>ChildProcess</code></li>
+</ul>
+
+<p>Este es similar a <code>child_process.exec()</code>, salvo que no se ejecuta un subintérprete, sino más bien el archivo especificado directamente. Esto hace que sea un poco más rápido que <code>child_process.exec</code>. Tiene las mismas opciones.</p>
+
+<h2><code>child\_process.fork(</code><abbr title="modulePath"><code>rutaModulo</code></abbr><code>, [args], [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="modulePath"><code>rutaModulo</code></abbr> {<abbr title="String">Cadena</abbr>} El módulo a ejecutar en el hijo</li>
+<li><code>args</code> {<abbr title="Array">Arreglo</abbr>} Lista de argumentos cadena</li>
+<li><abbr title="options"><code>opciones</code></abbr> {<abbr title="Object">Objeto</abbr>}
+<ul><li><code>cwd</code> {<abbr title="String">Cadena</abbr>} El directorio de trabajo actual del proceso hijo</li>
+<li><abbr title="env"><code>entorno</code></abbr> {<abbr title="Object">Objeto</abbr>} Pares clave-valor del entorno</li>
+<li><abbr title="encoding"><code>codificacion</code></abbr> {<abbr title="String">Cadena</abbr>} (Predefinido: 'utf8')</li></ul></li>
+<li>Devuelve: Un objeto <code>ChildProcess</code></li>
+</ul>
+
+<p>Este es un caso especial de la funcionalidad de <code>spawn()</code> para procrear procesos Node. Además de contar con todos los métodos en una instancia normal de <code>ChildProcess</code>, el objeto devuelto tiene un canal de comunicación integrado. Consulta <abbr title="child"><code>hijo</code></abbr><code>.send(</code><abbr title="message"><code>mensaje</code></abbr><code>, [</code><abbr title="sendHandle"><code>gestionaEnvio</code></abbr><code>])</code> para más detalles.</p>
+
+<p>Por omisión, el proceso Node procreado tendrá asociados los flujos <code>'stdout'</code> y <code>'stderr'</code> con el padre. Para cambiar este comportamiento establece en <code>true</code> la propiedad <code>silent</code> en las <code>opciones</code> del objeto.</p>
+
+<p>El proceso hijo no sale automáticamente una vez terminado, es necesario que invoque explícitamente a <code>process.exit()</code>. Esta limitación puede desaparecer en el futuro.</p>
+
+<p>Estos Nodes secundarios siguen siendo nuevas instancias de V8. Supongamos que, al menos al arrancar se configuraron 30ms y 10mb de memoria para cada nuevo Node. Es decir, no puedes crear muchos miles de ellos.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Protocolo de datagramas de usuario">UDP</abbr> / <abbr title="Sockets">Tomas</abbr> de datagramas</h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<!-- name=dgram -->
+
+<p>Hay disponibles <abbr title="sockets"><code>tomas</code></abbr> de datagramas a través de:</p>
+
+<pre><code>var dgram = require('dgram'); // dgram es una contracción
+                              // de 'datagrama'
+</code></pre>
+
+<h2><code>dgram.createSocket(</code><abbr title="type"><code>tipo</code></abbr><code>, [</code><abbr title="Callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="type"><code>tipo</code></abbr> <abbr title="String">Cadena</abbr>. O bien <code>'udp4'</code> o <code>'udp6'</code></li>
+<li><abbr title="callback"><code>retrollamada</code></abbr> <abbr title="Function">Función</abbr>. Se adjunta como un escucha de eventos <code>'message'</code>.
+Opcional</li>
+<li>Devuelve: <abbr title="Object">Objeto</abbr> <abbr title="Socket"><code>Toma</code></abbr> — <code>Socket</code></li>
+</ul>
+
+<p>Crea una toma de datagramas del tipo especificado.  Los tipos válidos son <code>udp4</code> y <code>udp6</code>.</p>
+
+<p>Toma una retrollamada opcional que se agrega como un escucha de eventos <code>'message'</code>.</p>
+
+<p>Llama a <abbr title="socket"><code>toma</code></abbr><code>.bind</code> si quieres recibir datagramas. <abbr title="socket"><code>toma</code></abbr><code>.bind()</code> se vinculará a «todas las direcciones de interfaz» en un puerto aleatorio (el cual hace lo correcto, para ambas tomas <code>udp4</code> y <code>udp6</code>). Luego, puedes recuperar la dirección y puerto con <abbr title="socket"><code>toma</code></abbr><code>.address().address</code> y <abbr title="socket"><code>toma</code></abbr><code>.address().port</code>.</p>
+
+<h2>Clase: <code>Socket</code></h2>
+
+<p>La clase <code>Socket</code> de <abbr title="dgram"><code>datagrama</code></abbr> encapsula la funcionalidad de datagramas.  La debes crear a través de <code>dgram.createSocket(</code><abbr title="type"><code>tipo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code>.</p>
+
+<h3>Evento: <code>'message'</code></h3>
+
+<ul>
+<li><abbr title="msg"><code>mensaje</code></abbr> <abbr title="Object">Objeto</abbr> Buffer. El mensaje</li>
+<li><code>rinfo</code> <abbr title="Object">Objeto</abbr>. Información de la dirección remota</li>
+</ul>
+
+<p>Emitido cuando está disponible un nuevo datagrama en una toma.  <abbr title="msg"><code>mensaje</code></abbr> es un <code>búfer</code> y <code>rinfo</code> es un objeto con información de la dirección del remitente y el número de bytes en el datagrama.</p>
+
+<h3>Evento: <code>'listening'</code></h3>
+
+<p>Emitido cuando una toma empieza a escuchar datagramas.  Esto ocurre tan pronto como se crean tomas <abbr title="Protocolo de datagramas de usuario">UDP</abbr>.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p>Emitido cuando se cierra una toma con <code>close()</code>.  No se emitirán nuevos eventos <code>'message'</code> en esta toma.</p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<ul>
+<li><abbr title="exception"><code>excepcion</code></abbr> <abbr title="Object">Objeto</abbr> Error</li>
+</ul>
+
+<p>Emitido cuando ocurre un error.</p>
+
+<h3><code>dgram.send(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="offset"><code>desplazamiento</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>,</code> <abbr title="port"><code>puerto</code></abbr><code>,</code> <abbr title="address"><code>direccion</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="buffer"><code>bufer</code></abbr> <abbr title="Object">Objeto</abbr> Buffer  Mensaje a enviar</li>
+<li><abbr title="offset"><code>desplazamiento</code></abbr> <abbr title="Integer">Entero</abbr>. Desplazamiento en el búfer donde comienza el mensaje.</li>
+<li><abbr title="length"><code>largo</code></abbr> <abbr title="Integer">Entero</abbr>. Cantidad de bytes en el mensaje.</li>
+<li><abbr title="port"><code>puerto</code></abbr> <abbr title="Integer">Entero</abbr>. El puerto destino</li>
+<li><abbr title="address"><code>direccion</code></abbr> <abbr title="String">Cadena</abbr>. La <abbr title="Protocolo de Internet">IP</abbr> destino</li>
+<li><abbr title="callback"><code>retrollamada</code></abbr> <abbr title="Function">Función</abbr>. Retrollamada cuando se está entregando el mensaje.
+Opcional.</li>
+</ul>
+
+<p>Para tomas <abbr title="Protocolo de datagramas de usuario">UDP</abbr>, se deben especificar el puerto y la dirección <abbr title="Protocolo de Internet">IP</abbr> del destino.  Puedes suministrar una cadena para el argumento <abbr title="address"><code>direccion</code></abbr> y esta se resolverá con el <abbr title="Sistema de nombres de dominio">DNS</abbr>.  Opcionalmente puedes especificar una retrollamada para detectar cualquier error <abbr title="Sistema de nombres de dominio">DNS</abbr> y cuándo se puede reutilizar el <abbr title="buffer"><code>bufer</code></abbr>.  Ten en cuenta que las búsquedas de <abbr title="Sistema de nombres de dominio">DNS</abbr> retrasarán el momento en que se lleve a cabo un envío, cuando menos hasta el siguiente pulso.  La única manera de saber con certeza que se ha realizado un envío es usando la retrollamada.</p>
+
+<p>Si la toma no se ha vinculado previamente con una llamada a <code>bind</code>, se le asigna un número de puerto aleatorio y se vincula a la dirección de «todas las interfaces» (0.0.0.0 para tomas <code>udp4</code>, ::0 para tomas <code>udp6</code>).</p>
+
+<p>Ejemplo del envío de un paquete <abbr title="Protocolo de datagramas de usuario">UDP</abbr> a un puerto aleatorio en <code>localhost</code>;</p>
+
+<pre><code>var dgram = require('dgram');
+var mensaje = new Buffer('Algunos bytes');
+var cliente = dgram.createSocket('udp4');
+cliente.send(mensaje,
+             0,
+             mensaje.length,
+             41234,
+             'localhost',
+             function (error, bytes) {
+                 cliente.close();
+});
+</code></pre>
+
+<p><strong>Una nota sobre el tamaño del datagrama <abbr title="Protocolo de datagramas de usuario">UDP</abbr></strong></p>
+
+<p>El tamaño máximo de un datagrama <code>IPv4/v6</code> depende de la <code>MTU</code> (<em>Maximum Transmission Unit</em> o unidad máxima de transmisión) y de el tamaño del campo de Longitud de carga útil (<code>Payload Length</code>).</p>
+
+<ul>
+<li><p>El campo <code>longitud de carga útil</code> es de <code>16 bits</code> de ancho, lo cual significa que una carga normal no puede ser mayor de 64K octetos, incluyendo cabecera y datos (65,507 bytes = 65,535 — 8 bytes de la cabecera <abbr title="Protocolo de datagramas de usuario">UDP</abbr> — 20 bytes de la cabecera <abbr title="Protocolo de Internet">IP</abbr>);
+generalmente es cierto para las interfaces con bucle de retorno, pero esos largos datagramas no son prácticos para la mayoría de las redes y servidores.</p></li>
+<li><p>La <code>MTU</code> es el mayor tamaño de la capa que una tecnología de enlaces puede apoyar para los datagramas.
+Para cualquier enlace, mandatos <code>IPv4</code> de un <code>MTU</code> mínimo de <code>68</code> octetos, mientras que la <code>MTU</code> recomendada para <code>IPv4</code> es de <code>576</code> (por lo general se recomienda como la <code>MTU</code> para aplicaciones del tipo de marcación manual — <code>dial-up</code>), tanto si llegan en su totalidad o en fragmentos.</p>
+
+<p>Para <code>IPv6</code>, la <code>MTU</code> mínima es de <code>1280</code> octetos, sin embargo, el tamaño mínimo obligatorio del búfer para el reensamblado de fragmentos es de <code>1500</code> octetos.
+El valor de <code>68</code> octetos es muy pequeño, ya que las tecnologías de la capa de enlace recientes tienen una <code>MTU</code> mínima de <code>1500</code> (tal como <code>Ethernet</code>).</p></li>
+</ul>
+
+<p>Ten en cuenta que es imposible conocer de antemano la <code>MTU</code> de cada enlace a través del cual un paquete puede viajar, y que, por lo general el envío de un datagrama mayor que la <code>MTU</code> (receptora) no funcionará (el paquete se cae silenciosamente, sin informar a la fuente que los datos no llegaron a su destinatario).</p>
+
+<h3><code>dgram.bind(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="address"><code>direccion</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="port"><code>puerto</code></abbr> <abbr title="Integer">Entero</abbr></li>
+<li><abbr title="address"><code>direccion</code></abbr> <abbr title="String">Cadena</abbr>, Opcional</li>
+</ul>
+
+<p>Para tomas <abbr title="Protocolo de datagramas de usuario">UDP</abbr>, los datagramas se escuchan en un <abbr title="port"><code>puerto</code></abbr> nombrado y una <abbr title="address"><code>direccion</code></abbr> opcional. Si no especificas <abbr title="address"><code>direccion</code></abbr>, el sistema operativo tratará de escuchar en todas las direcciones.</p>
+
+<p>Ejemplo de un servidor <abbr title="Protocolo de datagramas de usuario">UDP</abbr> escuchando en el puerto 41234:</p>
+
+<pre><code>var dgram = require('dgram');
+
+var servidor = dgram.createSocket('udp4');
+
+servidor.on('message', function (mensaje, rinfo) {
+  console.log('el servidor obtuvo: ' + mensaje + ' desde ' +
+    rinfo.address + ':' + rinfo.port);
+});
+
+servidor.on('listening', function () {
+  var direccion = servidor.address();
+  console.log('servidor escuchando ' +
+      direccion.address + ':' + direccion.port);
+});
+
+servidor.bind(41234);
+// servidor escuchando 0.0.0.0:41234
+</code></pre>
+
+<h3><code>dgram.close()</code></h3>
+
+<p>Cierra la toma subyacente y deja de escuchar los datos de ella.</p>
+
+<h3><code>dgram.address()</code></h3>
+
+<p>Devuelve un objeto que contiene información de la dirección de una toma.  Para tomas <abbr title="Protocolo de datagramas de usuario">UDP</abbr>, este objeto contiene <code>'address'</code>, <code>'family'</code> y <code>'port'</code>.</p>
+
+<h3><code>dgram.setBroadcast(</code><abbr title="flag"><code>indicador</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="flag"><code>indicador</code></abbr> <abbr title="Boolean">Booleano</abbr></li>
+</ul>
+
+<p>Establece o borra la opción <code>SO_BROADCAST</code> de la toma.  Cuando esta opción está activada, los paquetes <abbr title="Protocolo de datagramas de usuario">UDP</abbr> se pueden enviar a la dirección de difusión de una interfaz local.</p>
+
+<h3><code>dgram.setTTL(</code><abbr title="tiempo de vida"><code>ttl</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="tiempo de vida"><code>ttl</code></abbr> <abbr title="Integer"><code>Entero</code></abbr></li>
+</ul>
+
+<p>Establece la opción <code>IP_TTL</code> de la toma.  <abbr title="Tiempo de vida">TTL</abbr> significa «Time to Live» (tiempo de vida), pero en este contexto especifica la cantidad permitida de saltos que un paquete <abbr title="Protocolo de Internet">IP</abbr> puede dar.  Cada enrutador o puerta de enlace que envía un paquete decrementa el <abbr title="Tiempo de vida">TTL</abbr>.  Si un enrutador decrementa el <abbr title="Tiempo de vida">TTL</abbr> a 0, este no será enviado.  El cambio de valores <abbr title="Tiempo de vida">TTL</abbr> normalmente se realiza para las sondas de red o cuando hay multidifusión.</p>
+
+<p>El argumento de <code>setTTL()</code> es la cantidad de saltos entre 1 y 255.  El valor predeterminado en la mayoría de los sistemas es de 64.</p>
+
+<h3><code>dgram.setMulticastTTL(</code><abbr title="tiempo de vida"><code>ttl</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="tiempo de vida"><code>ttl</code></abbr> <abbr title="Integer"><code>Entero</code></abbr></li>
+</ul>
+
+<p>Establece la opción <code>IP_MULTICAST_TTL</code> de la toma.  <abbr title="Tiempo de vida">TTL</abbr> significa «Time to Live», pero en este contexto especifica la cantidad de saltos que un paquete <abbr title="Protocolo de Internet">IP</abbr> tiene permitido recorrer, específicamente para el tráfico de multidifusión.  Cada enrutador o puerta de enlace que envía un paquete decrementa el <abbr title="Tiempo de vida">TTL</abbr>. Si un enrutador decrementa el <abbr title="Tiempo de vida">TTL</abbr> a 0, este no será enviado.</p>
+
+<p>El argumento de <code>setMulticastTTL()</code> es la cantidad de saltos entre 0 y 255.  El valor predeterminado en la mayoría de los sistemas es de 1.</p>
+
+<h3><code>dgram.setMulticastLoopback(</code><abbr title="flag"><code>indicador</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="flag"><code>indicador</code></abbr> <abbr title="Boolean">Booleano</abbr></li>
+</ul>
+
+<p>Establece o borra la opción <code>IP_MULTICAST_LOOP</code> de la toma.  Cuando esta opción está activada, los paquetes de multidifusión también serán recibidos en la interfaz local.</p>
+
+<h3><code>dgram.addMembership(</code><abbr title="multicastAddress"><code>direccionDeMultidifucion</code></abbr><code>, [</code><abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="multicastAddress"><code>direccionDeMultidifucion</code></abbr> <abbr title="String">Cadena</abbr></li>
+<li><abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr> <abbr title="String">Cadena</abbr>, Opcional</li>
+</ul>
+
+<p>Le dice al núcleo que se una a un grupo de multidifusión, con la opción <code>IP_ADD_MEMBERSHIP</code> de la toma.</p>
+
+<p>Si no especificas <abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr>, el sistema operativo intenta agregar miembros a todas las interfaces válidas.</p>
+
+<h3><code>dgram.dropMembership(</code><abbr title="multicastAddress"><code>direccionDeMultidifucion</code></abbr><code>, [</code><abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="multicastAddress"><code>direccionDeMultidifucion</code></abbr> <abbr title="String">Cadena</abbr></li>
+<li><abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr> <abbr title="String">Cadena</abbr>, Opcional</li>
+</ul>
+
+<p>Opuesto a <code>addMembership</code> — le dice al núcleo que deje un grupo de multidifusión con la opción <code>IP_DROP_MEMBERSHIP</code> de la toma. Este es llamado automáticamente por el núcleo al cerrar la toma o al terminar el proceso, por lo tanto la mayoría de las aplicaciones no lo tendrá que llamar.</p>
+
+<p>Si no especificas <abbr title="multicastInterface"><code>interfazDeMultidifucion</code></abbr>, el sistema operativo intentará quitar miembros a todas las interfaces válidas.</p>
+
+<h3><code>dgram.unref()</code></h3>
+
+<p>Llamar a <code>unref</code> en una toma permitirá al programa salir si esta es la única toma activa en el sistema de eventos. Si la toma ya invocó a <code>unref</code> llamar una vez más a <code>unref</code> no tiene ningún efecto.</p>
+
+<h3><code>dgram.ref()</code></h3>
+
+<p>Contrario a <code>unref</code>, llamar a <code>ref</code> en una toma que previamente había invocado a <code>unref</code> <em>no</em>
+lo dejará salir del programa si es la única toma que queda (el comportamiento predeterminado). Si la toma ya invocó a <code>ref</code> llamarlo una vez más no tiene ningún efecto.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

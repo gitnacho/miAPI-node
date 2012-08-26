@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Path">Ruta</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Este módulo contiene utilidades para manipular y transformar rutas de archivo.  Casi todos estos métodos sólo realizan transformación de cadenas.
+No se consulta al sistema de archivos para comprobar si las rutas son válidas.</p>
+
+<p>Para utilizar este módulo usa:</p>
+
+<pre><code>var ruta = require('path'); // para usarla en
+                            // los ejemplos  
+</code></pre>
+
+<p>Proporciona los siguientes métodos:</p>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.normalize(</code><abbr title="p"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>Normaliza una cadena de ruta, teniendo cuidado de las partes <code>'..'</code> y <code>'.'</code>.</p>
+
+<p>Cuando se encuentran varias barras inclinadas, son reemplazadas por una sola;
+Cuando la ruta contiene una barra inversa, se conserva.
+Windows utiliza barras inversas. </p>
+
+<p>Ejemplo:</p>
+
+<pre><code>ruta.normalize('/loquesea/bar//baz/asdf/quux/..')
+// devuelve
+'/loquesea/bar/baz/asdf'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.join([ruta1], [ruta2], [...])</code></h2>
+
+<p>Une todos los argumentos y normaliza la <abbr title="path">ruta</abbr> producida.
+Los argumentos distintos de cadena se omiten.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>ruta.join('/loquesea', 'bar', 'baz/asdf', 'quux', '..')
+// devuelve
+'/loquesea/bar/baz/asdf'
+
+ruta.join('loquesea', {}, 'bar')
+// devuelve
+'loquesea/bar'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.resolve([</code><abbr title="from"><code>desde</code></abbr><code>...],</code><abbr title="to"><code>hasta</code></abbr><code>)</code></h2>
+
+<p>Resuelve <abbr title="to"><code>hasta</code></abbr> en una ruta absoluta.</p>
+
+<p>Si <abbr title="to"><code>hasta</code></abbr> no es absoluta ya, los argumentos <abbr title="from"><code>desde</code></abbr> se anteponen en orden de derecha a izquierda, hasta que encuentre una ruta absoluta. Si después de utilizar todas las rutas <abbr title="from"><code>desde</code></abbr> todavía no encuentra ninguna ruta absoluta, utiliza el directorio de trabajo actual también. La ruta producida se normaliza y se quitan las barras finales, a menos que la ruta obtenida resuelva al directorio raíz. Los argumentos distintos de cadena se omiten.</p>
+
+<p>Otra forma de pensar es como una secuencia de ordenes <code>cd</code> en un intérprete.</p>
+
+<pre><code>ruta.resolve('loquesea/bar', '/tmp/archivo/', '..', 'a/../subarchivo')
+</code></pre>
+
+<p>Es similar a:</p>
+
+<pre><code>cd loquesea/bar
+cd /tmp/archivo/
+cd ..
+cd a/../subarchivo
+pwd
+</code></pre>
+
+<p>La diferencia es que no es necesario que existan las diferentes rutas y también pueden ser archivos.</p>
+
+<p>Ejemplos:</p>
+
+<pre><code>ruta.resolve('/loquesea/bar', './baz')
+// devuelve
+'/loquesea/bar/baz'
+
+ruta.resolve('/loquesea/bar', '/tmp/archivo/')
+// devuelve
+'/tmp/archivo'
+
+ruta.resolve('wwwroot', 'static_files/png/', '../gif/image.gif')
+// si actualmente estás en /home/yo/node, devolverá
+'/home/yo/node/wwwroot/static_files/gif/image.gif'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.relative(</code><abbr title="from"><code>desde</code></abbr><code>,</code> <abbr title="to"><code>hasta</code></abbr><code>)</code></h2>
+
+<p>Resuelve la ruta de acceso relativa <abbr title="from"><code>desde</code></abbr> a <abbr title="to"><code>hasta</code></abbr>.</p>
+
+<p>A veces tenemos dos rutas absolutas y tenemos que derivar la ruta relativa de una a otra.  Esta realmente transforma la inversa de <abbr title="path"><code>ruta</code></abbr><code>.resolve</code>, lo cual significa que vemos:</p>
+
+<pre><code>ruta.resolve(desde, ruta.relative(desde, hasta)) == ruta.resolve(hasta)
+</code></pre>
+
+<p>Ejemplos:</p>
+
+<pre><code>ruta.relative('C:\orandea\prueba\aaa', 'C:\orandea\impl\bbb')
+// devuelve
+'..\..\impl\bbb'
+
+ruta.relative('/data/orandea/prueba/aaa', '/data/orandea/impl/bbb')
+// devuelve
+'../../impl/bbb'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.dirname(</code><abbr title="p"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>Devuelve el nombre del directorio de la <abbr title="path">ruta</abbr>.  Similar a la orden <code>dirname</code> de Unix.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>ruta.dirname('/loquesea/bar/baz/asdf/quux')
+// devuelve
+'/loquesea/bar/baz/asdf'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.basename(</code><abbr title="p"><code>ruta</code></abbr><code>, [</code><abbr title="ext"><code>extension</code></abbr><code>])</code></h2>
+
+<p>Devuelve la última parte de una ruta.  Similar a la orden <code>basename</code> de Unix.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>ruta.basename('/loquesea/bar/baz/asdf/quux.html')
+// devuelve
+'quux.html'
+
+ruta.basename('/loquesea/bar/baz/asdf/quux.html', '.html')
+// devuelve
+'quux'
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.extname(</code><abbr title="p"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>Devuelve la extensión de la <abbr title="path">ruta</abbr>, desde el último '.' hasta el final de la cadena en la última parte de la ruta.  Si no hay un '.' en la última parte de la ruta o el primer carácter de la misma es '.', entonces, devuelve una cadena vacía.  Ejemplos:</p>
+
+<pre><code>ruta.extname('index.html')
+// devuelve
+'.html'
+
+ruta.extname('index.')
+// devuelve
+'.'
+
+ruta.extname('index')
+// devuelve
+''
+</code></pre>
+
+<h2><abbr title="path"><code>ruta</code></abbr><code>.sep</code></h2>
+
+<p>El separador de archivo específico del ambiente. <code>'\'</code> o <code>'/'</code>.</p>
+
+<p>Un ejemplo en linux:</p>
+
+<pre><code>'loquesea/bar/baz'.split(ruta.sep)
+// devuelve
+['loquesea', 'bar', 'baz']
+</code></pre>
+
+<p>Un ejemplo de windows:</p>
+
+<pre><code>'loquesea\bar\baz'.split(ruta.sep)
+// devuelve
+['loquesea', 'bar', 'baz']
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

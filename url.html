@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Localizador uniforme de recursos">URL</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Este módulo tiene utilidades para la resolución y análisis de direcciones <abbr title="Localizador uniforme de recursos">URL</abbr>.
+Para acceder a este módulo usa:</p>
+
+<pre><code>var url = require('url');
+</code></pre>
+
+<p>Los objetos <abbr title="Localizador uniforme de recursos">URL</abbr> analizados tienen alguno o todos los siguientes campos, en función de si existen o no en la cadena de la dirección <abbr title="Localizador uniforme de recursos">URL</abbr>. Las piezas que no están en la cadena de la dirección <abbr title="Localizador uniforme de recursos">URL</abbr> no estarán en el objeto analizado. Los ejemplos mostrados están basados en la dirección <abbr title="Localizador uniforme de recursos">URL</abbr>:</p>
+
+<p><code>'http://usuario:pase@host.com:8080/r/u/t/a?consulta=cadena#codificada'</code></p>
+
+<ul>
+<li><p><code>href</code>: La dirección <abbr title="Localizador uniforme de recursos">URL</abbr> completa analizada en un principio. Tanto el protocolo como el servidor están en minúsculas.</p>
+
+<p>Ejemplo: <code>'http://usuario:pase@host.com:8080/r/u/t/a?consulta=cadena#codificada'</code></p></li>
+<li><p><code>protocol</code>: El protocolo de la petición, en minúsculas.</p>
+
+<p>Ejemplo: <code>'http:'</code></p></li>
+<li><p><code>host</code>: La porción completa del servidor en minúsculas de la <abbr title="Localizador uniforme de recursos">URL</abbr>, incluyendo información del puerto.</p>
+
+<p>Ejemplo: <code>'host.com:8080'</code></p></li>
+<li><p><code>auth</code>: La parte de la información de autenticación de una <abbr title="Localizador uniforme de recursos">URL</abbr>.</p>
+
+<p>Ejemplo: <code>'usuario:pase'</code></p></li>
+<li><p><code>hostname</code>: Sólo la porción en minúsculas del nombre de la máquina.</p>
+
+<p>Ejemplo: <code>'host.com'</code></p></li>
+<li><p><code>port</code>: La parte correspondiente al número de puerto del servidor.</p>
+
+<p>Ejemplo: <code>'8080'</code></p></li>
+<li><p><code>pathname</code>: La sección de ruta de la <abbr title="Localizador uniforme de recursos">URL</abbr>, la cual viene después del nombre de la máquina y antes de la cadena de consulta, incluyendo la barra inclinada inicial si está presente.</p>
+
+<p>Ejemplo: <code>'/r/u/t/a'</code></p></li>
+<li><p><code>search</code>: La parte de la «cadena de consulta» de la <abbr title="Localizador uniforme de recursos">URL</abbr>, incluyendo el signo de interrogación inicial.</p>
+
+<p>Ejemplo: <code>'?consulta=cadena'</code></p></li>
+<li><p><abbr title="path"><code>ruta</code></abbr>: La concatenación de <code>pathname</code> y <code>search</code>.</p>
+
+<p>Ejemplo: <code>'/r/u/t/a?consulta=cadena'</code></p></li>
+<li><p><code>query</code>: O bien la parte <code>'params'</code> de la cadena de consulta, o un objeto <abbr title="querystring"><code>cadenaDeConsulta</code></abbr> analizado.</p>
+
+<p>Ejemplo: <code>'consulta=cadena'</code> o <code>{ 'consulta': 'cadena' }</code></p></li>
+<li><p><code>hash</code>: La porción <code>'fragmento'</code> de la dirección <abbr title="Localizador uniforme de recursos">URL</abbr> incluido el signo de número.</p>
+
+<p>Ejemplo: <code>'#codificado'</code></p></li>
+</ul>
+
+<p>El módulo <abbr title="Localizador uniforme de recursos">URL</abbr> proporciona los siguientes métodos:</p>
+
+<h2><code>url.parse(</code><abbr title="urlStr"><code>cadenaUrl</code></abbr><code>, [</code><abbr title="parseQueryString"><code>cadenaDeConsultaPorAnalizar</code></abbr><code>], [</code><abbr title="slashesDenoteHost"><code>barrasDenotanServidor</code></abbr><code>])</code></h2>
+
+<p>Toma una cadena de dirección <abbr title="Localizador uniforme de recursos">URL</abbr>, y devuelve un objeto.</p>
+
+<p>Pasa <code>true</code> como segundo argumento para analizar también la cadena de consulta utilizando el módulo de cadenas de consulta, <code>querystring</code>.
+De manera predeterminada es <code>false</code>.</p>
+
+<p>Pasa <code>true</code> como tercer argumento para tratar <code>//</code><abbr title="foo"><code>loquesea</code></abbr><code>/bar</code> como
+<code>{ host: 'loquesea', pathname: '/bar' }</code> en lugar de
+<code>{ pathname: '//loquesea/bar' }</code>. De manera predeterminada es <code>false</code>.</p>
+
+<h2><code>url.format(</code><abbr title="urlObj"><code>objetoUrl</code></abbr><code>)</code></h2>
+
+<p>Toma un objeto <abbr title="Localizador uniforme de recursos">URL</abbr> analizado y devuelve una cadena con formato <abbr title="Localizador uniforme de recursos">URL</abbr>.</p>
+
+<ul>
+<li><code>href</code> será descartado.</li>
+<li><code>protocol</code> es tratado como el mismo con o sin los <code>:</code> (dos puntos) finales.
+<ul><li>Los protocolos <code>http</code>, <code>https</code>, <code>ftp</code>, <code>gopher</code>, <code>file</code> se deben posfijar con `://' (dos puntos-barra inclinada-barra inclinada).</li>
+<li>Todos los demás protocolos <code>mailto</code>, <code>xmpp</code>, <code>aim</code>, <code>sftp</code>, <abbr title="foo"><code>loquesea</code></abbr>, etc. se deben posfijar con dos puntos (<code>:</code>).</li></ul></li>
+<li><code>auth</code> se utilizará si está presente.</li>
+<li><code>hostname</code> sólo se utilizará si <code>host</code> está ausente.<code>auth</code> se utilizará si está presente.</li>
+<li><code>port</code> sólo se utilizará si <code>host</code> está ausente.</li>
+<li><code>host</code> se utiliza en lugar de <abbr title="hostname"><code>nombreServidor</code></abbr> y <abbr title="port"><code>puerto</code></abbr></li>
+<li><code>pathname</code> se trata igual con o sin la <code>/</code> (barra inclinada)</li>
+<li><code>search</code> se utiliza en lugar de <code>query</code></li>
+<li><code>query</code> (objeto; consulta <abbr title="querystring"><code>cadenaDeConsulta</code></abbr>) sólo se utilizará si <code>search</code> está ausente.</li>
+<li><code>search</code> es tratada igual con o sin el signo de interrogación inicial <code>?</code></li>
+<li><code>hash</code> se trata igual con o sin el <code>#</code> (signo de número, ancla)</li>
+</ul>
+
+<h2><code>url.resolve(</code><abbr title="from"><code>desde</code></abbr><code>,</code> <abbr title="to"><code>hasta</code></abbr><code>)</code></h2>
+
+<p>Toma una dirección <abbr title="Localizador uniforme de recursos">URL</abbr> base y una dirección href URL, y las resuelve como una ancla del navegador.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

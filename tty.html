@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Teletypewriter">TTY</abbr></h1>
+
+<pre><code>Estabilidad: 2 — Inestable
+</code></pre>
+
+<p>El módulo <abbr title="teletypewriter"><code>tty</code></abbr> alberga las clases <code>tty.ReadStream</code> y <code>tty.WriteStream</code>. En la mayoría de los casos, no tendrás que utilizar este módulo directamente.</p>
+
+<p>Cuando Node detecta que se está ejecutando dentro de un contexto <abbr title="Teletypewriter">TTY</abbr>, entonces <code>process.stdin</code> será una instancia de <code>tty.ReadStream</code> y <code>process.stdout</code> será una instancia de <code>tty.WriteStream</code>. La mejor forma de comprobar si Node se está ejecutando en un contexto <abbr title="Teletypewriter">TTY</abbr> es revisando <code>process.stdout.isTTY</code>:</p>
+
+<pre><code>$ node -p -e 'Boolean(process.stdout.isTTY)'
+true
+$ node -p -e 'Boolean(process.stdout.isTTY)' | cat
+false
+</code></pre>
+
+<h2><code>tty.isatty(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> o <code>false</code> dependiendo de si el <abbr title="fd"><code>descriptorArchivo</code></abbr> está asociado con una terminal.</p>
+
+<h2><code>tty.setRawMode(</code><abbr title="mode"><code>modo</code></abbr><code>)</code></h2>
+
+<p><strong>Desaconsejado</strong>. En su lugar usa <code>tty.ReadStream#setRawMode()</code> (es decir, <code>process.stdin.setRawMode()</code>).</p>
+
+<h2>Clase: <code>ReadStream</code></h2>
+
+<p>Una subclase de <code>net.Socket</code> que representa la parte legible de un <abbr title="Teletypewriter">TTY</abbr>. En circunstancias normales, <code>process.stdin</code> será la única instancia de <code>tty.ReadStream</code>, en cualquier programa Node (sólo cuando <code>isatty(0)</code> es <code>true</code>).</p>
+
+<h3><code>rs.isRaw</code></h3>
+
+<p>Un <abbr title="Boolean"><code>Booleano</code></abbr> que se inicia en <code>false</code>. Representa el estado actual «sin procesar» de la instancia <code>tty.ReadStream</code>.</p>
+
+<h3><code>rs.setRawMode(</code><abbr title="mode"><code>modo</code></abbr><code>)</code></h3>
+
+<p><abbr title="mode"><code>modo</code></abbr> debe ser <code>true</code> o <code>false</code>. Este establece las propiedades del <code>tty.ReadStream</code> para actuar ya sea como un dispositivo sin procesar o el predefinido. <code>isRaw</code> se fijará al modo resultante.</p>
+
+<h2>Clase: <code>WriteStream</code></h2>
+
+<p>Una subclase de <code>net.Socket</code> que representa la parte de escritura de un <abbr title="teletypewriter">tty</abbr>. En circunstancias normales, <code>process.stdout</code> será la única instancia de <code>tty.WriteStream</code> jamás creada (y sólo cuando <code>isatty(1)</code> es <code>true</code>).</p>
+
+<h3><code>ws.columns</code></h3>
+
+<p>Un <abbr title="Number"><code>Número</code></abbr> que proporciona la cantidad de columnas que la <abbr title="teletypewriter">tty</abbr> tiene actualmente. Esta propiedad se actualiza en los eventos <code>'resize'</code>.</p>
+
+<h3><code>ws.rows</code></h3>
+
+<p>Un <abbr title="Number"><code>Número</code></abbr> que proporciona la cantidad de filas que la <abbr title="teletypewriter">tty</abbr> tiene actualmente. Esta propiedad se actualiza en los eventos <code>'resize'</code>.</p>
+
+<h3>Evento: <code>'resize'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido por <code>refreshSize()</code> cuando cualquiera de las propiedades <code>columns</code> o <code>rows</code> ha cambiado.</p>
+
+<pre><code>process.stdout.on('resize', function () {
+  console.log('¡el tamaño de la pantalla ha cambiado!');
+  console.log(process.stdout.columns + 'x' + process.stdout.rows);
+});
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Cluster">Agrupando</abbr></h1>
+
+<pre><code>Estabilidad: 1 — Experimental
+</code></pre>
+
+<p>Una sola instancia de Node se ejecuta en un único hilo. Para aprovechar las ventajas de sistemas multinúcleo a veces el usuario quiere lanzar un conjunto de procesos Node para balancear la carga.</p>
+
+<p>El módulo <code>cluster</code> te permite crear fácilmente una red de procesos en la que todos ellos comparten los puertos del servidor.</p>
+
+<pre><code>var grupo = require('cluster');
+var http = require('http');
+var numCPUs = require('os').cpus().length;
+
+if (grupo.isMaster) {
+  // Bifurca trabajadores.
+  for (var i = 0; i &lt; numCPUs; i++) {
+    grupo.fork();
+  }
+
+  grupo.on('exit', function (trabajador, codigo, senial) {
+    console.log('El trabajador ' + trabajador.process.pid
+                + ' terminó');
+  });
+} else {
+  // Los trabajadores pueden compartir cualquier conexión TCP
+  // En este caso es un servidor HTTP
+  http.createServer(function (peticion, respuesta) {
+    respuesta.writeHead(200);
+    respuesta.end('Hola mundo
+</code></pre>
+
+<p>');
+      }).listen(8000);
+    }</p>
+
+<p>Al ejecutar Node ahora comparte el puerto 8000 entre los trabajadores:</p>
+
+<pre><code>% node servidor.js
+Worker 2438 online
+Worker 2437 online
+</code></pre>
+
+<p>Esta característica se introdujo recientemente, y puede cambiar en futuras versiones.
+Por favor, pruébala y proporciona retroalimentación.</p>
+
+<p>Además, ten en cuenta que en Windows, todavía no es posible configurar la canalización de un servidor con nombre en un trabajador.</p>
+
+<h2>¿Cómo funciona?</h2>
+
+<!-- type=misc -->
+
+<p>Los procesos del <abbr title="worker">trabajador</abbr> se procrean utilizando el método <code>child_process.fork</code>, por lo tanto se pueden comunicar con su padre a través de <abbr title="Inter-process communication">IPC</abbr> y pasar el controlador del servidor de ida y vuelta.</p>
+
+<p>Cuando llamas a <abbr title="server"><code>servidor</code></abbr><code>.listen(...)</code> en un trabajador, este serializa los argumentos y pasa la petición al proceso principal.  Si el proceso principal ya cuenta con un servidor escuchando las peticiones de los trabajadores correspondientes, entonces pasa el control al trabajador.  Si aún no tiene un servidor escuchando las peticiones correspondientes, entonces se creará uno y pasará el control al hijo.</p>
+
+<p>Potencialmente, esto provoca sorprendente comportamiento en tres casos extremos:</p>
+
+<ol>
+<li><abbr title="server"><code>servidor</code></abbr><code>.listen({fd: 7})</code> Debido a que el mensaje se transmite al maestro, el descriptor de archivo 7 se escucha <strong>en el padre</strong> y el control se pasa al trabajador, en lugar de escuchar la idea de los trabajadores de que el número 7 se refiere al descriptor de archivo.</li>
+<li><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="handle"><code>controlador</code></abbr><code>)</code> Escuchar al controlador explícitamente hará que el trabajador use el controlador suministrado, en lugar de hablar con el proceso principal.  Si el trabajador ya tiene el <abbr title="handle"><code>controlador</code></abbr>, entonces se presume que ya sabes lo que estás haciendo.</li>
+<li><abbr title="server"><code>servidor</code></abbr><code>.listen(0)</code> Normalmente, esto va a encajonar al servidor para escuchar en un puerto aleatorio.  Sin embargo, en un grupo, cada trabajador recibirá el mismo puerto «aleatorio» cada vez que llame a <code>listen(0)</code>.  En esencia, el puerto es aleatorio la primera vez, pero a partir de entonces predecible.  Si deseas escuchar en un único puerto, genera un número de puerto basándote en el identificador del grupo de los trabajadores.</li>
+</ol>
+
+<p>Cuando varios procesos están <code>accept()</code>ando el mismo recurso subyacente, el sistema operativo equilibra la carga a través de ellos de manera muy eficiente.  No hay ningún enrutamiento lógico en Node.js, o en tu programa, y ningún estado compartido entre trabajadores.  Por lo tanto, es importante diseñar tu programa de modo que no confíe demasiado en los objetos de datos en memoria para cosas como sesiones e inicios de sesión.</p>
+
+<p>Debido a que todos los trabajadores son procesos separados, se pueden terminar o regenerar en función de las necesidades de tu programa, sin afectar a otros trabajadores.  Mientras aún haya algún trabajador vivo, el servidor seguirá aceptando conexiones.  Aún así, Node no gestiona automáticamente el número de trabajadores por ti.  Es tu responsabilidad gestionar las necesidades de agrupar al trabajador en tu aplicación.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.settings</code></h2>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}
+<ul><li><code>exec</code> {<abbr title="String">Cadena</abbr>} ruta al archivo del trabajador.  (Predefinido=<code>__filename</code>)</li>
+<li><code>args</code> {<abbr title="Array">Arreglo</abbr>} argumentos de cadena pasados al trabajador.
+(Predefinido=<code>process.argv.slice(2)</code>)</li>
+<li><code>silent</code> {<abbr title="Boolean">Booleano</abbr>} si se debe o no enviar el resultado a la <code>'stdio'</code> del padre.
+(Predefinido=<code>false</code>)</li></ul></li>
+</ul>
+
+<p>Todas las opciones establecidas por <code>.setupmaster</code> se almacenan en la configuración de este objeto.
+Se supone que no debes configurar o cambiar manualmente este objeto.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.isMaster</code></h2>
+
+<ul>
+<li>{<abbr title="Boolean">Booleano</abbr>}</li>
+</ul>
+
+<p><code>true</code> si el proceso es el maestro. Esto lo determinará el <code>process.env.NODE_UNIQUE_ID</code>. Si <code>process.env.NODE_UNIQUE_ID</code> no está definido, entonces <code>isMaster</code> es <code>true</code>.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.isWorker</code></h2>
+
+<ul>
+<li>{<abbr title="Boolean">Booleano</abbr>}</li>
+</ul>
+
+<p>Este indicador lógico es <code>true</code> si el proceso es un trabajador bifurcado desde uno principal.
+Si suministras un valor a <code>process.env.NODE_UNIQUE_ID</code>, entonces <code>isWorker</code> es <code>true</code>.</p>
+
+<h2>Evento: <code>'fork'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+</ul>
+
+<p>Cuando bifurcas un nuevo trabajador el módulo del grupo emitirá un evento <code>'fork'</code>.
+Lo puedes utilizar para registrar la actividad del trabajador, y crear tu propio <abbr title="timeout"><code>tiempoDeEspera</code></abbr>.</p>
+
+<pre><code>var tiemposDeEspera = [];
+function mensajeError() {
+  console.error('Algo anda mal con la conexión ...');
+}
+
+grupo.on('fork', function (trabajador) {
+  tiemposDeEspera[trabajador.id] = setTimeout(mensajeError, 2000);
+});
+grupo.on('listening', function (trabajador, direccion) {
+  clearTimeout(tiemposDeEspera[trabajador.id]);
+});
+grupo.on('exit', function (trabajador, codigo, senial) {
+  clearTimeout(tiemposDeEspera[trabajador.id]);
+  mensajeError();
+});
+</code></pre>
+
+<h2>Evento: <code>'online'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+</ul>
+
+<p>Después de bifurcar un nuevo trabajador, el trabajador debe responder con un mensaje <code>'online'</code>.
+Cuando el maestro recibe un mensaje <code>'online'</code> emitirá dicho evento.
+La diferencia entre <code>'fork'</code> y <code>'online'</code> es que <code>'fork'</code> se emite cuando el maestro trata de bifurcar un trabajador, y <code>'online'</code> se emite cuando el trabajador se está ejecutando.</p>
+
+<pre><code>grupo.on('online', function (trabajador) {
+  console.log('¡Hurra! el trabajador respondió después de bifurcado');
+});
+</code></pre>
+
+<h2>Evento: <code>'listening'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+<li><abbr title="address"><code>direccion</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Cuando llames a <code>listen()</code> desde un trabajador, automáticamente se asigna  un evento <code>'listening'</code> a la instancia del servidor. Cuando el servidor está escuchando se envía un mensaje al maestro desde donde se emitió el evento <code>'listening'</code>.</p>
+
+<p>El controlador de eventos se ejecuta con dos argumentos, el <code>trabajador</code> contiene el objeto <code>worker</code> y el objeto <abbr title="address"><code>direccion</code></abbr> contiene las siguientes propiedades de conexión:
+<code>address</code>, <code>port</code> y <code>addressType</code>. Esto es muy útil si el trabajador está escuchando en más de una dirección.</p>
+
+<pre><code>grupo.on('listening', function (trabajador, direccion) {
+  console.log('Un trabajador ahora está conectado en '
+              + direccion.address
+              + ':'
+              + direccion.port);
+});
+</code></pre>
+
+<h2>Evento: <code>'disconnect'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+</ul>
+
+<p>Cuando se desconecta un trabajador del canal <abbr title="Inter-process communication">IPC</abbr> se emite este evento. Esto sucederá cuando el trabajador termine, generalmente después de llamar a <code>.destroy()</code>.</p>
+
+<p>Al llamar a <code>.disconnect()</code>, puede haber cierta <abbr title="delay"><code>demora</code></abbr> entre los eventos <code>'disconnect'</code> y <code>'exit'</code>.  Puedes utilizar este evento para detectar si el proceso está atascado en una limpieza o si hay conexiones longevas.</p>
+
+<pre><code>grupo.on('disconnect', function (trabajador) {
+  console.log('El trabajador #' + trabajador.id + ' se ha desconectado');
+});
+</code></pre>
+
+<h2>Evento: <code>'exit'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+<li><abbr title="code"><code>codigo</code></abbr> {<abbr title="Number">Número</abbr>} El código de salida, si sale normalmente.</li>
+<li><abbr title="signal"><code>senial</code></abbr> {<abbr title="String">Cadena</abbr>} el nombre de la señal (por ejemplo, <code>'SIGHUP'</code>) el cual provoca que el proceso termine.</li>
+</ul>
+
+<p>Cuando alguno de los trabajadores termina el módulo <code>cluster</code> emitirá el evento <code>'exit'</code>.
+Lo puedes usar para reiniciar el trabajador llamando a <code>fork()</code> de nuevo.</p>
+
+<pre><code>grupo.on('exit', function (trabajador, codigo, senial) {
+  var codigoDeSalida = trabajador.process.exitCode;
+  console.log('El trabajador '
+            + trabajador.process.pid
+            + ' terminó ('
+            + codigoDeSalida
+            + '). reiniciando...');
+  grupo.fork();
+});
+</code></pre>
+
+<h2>Evento: <code>'setup'</code></h2>
+
+<ul>
+<li><abbr title="worker"><code>trabajador</code></abbr> {<abbr title="Object">Objeto</abbr> Worker}</li>
+</ul>
+
+<p>Cuando la función <code>.setupMaster()</code> se ha ejecutado emite este evento.
+Si <code>.setupMaster()</code> no se ha ejecutado antes del <code>fork()</code> esta función llamará a <code>.setupMaster()</code> sin argumentos.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.setupMaster([</code><abbr title="settings"><code>ajustes</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="settings"><code>ajustes</code></abbr> {<abbr title="Object">Objeto</abbr>}
+<ul><li><code>exec</code> {<abbr title="String">Cadena</abbr>} ruta al archivo del trabajador.  (Predefinido=<code>__filename</code>)</li>
+<li><code>args</code> {<abbr title="Array">Arreglo</abbr>} argumentos de cadena pasados al trabajador.
+(Predefinido=<code>process.argv.slice(2)</code>)</li>
+<li><code>silent</code> {<abbr title="Boolean">Booleano</abbr>} si se debe o no enviar el resultado a la <code>'stdio'</code> del padre.
+(Predefinido=<code>false</code>)</li></ul></li>
+</ul>
+
+<p>El <code>setupMaster</code> se utiliza para cambiar el comportamiento predefinido de <code>'fork'</code>. Este toma un objeto opción como argumento.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var cluster = require('cluster');
+grupo.setupMaster({
+  exec : 'trabajador.js',
+  args : ['--use', 'https'],
+  silent : true
+});
+grupo.fork();
+</code></pre>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.fork([</code><abbr title="env"><code>entorno</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="env"><code>entorno</code></abbr> {<abbr title="Object">Objeto</abbr>} Pares clave/valor para agregar al entorno del proceso hijo.</li>
+<li>devuelve {<abbr title="Object">Objeto</abbr> <code>Worker</code>}</li>
+</ul>
+
+<p>Procrea un nuevo proceso trabajador. Este sólo se puede llamar desde el proceso principal.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.disconnect([</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<ul>
+<li><abbr title="callback"><code>retrollamada</code></abbr> {<abbr title="Function">Función</abbr>} invocada cuando se desconectan todos los trabajadores y se cierran los controladores</li>
+</ul>
+
+<p>Al llamar a este método, todos los trabajadores finalizarán elegantemente. Cuando se desconecta todos los controladores internos se cerrarán, permitiendo que el proceso principal termine graciosamente si no hay otro evento esperando.</p>
+
+<p>El método toma un argumento retrollamada opcional que se invocará cuando haya terminado.</p>
+
+<h2><abbr title="cluster"><code>grupo</code></abbr><code>.workers</code></h2>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Un <abbr title="hash"><code>hachís</code></abbr> que almacena los objetos <abbr title="worker"><code>trabajador</code></abbr> activos, indexados por el campo <code>id</code>. Hace que sea fácil recorrer todos los trabajadores.</p>
+
+<pre><code>// Recorre todos los trabajadores
+function cadaTrabajador(retrollamada) {
+  for (var id in grupo.workers) {
+    retrollamada(grupo.workers[id]);
+  }
+}
+cadaTrabajador(function (trabajador) {
+  trabajador.send('gran anuncio a todos los trabajadores');
+});
+</code></pre>
+
+<p>Si deseas hacer referencia a un trabajador sobre un canal de comunicación, la manera más fácil para encontrar al trabajador es usando el identificador único del trabajador.</p>
+
+<pre><code>toma.on('data', function (id) {
+  var trabajador = grupo.workers[id];
+});
+</code></pre>
+
+<h2>Clase: <code>Worker</code></h2>
+
+<p>Un objeto <code>Worker</code> contiene toda la información pública y métodos de un trabajador.
+En el maestro, este se puede obtener usando <abbr title="cluster"><code>grupo</code></abbr><code>.workers</code>. En un trabajador se puede obtener usando <abbr title="cluster"><code>grupo</code></abbr><code>.worker</code>.</p>
+
+<h3><code>worker.id</code></h3>
+
+<ul>
+<li>{<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>A cada nuevo trabajador se le da su propio <code>id</code> exclusivo, este identificador se almacena en <code>id</code>.</p>
+
+<p>Mientras un trabajador esté vivo, esta es la clave que lo identifica en <abbr title="cluster"><code>grupo</code></abbr><code>.workers</code></p>
+
+<h3><code>worker.process</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr> ChildProcess}</li>
+</ul>
+
+<p>Todos los trabajadores son creados usando <code>child_process.fork()</code>, el objeto devuelto por esta función se almacena en el proceso.</p>
+
+<p>Ve: el <a href="child_process.html">Módulo del proceso hijo</a></p>
+
+<h3><code>worker.suicide</code></h3>
+
+<ul>
+<li>{<abbr title="Boolean">Booleano</abbr>}</li>
+</ul>
+
+<p>Esta propiedad es un valor lógico. Se establece cuando un trabajador termina después de llamar a <code>.destroy()</code> o inmediatamente después de llamar al método <code>.disconnect()</code>. Hasta entonces, es <abbr title="undefined"><code>indefinido</code></abbr>.</p>
+
+<h3><code>worker.send(</code><abbr title="message"><code>mensaje</code></abbr><code>, [</code><abbr title="sendHandle"><code>gestionaEnvio</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="message"><code>mensaje</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+<li><abbr title="sendHandle"><code>gestionaEnvio</code></abbr> {<abbr title="Object">Objeto</abbr> Handle}</li>
+</ul>
+
+<p>Esta función es igual a los métodos de envío proporcionados por <code>child_process.fork()</code>.  En el maestro debes utilizar esta función para enviar un mensaje a un trabajador específico.  Sin embargo, en un trabajador también puedes utilizar <code>process.send(</code><abbr title="message"><code>mensaje</code></abbr><code>)</code>, ya que esta es la misma función.</p>
+
+<p>En este ejemplo se hará eco de todos los mensajes del maestro:</p>
+
+<pre><code>if (grupo.isMaster) {
+  var trabajador = grupo.fork();
+  trabajador.send('hola por allí');
+
+} else if (grupo.isWorker) {
+  process.on('message', function (mensaje) {
+    process.send(mensaje);
+  });
+}
+</code></pre>
+
+<h3><code>worker.destroy()</code></h3>
+
+<p>Esta función finalizará el trabajador, e informará al maestro para no procrear un nuevo trabajador.  El valor lógico <code>suicide</code> te permite distinguir entre una salida voluntaria o accidental.</p>
+
+<pre><code>grupo.on('exit', function (trabajador, codigo, senial) {
+  if (trabajador.suicide === true) {
+    console.log('Oh, este precisamente fue un suicidio – no te preocupes').
+  }
+});
+
+// destruye al trabajador
+trabajador.destroy();
+</code></pre>
+
+<h3><code>worker.disconnect()</code></h3>
+
+<p>Cuando se llama a esta función, el trabajador dejará de aceptar nuevas conexiones, pero serán manejadas por otro trabajador que las esté escuchando. La conexión existente te permitirá salir como de costumbre. Cuando no existen más conexiones, el canal <abbr title="Inter-process communication">IPC</abbr> del trabajador se cerrará permitiéndote terminar graciosamente. Al cerrar el canal <abbr title="Inter-process communication">IPC</abbr> se emite el evento <code>'disconnect'</code>, este es seguido por el evento <code>'exit'</code>, el cual se emite cuando el trabajador finalmente termina.</p>
+
+<p>Debido a que puede haber conexiones longevas, es útil implementar un tiempo de espera.
+En este ejemplo se pide al trabajador se desconecte y después de 2 segundos se destruye el servidor. Una alternativa es ejecutar <code>worker.destroy()</code> después de 2 segundos, pero esta normalmente no permite que el trabajador realice una limpieza si es necesaria.</p>
+
+<pre><code>if (grupo.isMaster) {
+  var trabajador = grupo.fork();
+  var tiempoDeEspera;
+
+  trabajador.on('listening', function (direccion) {
+    trabajador.disconnect();
+    tiempoDeEspera = setTimeout(function () {
+      trabajador.send('force kill');
+    }, 2000);
+  });
+
+  trabajador.on('disconnect', function () {
+    clearTimeout(tiempoDeEspera);
+  });
+
+} else if (grupo.isWorker) {
+  var net = require('net');
+  var servidor = red.createServer(function (toma) {
+    // la conexión nunca termina
+  });
+
+  servidor.listen(8000);
+
+  servidor.on('close', function () {
+    // limpia
+  });
+
+  process.on('message', function (mensaje) {
+    if (mensaje === 'force kill') {
+      servidor.destroy();
+    }
+  });
+}
+</code></pre>
+
+<h3>Evento: <code>'message'</code></h3>
+
+<ul>
+<li><abbr title="message"><code>mensaje</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Este evento es el mismo que el proporcionado por <code>child_process.fork()</code>.
+En el maestro debes usar este evento, no obstante, en un trabajador también puedes utilizar <code>process.on(</code><abbr title="message"><code>'mensaje'</code></abbr><code>)</code></p>
+
+<p>Como ejemplo, aquí hay un grupo que mantiene la cantidad de peticiones en el proceso principal usando el sistema de mensajes:</p>
+
+<pre><code>var grupo = require('cluster');
+var http = require('http');
+
+if (grupo.isMaster) {
+
+  // da seguimiento a las peticiones http
+  var numPeticiones = 0;
+  setInterval(function () {
+    console.log('numPeticiones =', numPeticiones);
+  }, 1000);
+
+  // Cantidad de peticiones
+  function messageHandler(mensaje) {
+    if (mensaje.cmd &amp;&amp; mensaje.cmd == 'notifyRequest') {
+      numPeticiones += 1;
+    }
+  }
+
+  // Inicia trabajadores y escucha los mensajes que contienen notifyRequest
+  var numCPUs = require('os').cpus().length;
+  for (var i = 0; i &lt; numCPUs; i++) {
+    grupo.fork();
+  }
+
+  Object.keys(grupo.workers).forEach(function (id) {
+    grupo.workers[id].on('message', messageHandler);
+  });
+
+} else {
+
+  // Los procesos del trabajador tienen un servidor http.
+  servidor.Server(function (peticion, respuesta) {
+    respuesta.writeHead(200);
+    respuesta.end('Hola mundo
+</code></pre>
+
+<p>');</p>
+
+<pre><code>    // notifica al maestro sobre la petición
+    process.send({ cmd: 'notifyRequest' });
+  }).listen(8000);
+}
+</code></pre>
+
+<h3>Evento: <code>'online'</code></h3>
+
+<p>Igual que el evento <abbr title="cluster"><code>grupo</code></abbr><code>.on('online')</code>, pero únicamente se emite cuando el trabajador específico cambia de estado.</p>
+
+<pre><code>grupo.fork().on('online', function () {
+  // el trabajador está en línea
+};
+</code></pre>
+
+<h3>Evento: <code>'listening'</code></h3>
+
+<ul>
+<li><abbr title="address"><code>direccion</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Igual que el evento <abbr title="cluster"><code>grupo</code></abbr><code>.on('listening')</code>, pero sólo se emite cuando el trabajador especifico cambia de estado.</p>
+
+<pre><code>grupo.fork().on('listening', function (direccion) {
+  // el trabajador está escuchando
+};
+</code></pre>
+
+<h3>Evento: <code>'disconnect'</code></h3>
+
+<p>Igual que el evento <abbr title="cluster"><code>grupo</code></abbr><code>.on('disconnect')</code>, pero sólo se emite cuando el trabajador especifico cambia de estado.</p>
+
+<pre><code>grupo.fork().on('disconnect', function () {
+  // el trabajador está desconectado
+};
+</code></pre>
+
+<h3>Evento: <code>'exit'</code></h3>
+
+<ul>
+<li><abbr title="code"><code>codigo</code></abbr> {<abbr title="Number">Número</abbr>} El código de salida, si sale normalmente.</li>
+<li><abbr title="signal"><code>senial</code></abbr> {<abbr title="String">Cadena</abbr>} el nombre de la señal (por ejemplo, <code>'SIGHUP'</code>) el cual provoca que el proceso termine.</li>
+</ul>
+
+<p>Emitido por la instancia del trabajador individual, cuando el proceso hijo subyacente termina.  Consulta el <a href="child_process.html#child_process_event_exit">evento child_process: 'exit'</a>.</p>
+
+<pre><code>var trabajador = grupo.fork();
+trabajador.on('exit', function (codigo, senial) {
+  if( senial ) {
+    console.log('el trabajador terminó por la señal: ' + senial);
+  } else if( codigo !== 0 ) {
+    console.log('El trabajador salió con el código de error: ' + codigo);
+  } else {
+    console.log('¡Trabajador exitoso!');
+  }
+};
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

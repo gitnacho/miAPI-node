@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>Ejecutando JavaScript</h1>
+
+<pre><code>Estabilidad: 2 — Inestable. Ve las salvedades, más adelante.
+</code></pre>
+
+<!-- name=vm -->
+
+<p>Puedes acceder a este módulo con:</p>
+
+<pre><code>var vm = require('vm');
+</code></pre>
+
+<p>El código JavaScript se puede compilar y ejecutar inmediatamente o compilar, guardar y ejecutarlo más tarde.</p>
+
+<h2>Salvedades</h2>
+
+<p>El módulo <code>vm</code> tiene muchos problemas y casos extremos conocidos. Si te encuentras con problemas o un comportamiento inesperado, por favor consulta las <a href="https://github.com/joyent/node/issues/search?q=vm">cuestiones pendientes en GitHub</a>.
+A continuación, describimos algunos de los mayores problemas.</p>
+
+<h3><abbr title="Sandboxes">Recintos de seguridad</abbr></h3>
+
+<p>El argumento <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> para <code>vm.runInNewContext</code> y <code>vm.createContext</code>, junto con el argumento <abbr title="initSandbox"><code>iniciaRecintoDeSeguridad</code></abbr> para <code>vm.createContext</code>, no se comportan como uno podría esperar normalmente y su comportamiento varía entre las diferentes versiones de Node.</p>
+
+<p>La cuestión clave a tener en cuenta es que el V8 no proporciona ninguna manera de controlar directamente el objeto global que se utiliza dentro de un contexto. Como resultado, mientras que las propiedades de tu objeto <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> estarán disponibles en el contexto, las propiedades de los <code>prototipos</code> del <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> pueden no estar disponibles. Además, la expresión <code>this</code> en el ámbito del contexto global se evalúa como el objeto vacío (<code>{}</code>) en lugar de como tu <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr>.</p>
+
+<p>Las propiedades de tu <abbr title="sandboxs"><code>recinto de seguridad</code></abbr> tampoco se comparten directamente con tu programa.
+En su lugar, las propiedades del recinto de seguridad se copian en el contexto al comienzo de la ejecución y luego, después de la ejecución, las propiedades se copian de nuevo en un intento de propagar cualquier cambio.</p>
+
+<h3>Globales</h3>
+
+<p>Las propiedades del objeto global, como <abbr title="Array"><code>Arreglo</code></abbr> y <abbr title="String"><code>Cadena</code></abbr>, tienen diferentes valores dentro de un contexto. Esto significa que las expresiones comunes, como <code>[] instanceof Array</code> u <code>Object.getPrototypeOf([]) === Array.prototype</code> posiblemente no produzcan los resultados esperados cuando se utilizan dentro de los programas evaluados a través del módulo <code>vm</code>.</p>
+
+<p>Algunos de estos problemas tienen soluciones conocidas enumeradas en las cuestiones de <code>vm</code> en GitHub. Por ejemplo, <code>Arreglo.isArray</code> soluciona el problema del ejemplo, con <abbr title="Array"><code>Arreglo</code></abbr>.</p>
+
+<h2><code>vm.runInThisContext(</code><abbr title="code"><code>codigo</code></abbr><code>, [</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>])</code></h2>
+
+<p><code>vm.runInThisContext()</code> compila <abbr title="code"><code>codigo</code></abbr>, lo ejecuta y devuelve el resultado. La ejecución del código no tiene acceso al ámbito local. <abbr title="filename"><code>nombreArchivo</code></abbr> es opcional, se usa sólo en el seguimiento de la pila.</p>
+
+<p>Ejemplo del uso de <code>vm.runInThisContext</code> y <code>eval</code> para ejecutar el mismo código:</p>
+
+<pre><code>var variableLocal = 123,
+    usandoGuion, evaluado,
+    vm = require('vm');
+
+usandoGuion = vm.runInThisContext('varialbeLocal = 1;',
+  'miarchivo.vm');
+console.log('variableLocal: ' + variableLocal + ', usandoGuion: ' +
+  usandoGuion);
+evaluado = eval('variableLocal = 1;');
+console.log('variableLocal: ' + varialbeLocal + ', evaluado: ' +
+  evaluado);
+
+// variableLocal: 123, usandoGuion: 1
+// variableLocal: 1, evaluado: 1
+</code></pre>
+
+<p><code>vm.runInThisContext</code> no tiene acceso al ámbito local, por lo que <code>variableLocal</code> no ha cambiado.
+<code>eval</code> tiene acceso al ámbito local, por lo que <code>variableLocal</code> cambia.</p>
+
+<p>En caso de error de sintaxis en el <abbr title="code"><code>codigo</code></abbr>, <code>vm.runInThisContext</code> emite el error de sintaxis en <code>'stderr'</code> y produce una excepción.</p>
+
+<h2><code>vm.runInNewContext(</code><abbr title="code"><code>codigo</code></abbr><code>, [</code><abbr title="sandbox"><code>recintoDeSeguridad</code></abbr><code>], [</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>])</code></h2>
+
+<p><code>vm.runInNewContext</code> compila <abbr title="code"><code>codigo</code></abbr>, luego lo ejecuta en el <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> y devuelve el resultado. La ejecución del código no tiene acceso al ámbito local. El objeto <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> se utiliza como objeto global para el <abbr title="code"><code>codigo</code></abbr>.
+<abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> y <abbr title="filename"><code>nombreArchivo</code></abbr> sólo se utilizan en el seguimiento de la pila.</p>
+
+<p>Ejemplo: compila y ejecuta el código que incrementa una variable global y configura una nueva.
+Estas variables globales se encuentran en el <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr>.</p>
+
+<pre><code>var util = require('util'),
+    vm = require('vm'),
+    recintoDeSeguridad = {
+      animal: 'gato',
+      cantidad: 2
+    };
+
+vm.runInNewContext(
+    'cantidad += 1; nombre = «kitty»',
+    recintoDeSeguridad,
+    'miarchivo.vm');
+console.log(util.inspect(recintoDeSeguridad));
+
+// { animal: 'gato', cantidad: 3, nombre: 'kitty' }
+</code></pre>
+
+<p>Ten en cuenta que la ejecución de código en el que no confías es un asunto complicado que requiere mucho cuidado.  Para evitar fugas accidentales de variables globales, <code>vm.runInNewContext</code> es muy útil, pero la ejecución con seguridad de código que no es de confianza requiere un proceso separado.</p>
+
+<p>En caso de error de sintaxis en el <abbr title="code"><code>codigo</code></abbr>, <code>vm.runInNewContext</code> emite el error de sintaxis en <code>'stderr'</code> y produce una excepción.</p>
+
+<h2><code>vm.runInContext(</code><abbr title="code"><code>codigo</code></abbr><code>,</code> <abbr title="context"><code>contexto</code></abbr><code>, [</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>])</code></h2>
+
+<p><code>vm.runInContext</code> compila el <abbr title="code"><code>codigo</code></abbr>, y luego lo ejecuta en el <abbr title="context"><code>contexto</code></abbr> y devuelve el resultado. Un <abbr title="context"><code>contexto</code></abbr> (V8) comprende un objeto global, junto con un conjunto de objetos y funciones incorporadas. La ejecución de código no tiene acceso al ámbito local y el objeto global dentro del <abbr title="context"><code>contexto</code></abbr> se utiliza como objeto global para el <abbr title="code"><code>codigo</code></abbr>.
+<abbr title="filename"><code>nombreArchivo</code></abbr> es opcional, sólo se usa en el seguimiento de la pila.</p>
+
+<p>Ejemplo: compila y ejecuta código en un contexto existente.</p>
+
+<pre><code>var util = require('util'),
+    vm = require('vm'),
+    iniciaRecintoDeSeguridad = {
+      animal: 'gato',
+      cantidad: 2
+    },
+    contexto = vm.createContext(iniciaRecintoDeSeguridad);
+
+vm.runInContext(
+    'cantidad += 1; nombre = «GATO»',
+    contexto,
+    'miarchivo.vm');
+console.log(util.inspect(contexto));
+
+// { animal: 'gato', cantidad: 3, nombre: 'GATO' }
+</code></pre>
+
+<p>Ten en cuenta que <code>CreateContext</code> clonará superficialmente el objeto <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> suministrado con el fin de iniciar el objeto global del contexto recién construido.</p>
+
+<p>Ten en cuenta que la ejecución de código en el que no confías es un asunto complicado que requiere mucho cuidado.  Para evitar fugas accidentales de variables globales, <code>vm.runInContext</code> es muy útil, pero la ejecución de código que no es de confianza requiere un proceso separado.</p>
+
+<p>En caso de error de sintaxis en el <abbr title="code"><code>codigo</code></abbr>, <code>vm.runInContext</code> emite el error de sintaxis en <code>'stderr'</code> y produce una excepción.</p>
+
+<h2><code>vm.createContext([</code><abbr title="initSandbox"><code>iniciaRecintoDeSeguridad</code></abbr><code>])</code></h2>
+
+<p><code>vm.createContext</code> crea un nuevo contexto que es adecuado para usarlo como el segundo argumento de una llamada posterior a <code>vm.runInContext</code>. Un <abbr title="context"><code>contexto</code></abbr> (V8) comprende un objeto global, junto con un conjunto de objetos y funciones integradas. El argumento opcional <abbr title="initSandbox"><code>iniciaRecintoDeSeguridad</code></abbr> será copiado superficialmente para sembrar el contenido inicial de un objeto global utilizado por el contexto.</p>
+
+<h2><code>vm.createScript(</code><abbr title="code"><code>codigo</code></abbr><code>, [</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>])</code></h2>
+
+<p><code>createScript</code> compila <abbr title="code"><code>codigo</code></abbr> pero no lo ejecuta. Por el contrario, devuelve un objeto <code>vm.Script</code> que representa el código compilado. Este guión posteriormente se puede ejecutar muchas veces utilizando los métodos de más abajo. El guión devuelto no está vinculado a ningún objeto global. Se vincula antes de cada ejecución, sólo para esa ocasión. <abbr title="filename"><code>nombreArchivo</code></abbr> es opcional, sólo se usa en el seguimiento de la pila.</p>
+
+<p>En caso de error de sintaxis en el <abbr title="code"><code>codigo</code></abbr>, <code>createScript</code> imprime el error de sintaxis en <code>'stderr'</code> y produce una excepción.</p>
+
+<h2>Clase: <code>Script</code></h2>
+
+<p>Una clase para ejecutar programas.  Devuelta por <code>vm.createScript</code>.</p>
+
+<h3><code>script.runInThisContext()</code></h3>
+
+<p>Similar a <code>vm.runInThisContext</code> pero un método de un objeto <code>Script</code> precompilado.
+<code>script.runInThisContext</code> ejecuta el código del <code>programa</code> y devuelve el resultado.
+La ejecución de código no tiene acceso al ámbito local, pero tiene acceso al objeto <code>global</code> (v8: en el contexto actual).</p>
+
+<p>Ejemplo usando <code>script.runInThisContext</code> para compilar el código una vez y ejecutarlo varias veces:</p>
+
+<pre><code>var vm = require('vm');
+
+variableGlobal = 0;
+
+var programa = vm.createScript('variableGlobal += 1', 'miarchivo.vm');
+
+for (var i = 0; i &lt; 1000; i += 1) {
+  programa.runInThisContext();
+}
+
+console.log(variableGlobal);
+
+// 1000
+</code></pre>
+
+<h3><code>script.runInNewContext([</code><abbr title="sandbox"><code>recintoDeSeguridad</code></abbr><code>])</code></h3>
+
+<p>Similar a <code>vm.runInNewContext</code>, un método de un objeto <code>Script</code> precompilado.
+<code>script.runInNewContext</code> ejecuta el código del <code>programa</code> con el <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> como objeto global y devuelve el resultado.
+La ejecución del código no tiene acceso al ámbito local. <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr> es opcional.</p>
+
+<p>Ejemplo: Compila el código que incrementa una variable global y configura una, luego, ejecuta el código varias veces.
+Estas variables globales se encuentran en el <abbr title="sandbox"><code>recintoDeSeguridad</code></abbr>.</p>
+
+<pre><code>var util = require('util'),
+    vm = require('vm'),
+    recintoDeSeguridad = {
+      animal: 'gato',
+      cantidad: 2
+    };
+
+var programa = vm.createScript(
+    'cantidad += 1; nombre = «kitty»',
+    'miarchivo.vm');
+
+for (var i = 0; i &lt; 10; i += 1) {
+  programa.runInNewContext(recintoDeSeguridad);
+}
+
+console.log(util.inspect(recintoDeSeguridad));
+
+// { animal: 'gato', cantidad: 12, nombre: 'kitty' }
+</code></pre>
+
+<p>Ten en cuenta que la ejecución de código en el que no confías es un asunto complicado que requiere mucho cuidado.  Para evitar fugas accidentales de variables globales, <code>script.runInNewContext</code> es muy útil, pero la ejecución de manera segura de código que no es de confianza requiere un proceso independiente.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>Módulos</h1>
+
+<pre><code>Estabilidad: 5 — Cerrada
+</code></pre>
+
+<!-- name=module -->
+
+<p>Node tiene un sencillo sistema para cargar módulos.  En Node, archivos y módulos están en correspondencia uno a uno.  Por ejemplo, <code>loquesea.js</code> carga el módulo <code>circulo.js</code> en el mismo directorio.</p>
+
+<p>El contenido de <code>loquesea.js</code> es:</p>
+
+<pre><code>var circulo = require('./circulo.js');
+console.log('El área de un círculo de radio 4 es '
+            + circulo.area(4));
+</code></pre>
+
+<p>El contenido de <code>circulo.js</code> es:</p>
+
+<pre><code>var PI = Math.PI;
+
+exports.area = function (radio) {
+  return PI * radio * radio;
+};
+
+exports.circunferencia = function (radio) {
+  return 2 * PI * radio;
+};
+</code></pre>
+
+<p>El módulo <code>circulo.js</code> ha exportado las funciones <code>area()</code> y <code>circunferencia()</code>.  Para exportar un objeto, añade el objeto especial <code>exports</code>.</p>
+
+<p>Las variables locales para el módulo serán privadas. En este ejemplo la variable <code>PI</code> es privada a <code>circulo.js</code>.</p>
+
+<p>El sistema de módulos está implementado en el módulo <code>require('module')</code>.</p>
+
+<h2>Dependencias cíclicas</h2>
+
+<!-- type=misc -->
+
+<p>Cuando hay llamadas cíclicas a <code>require()</code>, no se podrá ejecutar un módulo cuando es devuelto.</p>
+
+<p>Considera esta situación:</p>
+
+<p><code>a.js</code>:</p>
+
+<pre><code>console.log('iniciando a');
+exports.hecho = false;
+var b = require('./b.js');
+console.log('en a, b.hecho = %j', b.hecho);
+exports.hecho = true;
+console.log('a hecho');
+</code></pre>
+
+<p><code>b.js</code>:</p>
+
+<pre><code>console.log('iniciando b');
+exports.hecho = false;
+var a = require('./a.js');
+console.log('en b, a.hecho = %j', a.hecho);
+exports.hecho = true;
+console.log('b hecho');
+</code></pre>
+
+<p><code>principal.js</code>:</p>
+
+<pre><code>console.log('iniciando principal');
+var a = require('./a.js');
+var b = require('./b.js');
+console.log('en principal, a.hecho = %j, b.hecho = %j',
+            a.hecho,
+            b.hecho);
+</code></pre>
+
+<p>Cuando <code>principal.js</code> carga <code>a.js</code>, y <code>a.js</code> a su vez carga a <code>b.js</code>.  En ese momento, <code>b.js</code> intenta cargar <code>a.js</code>.  A fin de evitar un bucle infinito, se devuelve una <strong>copia sin terminar</strong> de los objetos exportados de <code>a.js</code> al módulo <code>b.js</code>.  Entonces <code>b.js</code>, termina de cargar y su objeto <code>exports</code> se proporciona al módulo <code>a.js</code>.</p>
+
+<p>Por el momento <code>principal.js</code> ha cargado los dos módulos, ambos terminados.
+La salida de este programa tiene este aspecto:</p>
+
+<pre><code>$ node principal.js
+iniciando principal
+iniciando a
+iniciando b
+en b, a.hecho = false
+b hecho
+en a, b.hecho = true
+a hecho
+en principal, a.hecho = true, b.hecho = true
+</code></pre>
+
+<p>Si tienes dependencias cíclicas de módulos en el programa, asegúrate de planificar consecuentemente.</p>
+
+<h2>Módulos del núcleo</h2>
+
+<!-- type=misc -->
+
+<p>Node dispone de varios módulos compilados en el binario.  Estos módulos se describen con más detalle en otra parte de esta documentación.</p>
+
+<p>Los módulos principales se definen en el directorio <code>lib/</code> del código fuente de Node.</p>
+
+<p>Los módulos del núcleo siempre se cargan preferentemente si su identificador se pasa a <code>require()</code>.  Por ejemplo, <code>require('http')</code> siempre devolverá el módulo HTTP integrado, incluso si existe un archivo con ese nombre.</p>
+
+<h2>Archivos de módulo</h2>
+
+<!-- type=misc -->
+
+<p>Si el nombre de archivo exacto no se encuentra, entonces Node intentará cargar el nombre del archivo añadiendo la extensión requerida <code>.js</code>, <code>.json</code> o finalmente <code>.node</code>.</p>
+
+<p>Los archivos <code>.js</code> se interpretan como archivos de texto JavaScript, y los archivos <code>.json</code> se analizan como archivos de texto JSON. Los archivos <code>.node</code> se interpretan como módulos agregados compilados y cargados con <code>dlopen</code>.</p>
+
+<p>Un módulo con el prefijo <code>'/'</code> es una ruta absoluta al archivo.  Por ejemplo, <code>require('/home/marco/loquesea.js')</code> cargará el archivo en <code>/home/marco/loquesea.js</code>.</p>
+
+<p>Un módulo prefijado con <code>'./'</code> es relativo al archivo que llama a <code>require()</code>.
+Es decir, <code>circulo.js</code> debe estar en el mismo directorio que <code>loquesea.js</code> para que <code>require('./circulo')</code> lo encuentre.</p>
+
+<p>Sin una '/' o './' inicial para indicar un archivo, el módulo puede ser un «módulo del núcleo» o se carga desde un directorio <code>node_modules</code>.</p>
+
+<p>Si la ruta dada no existe, <code>require()</code> lanzará un <code>Error</code> con su propiedad <abbr title="code"><code>codigo</code></abbr> ajustada a <code>'MODULE_NOT_FOUND'</code>.</p>
+
+<h2>Cargando desde directorios <code>node_modules</code></h2>
+
+<!-- type=misc -->
+
+<p>Si el identificador de módulo pasado a <code>require()</code> no es un módulo nativo y no comienza con <code>'/'</code>,<code>'../'</code>, o <code>'./'</code>, entonces Node comienza a buscar en el directorio padre del módulo actual añadiéndole <code>/node_modules</code>, e intenta cargar el módulo desde esa ubicación.</p>
+
+<p>Si no se encuentra allí, entonces se mueve al directorio padre y así sucesivamente, hasta que alcanza la raíz del árbol.</p>
+
+<p>Por ejemplo, si el archivo en <code>'/home/ry/proyectos/loquesea.js'</code> es llamado con <code>require('bar.js')</code>, entonces, Node buscará en los siguientes lugares, en este orden:</p>
+
+<ul>
+<li><code>/home/ry/proyectos/node_modules/bar.js</code></li>
+<li><code>/home/ry/node_modules/bar.js</code></li>
+<li><code>/home/node_modules/bar.js</code></li>
+<li><code>/node_modules/bar.js</code></li>
+</ul>
+
+<p>Esto permite que los programas localicen sus dependencias, sin producir colisiones.</p>
+
+<h2>Directorios como módulos</h2>
+
+<!-- type=misc -->
+
+<p>Es conveniente organizar programas y bibliotecas en directorios autónomos, y luego proporcionar un único punto de entrada a la biblioteca.
+Hay tres formas en las que puedes pasar un directorio como argumento a <code>require()</code>.</p>
+
+<p>La primera es creando un archivo <code>package.json</code> en el directorio raíz, en el cual especificas un módulo <code>main</code>.  Un archivo <code>package.json</code> de ejemplo podría tener el siguiente aspecto:</p>
+
+<pre><code>{ 'name': 'alguna-biblioteca',
+  'main': './lib/alguna-biblioteca.js' }
+</code></pre>
+
+<p>Si tuvieras un directorio en <code>./alguna-biblioteca</code>, y luego llamas a <code>require ('./alguna-biblioteca')</code> intenta cargar <code>./alguna-biblioteca/lib/alguna-biblioteca.js</code>.</p>
+
+<p>Este es el alcance de la conciencia de Node sobre los archivos <code>package.json</code>.</p>
+
+<p>Si no encuentra ningún archivo <code>package.json</code> en el directorio, entonces, Node intentará cargar un archivo <code>index.js</code> o <code>index.node</code> desde ese directorio.  Por ejemplo, si no hubiera un archivo <code>package.json</code> en el ejemplo anterior, entonces <code>require('./alguna-biblioteca')</code> intentará cargar:</p>
+
+<ul>
+<li><code>./alguna-biblioteca/index.js</code></li>
+<li><code>./alguna-biblioteca/index.node</code></li>
+</ul>
+
+<h2>Caché</h2>
+
+<!-- type=misc -->
+
+<p>Los módulos se almacenan en caché después de cargarlos por primera vez.  Esto significa (entre otras cosas) que todas las llamadas a <code>require('</code><abbr title="foo"><code>loquesea</code></abbr><code>')</code> recibirán exactamente el mismo objeto devuelto la primera vez, si se resuelve en el mismo archivo.</p>
+
+<p>Varias llamadas a <code>require('</code><abbr title="foo"><code>loquesea</code></abbr><code>')</code> no pueden hacer que el código del módulo se ejecute varias veces.  Esta es una característica importante.  Con ella, se puede devolver lo que «hayan hecho parcialmente» los objetos, permitiendo que se carguen las dependencias transitivas, incluso cuando ello pudiese causar dependencias cíclicas.</p>
+
+<p>Si deseas tener un módulo que ejecute código varias veces, entonces, exporta una función y llama a esa función.</p>
+
+<h3>Salvedades sobre el almacenamiento de módulos en caché</h3>
+
+<!-- type=misc -->
+
+<p>Los módulos se almacenan en caché en función de su nombre resuelto.  Debido a que los módulos pueden resolver a diferente nombre de archivo basándose en la ubicación de la llamada al módulo (cargando de directorios <code>node_modules</code>), no se <em>garantiza</em>
+que <code>require('</code><abbr title="foo"><code>loquesea</code></abbr><code>')</code> siempre devuelva el mismo objeto exacto, si este se resolviera en diferentes archivos.</p>
+
+<h2>El objeto <code>module</code></h2>
+
+<!-- type=var -->
+<!-- name=module -->
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>En cada módulo, la variable libre <code>module</code> es una referencia al objeto que representa el módulo actual.  En particular, <code>module.exports</code> es el mismo objeto que <code>exports</code>.
+En realidad, <code>module</code> no es global sino más bien local a cada módulo.</p>
+
+<h3><code>module.exports</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>El objeto <code>exports</code> es creado por el sistema de módulos. A veces esto no es aceptable, muchos quisieran que su módulo fuera una instancia de alguna clase. Para ello asigna el objeto que deseas exportar a <code>module.exports</code>. Por ejemplo, supongamos que estás haciendo un módulo llamado <code>a-e.js</code></p>
+
+<pre><code>var emisorDeEvento = require('events').EventEmitter;
+
+module.exports = new emisorDeEvento();
+
+// hace algún trabajo y después de algún tiempo
+// emite el evento 'listo' desde el propio módulo.
+setTimeout(function () {
+  module.exports.emit('listo');
+}, 1000);
+</code></pre>
+
+<p>Entonces en otro archivo podemos hacer lo siguiente:</p>
+
+<pre><code>var a = require('./a-e');
+a.on('listo', function () {
+  console.log('el módulo está listo');
+});
+</code></pre>
+
+<p>Ten en cuenta que la asignación a <code>module.exports</code> se debe hacer inmediatamente. No se puede hacer en cualquier retrollamada.  Esto no funciona:</p>
+
+<p>x.js:</p>
+
+<pre><code>setTimeout(function () {
+  module.exports = { a: 'hola' };
+}, 0);
+</code></pre>
+
+<p>y.js:</p>
+
+<pre><code>var x = require('./x');
+console.log(x.a);
+</code></pre>
+
+<h3><code>module.require(id)</code></h3>
+
+<ul>
+<li><code>id</code> {<abbr title="String">Cadena</abbr>}</li>
+<li>Devuelve: {<abbr title="Object">Objeto</abbr>} <code>exports</code> desde el módulo resuelto</li>
+</ul>
+
+<p>El método <code>module.require</code> proporciona una forma de cargar un módulo, como si <code>require()</code> se llamara desde el módulo original.</p>
+
+<p>Ten en cuenta que para hacer esto, debes conseguir una referencia al objeto <code>module</code>.  Debido a que <code>require()</code> devuelve el objeto <code>exports</code> y <code>module</code> típicamente <em>sólo</em> está disponible en el código de un módulo específico, este se debe exportar explícitamente a fin de poder usarlo.</p>
+
+<h3><code>module.id</code></h3>
+
+<ul>
+<li>{<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>El identificador del módulo.  Normalmente, este es el nombre del archivo completamente resuelto.</p>
+
+<h3><code>module.filename</code></h3>
+
+<ul>
+<li>{<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>El nombre del archivo completamente resuelto para el módulo.</p>
+
+<h3><code>module.loaded</code></h3>
+
+<ul>
+<li>{<abbr title="Boolean">Booleano</abbr>}</li>
+</ul>
+
+<p>Cuando o no el módulo está completamente cargado, o está en el proceso de carga.</p>
+
+<h3><code>module.parent</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr> «module»}</li>
+</ul>
+
+<p>El módulo que lo requiere.</p>
+
+<h3><code>module.children</code></h3>
+
+<ul>
+<li>{<abbr title="Array">Arreglo</abbr>}</li>
+</ul>
+
+<p>Los objetos <code>module</code> requeridos por este.</p>
+
+<h2>Todo junto...</h2>
+
+<!-- type=misc -->
+
+<p>Para obtener el nombre exacto que se cargará cuando se llame a <code>require()</code>, usa la función <code>require.resolve()</code>.</p>
+
+<p>Poniendo todo lo anterior junto, aquí está el algoritmo de alto nivel en pseudocódigo de lo que hace <code>require.resolve</code>:</p>
+
+<pre><code>require(X) desde el módulo en la ruta Y
+1. Si X es un módulo del núcleo,
+   a. devuelve el módulo del núcleo
+   b. SE DETIENE
+2. Si X comienza con './' o '/' o '../'
+   a. CARGA_COMO_ARCHIVO(Y + X)
+   b. CARGA_COMO_DIRECTORIO(Y + X)
+3. CARGA_MODULOS_NODE(X, nombredirectorio(Y))
+4. LANZA «no encontrado»
+
+CARGA_COMO_ARCHIVO(X)
+1. Si X es un archivo, carga X como texto JavaScript.  
+   SE DETIENE
+2. Si X.js es un archivo, carga X.js como texto JavaScript.  
+   SE DETIENE
+3. Si X.node es un archivo, carga X.node como complemento binario.  
+   SE DETIENE
+
+CARGA_COMO_DIRECTORIO(X)
+1. Si hay un archivo X/package.json,
+   a. Analiza X/package.json, y busca el campo «main».
+   b. permite M = X + (campo main en archivo json)
+   c. CARGA_COMO_ARCHIVO(M)
+2. Si existe el archivo X/index.js,
+   carga X/index.js como texto JavaScript.  
+   SE DETIENE
+3. Si existe el archivo X/index.node,
+   carga X/index.node como complemento binario.  
+   SE DETIENE
+
+CARGA_MODULOS_NODE(X, INICIO)
+1. permite DIRS=RUTAS_A_MODULOS_NODE(INICIO)
+2. Por CADA DIR en DIRS:
+   a. CARGA_COMO_ARCHIVO(DIR/X)
+   b. CARGA_COMO_DIRECTORIO(DIR/X)
+
+RUTAS_MODULOS_NODE(INICIO)
+1. permite PARTES = ruta split(INICIO)
+2. permite RAÍZ = indice de la primer instancia de
+   «node_modules» en PARTES, o 0
+3. permite I = cantidad de PARTES — 1
+4. permite DIRS = []
+5. mientras I &gt; RAÍZ,
+   a. si PARTES[I] = «node_modules» CONTINUA
+   c. DIR = ruta join(PARTES[0 .. I] + «node_modules»)
+   b. DIRS = DIRS + DIR
+   c. permite I = I - 1
+6. return DIRS
+</code></pre>
+
+<h2>Cargando desde directorios globales</h2>
+
+<!-- type=misc -->
+
+<p>Si la variable de entorno <code>NODE_PATH</code> se configura como una lista de rutas absolutas delimitada por dos puntos, entonces, Node buscará las rutas para los módulos, si no se encuentran en otros lugares.  (Nota: En Windows, <code>NODE_PATH</code> está delimitada por punto y coma en lugar de dos puntos).</p>
+
+<p>Además, Node buscará en los siguientes lugares:</p>
+
+<ul>
+<li>1: <code>$HOME/.node_modules</code></li>
+<li>2: <code>$HOME/.node_libraries</code></li>
+<li>3: <code>$PREFIX/lib/node</code></li>
+</ul>
+
+<p>Donde <code>$HOME</code> es el directorio hogar del usuario, y <code>$PREFIX</code> es el <code>node_prefix</code> configurado en Node.</p>
+
+<p>Esto principalmente es por razones históricas.  Te recomendamos enfáticamente que coloques tus dependencias a nivel local en directorios <code>node_modules</code>.  Se cargarán más rápido y son más fiables.</p>
+
+<h2>Accediendo al módulo <code>main</code></h2>
+
+<!-- type=misc -->
+
+<p>Cuando un archivo se ejecuta directamente desde Node, <code>require.main</code> está configurado a <code>module</code>. Significa que puedes determinar si un archivo se ha ejecutado directamente probando:</p>
+
+<pre><code>require.main === module
+</code></pre>
+
+<p>Para un archivo <code>loquesea.js</code>, esta será <code>true</code> si se ejecuta a través de <code>node loquesea.js</code>, sino <code>false</code> si se llamó con <code>require('./</code><abbr title="foo"><code>loquesea</code></abbr><code>')</code>.</p>
+
+<p>Debido a que <code>module</code> proporciona una propiedad <code>filename</code> (normalmente equivalente a <code>__filename</code>), el punto de entrada de la aplicación actual se puede obtener comprobando <code>require.main.filename</code>.</p>
+
+<h2>Adendas: Consejos para el gestor de paquetes</h2>
+
+<!-- type=misc -->
+
+<p>La semántica de la función <code>require()</code> de Node se diseñó para ser lo suficientemente general como para apoyar una coherente variedad de estructuras de directorios. Se espera que a los programas gestores de paquetes como <code>dpkg</code>, <code>rpm</code> y <code>npm</code> les resulte posible construir paquetes nativos desde los módulos de Node sin modificaciones.</p>
+
+<p>A continuación mostramos una estructura de directorios sugerida que podría funcionar:</p>
+
+<p>Digamos que queremos guardar el contenido de una versión específica de un paquete en el directorio <code>/usr/lib/node/&lt;cierto-paquete&gt;/&lt;alguna-versión&gt;</code>.</p>
+
+<p>Los paquetes pueden depender unos de otros. Con el fin de instalar el paquete <abbr title="foo"><code>loquesea</code></abbr>, posiblemente tengas que instalar una versión específica del paquete <code>bar</code>.  El paquete <code>bar</code> sí puede tener dependencias, y en algunos casos, estas dependencias, incluso pueden chocar o formar dependencias cíclicas.</p>
+
+<p>Debido a que Node busca el <code>realpath</code> de los módulos que carga (es decir, resuelve los enlaces simbólicos), y luego mira sus dependencias en los directorios <code>node_modules</code> como se describió anteriormente, es muy sencillo resolver esta situación con la siguiente arquitectura:</p>
+
+<ul>
+<li><code>/usr/lib/node/loquesea/4.3.2/</code> — Contiene el paquete <abbr title="foo"><code>loquesea</code></abbr>, versión 1.2.3.</li>
+<li><code>/usr/lib/node/bar/4.3.2/</code> — Contiene el paquete <code>bar</code> del que depende <abbr title="foo"><code>loquesea</code></abbr>.</li>
+<li><code>/usr/lib/node/</code><abbr title="foo"><code>loquesea</code></abbr><code>/1.2.3/node_modules/bar</code> — Enlace simbólico a <code>/usr/lib/node/bar/4.3.2/</code>.</li>
+<li><code>/usr/lib/node/bar/4.3.2/node_modules/*</code> — Enlaces simbólicos a los paquetes de los que depende <code>bar</code>.</li>
+</ul>
+
+<p>De esta manera, incluso si se encuentra una dependencia cíclica, o si hay problemas de dependencias, cada módulo será capaz de obtener una versión de su dependencia que se puede utilizar.</p>
+
+<p>Cuando el código en el paquete <abbr title="foo"><code>loquesea</code></abbr> invoca a <code>require('bar')</code>, tendrá la versión enlazada simbólicamente a <code>usr/lib/node/</code><abbr title="foo"><code>loquesea</code></abbr><code>/1.2.3/node_modules/bar</code>.
+Entonces, cuando el código en el paquete <code>bar</code> llama a <code>require('quux')</code>, obtendrá la versión enlazada en <code>/usr/lib/node/bar/4.3.2/node_modules/quux</code>.</p>
+
+<p>Además, para optimizar mejor el proceso de búsqueda de módulos, en lugar de poner los paquetes directamente en <code>/usr/lib/node</code>, los podrías poner en <code>/usr/lib/node_modules/&lt;nombre&gt;/&lt;versión&gt;</code>.  Entonces Node no se molestará en buscar dependencias faltantes en <code>/usr/node_modules</code> o <code>/node_modules</code>.</p>
+
+<p>A fin de poner los módulos a disposición del <em>REPL</em> de Node, podría ser útil añadir también el directorio <code>/usr/lib/node_modules</code> a la variable de entorno <code>$NODE_PATH</code>.  Dado que la búsqueda de los módulos usa todos los directorios <code>node_modules</code> relativos, y se basa en la ruta real de los archivos haciendo llamadas a <code>require()</code>, los paquetes pueden estar en cualquier lugar.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

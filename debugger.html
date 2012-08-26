@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El <abbr title="debugger">depurador</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<!-- type=misc -->
+
+<p>V8 viene con un depurador exhaustivo que es accesible fuera del proceso a través de un sencillo <a href="http://code.google.com/p/v8/wiki/DebuggerProtocol">protocolo TCP</a>.
+Node tiene un cliente integrado para este depurador. Para usarlo, inicia Node con el argumento <code>debug</code>; aparecerá una invitación:</p>
+
+<pre><code>% node debug miprograma.js
+&lt; debugger listening on port 5858
+connecting... ok
+break in /home/indutny/Code/git/indutny/miprograma.js:1
+  1 x = 5;
+  2 setTimeout(function () {
+  3   debugger;
+debug&gt;
+</code></pre>
+
+<p>El cliente del depurador de Node no es compatible con la gama de ordenes completa, pero es posible el recorrido paso a paso e inspección. Poner la declaración <code>debugger;</code> en tu archivo de código fuente, te permite especificar un punto de interrupción.</p>
+
+<p>Por ejemplo, supongamos que <code>miprograma.js</code> se ve así:</p>
+
+<pre><code>// miprograma.js
+x = 5;
+setTimeout(function () {
+  debugger;
+  console.log('mundo');
+}, 1000);
+console.log('hola');
+</code></pre>
+
+<p>Entonces una vez que se ejecuta el depurador, se detendrá en la línea 4.</p>
+
+<pre><code>% node debug miprograma.js
+&lt; debugger listening on port 5858
+connecting... ok
+break in /home/indutny/Code/git/indutny/miprograma.js:1
+  1 x = 5;
+  2 setTimeout(function () {
+  3   debugger;
+debug&gt; cont
+&lt; hola
+break in /home/indutny/Code/git/indutny/miprograma.js:3
+  1 x = 5;
+  2 setTimeout(function () {
+  3   debugger;
+  4   console.log('mundo');
+  5 }, 1000);
+debug&gt; next
+break in /home/indutny/Code/git/indutny/miprograma.js:4
+  2 setTimeout(function () {
+  3   debugger;
+  4   console.log('mundo');
+  5 }, 1000);
+  6 console.log('hola');
+debug&gt; repl
+Pulsa Ctrl + C para dejar el _repl_ de depuración
+&gt; x
+5
+&gt; 2+2
+4
+debug&gt; next
+&lt; mundo
+break in /home/indutny/Code/git/indutny/miprograma.js:5
+  3   debugger;
+  4   console.log('mundo');
+  5 }, 1000);
+  6 console.log('hola');
+  7
+debug&gt; quit
+%
+</code></pre>
+
+<p>La orden <code>repl</code> te permite evaluar el código de forma remota. La orden <code>next</code> avanza a la siguiente línea. Hay algunas ordenes disponibles y otras más por venir. Escribe <code>help</code> para ver las demás.</p>
+
+<h2>Observadores</h2>
+
+<p>Puedes ver los valores de expresiones y variables, mientras depuras tu código.
+En cada punto de interrupción, cada expresión de la lista de observadores será evaluada en el contexto actual y mostrada justo antes del punto de interrupción de la lista del código fuente.</p>
+
+<p>Para empezar a observar una expresión, escribe <code>watch('mi_expresion')</code>. <code>watchers</code> imprime los observadores activos. Para eliminar un observador, escribe <code>unwatch('mi_expresion')</code>.</p>
+
+<h2>Referencia de ordenes</h2>
+
+<h3>Paso a paso</h3>
+
+<ul>
+<li><code>cont</code>, <code>c</code> — Continúa la ejecución</li>
+<li><code>next</code>, <code>n</code> — Siguiente paso</li>
+<li><code>step</code>, <code>s</code> — Va al paso</li>
+<li><code>out</code>, <code>o</code> — Sale del paso</li>
+<li><code>pause</code> — Interrumpe la ejecución del código (como el botón de pausa en las herramientas de desarrollo)</li>
+</ul>
+
+<h3>Puntos de interrupción</h3>
+
+<ul>
+<li><code>setBreakpoint()</code>, <code>sb()</code> — Establece el punto de interrupción en la línea actual</li>
+<li><code>setBreakpoint(linea)</code>, <code>sb(linea)</code> — Establece el punto de interrupción en la línea específica</li>
+<li><code>setBreakpoint('fn()')</code>, <code>sb(...)</code> — Establece el punto de interrupción en la primer declaración en el cuerpo de funciones</li>
+<li><code>setBreakpoint('archivo.js', 1)</code>, <code>sb(...)</code> — Establece el punto de interrupción en la primera línea de «archivo.js»</li>
+<li><code>clearBreakpoint</code>, <code>cb(...)</code> — Borra el punto de interrupción</li>
+</ul>
+
+<h3>Información</h3>
+
+<ul>
+<li><code>backtrace</code>, <code>bt</code> — Imprime el trazo inverso del marco de ejecución actual</li>
+<li><code>list(5)</code> — Lista el código fuente de los guiones en el contexto de la línea 5 (5 líneas antes y después)</li>
+<li><code>watch(expr)</code> — Agrega una expresión a la lista de observación</li>
+<li><code>unwatch(expr)</code> — Elimina la expresión de la lista de observación</li>
+<li><code>watchers</code> — Enumera todos los observadores y sus valores automáticamente (que aparecen en cada punto de interrupción)</li>
+<li><code>repl</code> — Abre el depurador en el <em>repl</em> para evaluación en el contexto de depuración del programa</li>
+</ul>
+
+<h3>Controlando la ejecución</h3>
+
+<ul>
+<li><code>run</code> — Ejecuta el programa (se ejecuta automáticamente al arrancar el depurador)</li>
+<li><code>restart</code> — Reinicia el programa</li>
+<li><code>kill</code> — Termina el programa</li>
+</ul>
+
+<h3>Varios</h3>
+
+<ul>
+<li><code>scripts</code> — Enumera todos los archivos cargados</li>
+<li><code>version</code> — Muestra la versión de v8</li>
+</ul>
+
+<h2>Uso avanzado</h2>
+
+<p>El depurador V8 se puede habilitar y acceder tanto al iniciar Node con la opción <code>--debugger</code> de la línea de ordenes o apuntando a un proceso existente de Node con <code>SIGUSR1</code>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

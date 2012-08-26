@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Assertions">Aserciones</abbr></h1>
+
+<pre><code>Estabilidad: 5 — Cerrada
+</code></pre>
+
+<p>Este módulo se usa para escribir pruebas unitarias para tus aplicaciones, puedes acceder a él con:</p>
+
+<pre><code>var acierta = require('assert');
+</code></pre>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.fail(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>,</code> <abbr title="message"><code>mensaje</code></abbr><code>,</code> <abbr title="operator"><code>operador</code></abbr><code>)</code></h2>
+
+<p>Lanza una excepción que exhibe los valores para <abbr title="actual"><code>real</code></abbr> y <abbr title="expected"><code>esperado</code></abbr> separados por el <abbr title="operator"><code>operador</code></abbr> proporcionado.</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>(</code><abbr title="value"><code>valor</code></abbr><code>,</code> <abbr title="message"><code>mensaje</code></abbr><code>)</code>, <abbr title="assert"><code>acierta</code></abbr><code>.ok(</code><abbr title="value"><code>valor</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba si el <abbr title="value"><code>valor</code></abbr> es <code>true</code>, esta es equivalente a <abbr title="assert"><code>acierta</code></abbr><code>.equal(true, !!</code><abbr title="value"><code>valor</code></abbr><code>,</code> <abbr title="message"><code>mensaje</code></abbr><code>);</code></p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.equal(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba superficial, de igualdad coactiva con el operador de comparación igual ( <code>==</code> ).</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.notEqual(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba superficial, de desigualdad coactiva con el operador de comparación de desigualdad ( <code>!=</code> ).</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.deepEqual(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba profunda de igualdad.</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.notDeepEqual(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba profunda de cualquier desigualdad.</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.strictEqual(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba la igualdad estricta, como lo determina el operador de igualdad estricta ( <code>===</code> )</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.notStrictEqual(</code><abbr title="actual"><code>real</code></abbr><code>,</code> <abbr title="expected"><code>esperado</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Prueba la desigualdad estricta, como lo determina el operador de desigualdad estricta ( <code>!==</code> )</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.throws(</code><abbr title="block"><code>bloque</code></abbr><code>, [error], [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Espera <abbr title="block"><code>bloque</code></abbr> para lanzar un <code>error</code>. El <code>error</code> puede ser un constructor, una expresión regular o una función de validación.</p>
+
+<p>Valida <code>instanceof</code> usando el constructor:</p>
+
+<pre><code>assert.throws(
+  function () {
+    throw new Error('Valor incorrecto');
+  },
+  Error
+);
+</code></pre>
+
+<p>Valida el mensaje de error usando la expresión regular, <code>RegExp</code>:</p>
+
+<pre><code>assert.throws(
+  function () {
+    throw new Error('Valor incorrecto');
+  },
+  /valor/
+);
+</code></pre>
+
+<p>Error de validación personalizado:</p>
+
+<pre><code>assert.throws(
+  function () {
+    throw new Error('Valor incorrecto');
+  },
+  function (error) {
+    if ( (error instanceof Error) &amp;&amp; /valor/.test(error) ) {
+      return true;
+    }
+  },
+  'error imprevisto'
+);
+</code></pre>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.doesNotThrow(</code><abbr title="block"><code>bloque</code></abbr><code>, [error], [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Espera <abbr title="block"><code>bloque</code></abbr> para no lanzar un <code>error</code>, ve <abbr title="assert"><code>acierta</code></abbr><code>.throws</code> para detalles.</p>
+
+<h2><abbr title="assert"><code>acierta</code></abbr><code>.ifError(</code><abbr title="value"><code>valor</code></abbr><code>)</code></h2>
+
+<p>Prueba si <abbr title="value"><code>valor</code></abbr> no es un valor <code>false</code>, lanzado si <abbr title="value"><code>valor</code></abbr> es <code>true</code>. Útil cuando pruebas el primer argumento, <code>error</code> en retrollamadas.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

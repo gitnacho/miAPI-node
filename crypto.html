@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Crypto">Criptografía</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Para acceder a este módulo usa:</p>
+
+<pre><code>var crypto = require('crypto');
+</code></pre>
+
+<p>El módulo <code>crypto</code> requiere que OpenSSL esté instalado en el ambiente subyacente.
+Este ofrece una forma de encapsular credenciales seguras para utilizarlas como parte de una conexión de red segura, HTTPS o http.</p>
+
+<p>También ofrece un conjunto de contenedores OpenSSL para <code>hash</code>, <code>hmac</code>, métodos de firma, verificación, cifrado y descifrado.</p>
+
+<h2><code>crypto.createCredentials(</code><abbr title="details"><code>detalles</code></abbr><code>)</code></h2>
+
+<p>Crea un objeto <abbr title="credentials"><code>credenciales</code></abbr>, con los <abbr title="details"><code>detalles</code></abbr> opcionales como un diccionario con las claves:</p>
+
+<ul>
+<li><code>pfx</code> : Una cadena o búfer manteniendo la clave privada PFX o PKCS12 codificada, certificado y certificados <abbr title="Autoridad certificadora">CA</abbr></li>
+<li><code>key</code> : Una cadena que contiene la clave privada PEM codificada</li>
+<li><code>passphrase</code> : Una cadena de contraseña para la clave privada o pfx</li>
+<li><code>cert</code> : Una cadena que contiene el certificado PEM codificado</li>
+<li><code>ca</code> : O bien una cadena o una lista de cadenas PEM codificadas con certificados de confianza <abbr title="Autoridad certificadora">CA</abbr>.</li>
+<li><code>crl</code> : O bien una cadena o una lista de cadenas PEM codificadas con CRL (Lista de revocación de certificados)</li>
+<li><code>ciphers</code>: Una cadena describiendo las claves a utilizar o excluir. Consulta <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT</a> para detalles del formato.</li>
+</ul>
+
+<p>Si no suministras los detalles <code>'ca'</code>, entonces node.js utilizará el valor predeterminado desde la lista pública de las entidades emisoras de certificados de confianza ubicada en <a href="http://mxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/builtins/certdata.txt">http://mxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/builtins/certdata.txt</a>.</p>
+
+<h2><code>crypto.createHash(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>hash</code>, un hachís criptográfico con el algoritmo dado que puedes utilizar para generar sumas de comprobación.</p>
+
+<p><abbr title="algorithm"><code>algoritmo</code></abbr> depende de los algoritmos disponibles compatibles con la versión de OpenSSL en ese ambiente. Ejemplos de ello son <code>'sha1'</code>, <code>'md5'</code>, <code>'sha256'</code>, <code>'sha512'</code>, etc.
+En las últimas versiones, <code>openssl list-message-digest-algorithms</code> mostrará los algoritmos de suma de comprobación disponibles.</p>
+
+<p>Ejemplo: este programa toma la suma de comprobación SHA1 de un archivo</p>
+
+<pre><code>var nombreArchivo = process.argv[2];
+var crypto = require('crypto');
+var sistemaDeArchivos = require('fs');
+
+var sumaSha = crypto.createHash('sha1');
+
+var flujo = sistemaDeArchivos.ReadStream(nombreArchivo);
+flujo.on('data', function (datos) {
+  sumaSha.update(datos);
+});
+
+flujo.on('end', function () {
+  var sumaComprobacion = sumaSha.digest('hex');
+  console.log(datos + '  ' + nombreArchivo);
+});
+</code></pre>
+
+<h2>Clase: <code>Hash</code></h2>
+
+<p>La clase para la creación de sumas de comprobación de datos <code>hash</code>.</p>
+
+<p>Devuelta por <code>crypto.createHash</code>.</p>
+
+<h3><code>hash.update(</code><abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="input_encoding"><code>codificacionEntrante</code></abbr><code>])</code></h3>
+
+<p>Actualiza el contenido de <code>hash</code> con los <abbr title="data"><code>datos</code></abbr> suministrados, la codificación de los cuales se da en <abbr title="input_encoding"><code>codificacionEntrante</code></abbr> y puede ser <code>'utf8'</code>, <code>'binary'</code> o <code>'ascii'</code>.
+De manera predeterminada es <code>'binary'</code>.
+Este se puede llamar varias veces con los nuevos datos que está transmitiendo.</p>
+
+<h3><code>hash.digest([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Calcula la suma de comprobación de todos los datos pasados para procesarlos.
+La <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'hex'</code>, <code>'binary'</code> o <code>'base64'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Nota: El objeto <code>hash</code> no se puede utilizar después de llamar al método <code>digest()</code>.</p>
+
+<h2><code>crypto.createHmac(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>,</code> <abbr title="key"><code>clave</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>hmac</code>, un <code>hmac</code> criptográfico con el algoritmo y clave suministrados.</p>
+
+<p><abbr title="algorithm"><code>algoritmo</code></abbr> depende de los algoritmos disponibles compatibles con OpenSSL — ve <code>createHash</code> arriba.
+<abbr title="key"><code>clave</code></abbr> es la clave <code>hmac</code> a usar.</p>
+
+<h2>Clase: <code>Hmac</code></h2>
+
+<p>Clase para crear el contenido criptográfico <code>hmac</code>.</p>
+
+<p>Devuelta por <code>crypto.createHmac</code>.</p>
+
+<h3><code>hmac.update(</code><abbr title="data"><code>datos</code></abbr><code>)</code></h3>
+
+<p>Actualiza el contenido <code>hmac</code> con los <abbr title="data"><code>datos</code></abbr> suministrados.
+Este se puede llamar varias veces con los nuevos datos que está transmitiendo.</p>
+
+<h3><code>hmac.digest([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Calcula la suma de comprobación de todos los datos pasados al <code>hmac</code>.
+La <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'hex'</code>, <code>'binary'</code> o <code>'base64'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Nota: El objeto <code>hmac</code> no se puede utilizar después de llamar al método <code>digest()</code>.</p>
+
+<h2><code>crypto.createCipher(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>,</code> <abbr title="password"><code>contrasenia</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>cipher</code>, con el algoritmo y <abbr title="password"><code>contrasenia</code></abbr> suministrados.</p>
+
+<p>El <abbr title="algorithm"><code>algoritmo</code></abbr> depende de OpenSSL, los ejemplos son <code>'Aes192'</code>, etc.
+En versiones recientes, <code>openssl list-cipher-algorithms</code> muestra los algoritmos de cifrado disponibles.
+<abbr title="password"><code>contrasenia</code></abbr> se utiliza para derivar la clave y el vector de inicio, que debe ser una cadena codificada como <code>'binary'</code> o un <a href="buffer.html">búfer</a>.</p>
+
+<h2><code>crypto.createCipheriv(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>,</code> <abbr title="key"><code>clave</code></abbr><code>,</code> <abbr title="iv"><code>vectorDeInicio</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>cipher</code>, con el <abbr title="algorithm"><code>algoritmo</code></abbr>, clave y <abbr title="iv"><code>vectorDeInicio</code></abbr> suministrados.</p>
+
+<p><abbr title="algorithm"><code>algoritmo</code></abbr> es el mismo que el argumento para <code>createCipher()</code>.
+<abbr title="key"><code>clave</code></abbr> es la clave sin procesar para usarla en el algoritmo.
+<abbr title="iv"><code>vectorDeInicio</code></abbr> es un <a href="http://en.wikipedia.org/wiki/Initialization_vector">vector de inicio</a>.</p>
+
+<p><abbr title="key"><code>clave</code></abbr> y <abbr title="iv"><code>vectorDeInicio</code></abbr> deben ser cadenas codificadas con <code>'binary'</code> o <a href="buffer.html">búfer</a>.</p>
+
+<h2>Clase: <code>Cipher</code></h2>
+
+<p>Clase para encriptación de datos.</p>
+
+<p>Devuelta por <code>crypto.createCipher</code> y <code>crypto.createCipheriv</code>.</p>
+
+<h3><code>cipher.update(</code><abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="input_encoding"><code>codificacionEntrante</code></abbr><code>], [</code><abbr title="output_encoding"><code>codificacionSaliente</code></abbr><code>])</code></h3>
+
+<p>Actualiza el cifrado con <abbr title="data"><code>datos</code></abbr>, la codificación de los cuales se da en <abbr title="input_encoding"><code>codificacionEntrante</code></abbr> y puede ser <code>'utf8'</code>, <code>'binary'</code> o <code>'ascii'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<p><abbr title="output_encoding"><code>codificacionSaliente</code></abbr> especifica el formato de salida de los datos cifrados, y puede ser <code>'binary'</code>, <code>'base64'</code> o <code>'hex'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Devuelve el contenido cifrado y se puede llamar varias veces con los nuevos datos que está transmitiendo.</p>
+
+<h3><code>cipher.final([</code><abbr title="output_encoding"><code>codificacionSaliente</code></abbr><code>])</code></h3>
+
+<p>Devuelve el contenido cifrado restante, con <abbr title="output_encoding"><code>codificacionSaliente</code></abbr> que puede ser uno de:
+<code>'binary'</code>, <code>'base64'</code> o <code>'hex'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Nota: el objeto <code>cipher</code> no se puede utilizar después de llamar al método <code>final()</code>.</p>
+
+<h3><code>cipher.setAutoPadding(auto_padding=true)</code></h3>
+
+<p>Puedes desactivar el relleno automático de datos para bloquear el tamaño. Si <code>auto_padding</code> es <code>false</code>, la longitud completa de los datos ingresados debe ser un múltiplo del tamaño del bloque <code>cipher</code> o <code>final</code> fallará.
+Útil para relleno atípico, por ejemplo, usando <code>0x0</code> en lugar del relleno PKCS. Debes llamar a este antes de <code>cipher.final</code>.</p>
+
+<h2><code>crypto.createDecipher(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>,</code> <abbr title="password"><code>contrasenia</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>cipher</code>, con el algoritmo y clave suministrados.
+Este es el espejo del <a href="#crypto_crypto_createcipher_algorithm_password">createCipher()</a> anterior.</p>
+
+<h2><code>crypto.createDecipheriv(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>,</code> <abbr title="key"><code>clave</code></abbr><code>,</code> <abbr title="iv"><code>vectorDeInicio</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto <code>descipher</code>, con el <abbr title="algorithm"><code>algoritmo</code></abbr>, clave y <abbr title="iv"><code>vectorDeInicio</code></abbr> suministrados.
+Este es el espejo del <a href="#crypto_crypto_createcipheriv_algorithm_key_iv">createCipheriv()</a> anterior.</p>
+
+<h2>Clase: <code>Decipher</code></h2>
+
+<p>Clase para descifrar datos.</p>
+
+<p>Devuelta por <code>crypto.createDecipher</code> y <code>crypto.createDecipheriv</code>.</p>
+
+<h3><code>decipher.update(</code><abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="input_encoding"><code>codificacionEntrante</code></abbr><code>], [</code><abbr title="output_encoding"><code>codificacionSaliente</code></abbr><code>])</code></h3>
+
+<p>Actualiza <code>decipher</code> con <abbr title="data"><code>datos</code></abbr>, el cual se codifica en <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<p><abbr title="output_encoding"><code>codificacionSaliente</code></abbr> especifica en qué formato devolver el texto descifrado: <code>'binary'</code>, <code>'ascii'</code> o <code>'utf8'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>decipher.final([</code><abbr title="output_encoding"><code>codificacionSaliente</code></abbr><code>])</code></h3>
+
+<p>Devuelve cualquier texto restante descifrado, con <abbr title="output_encoding"><code>codificacionSaliente</code></abbr> que puede ser una de: <code>'binary'</code>, <code>'ascii'</code> o <code>'utf8'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Nota: El objeto <code>decipher</code> no se puede utilizar después de llamar al método <code>final()</code>.</p>
+
+<h3><code>decipher.setAutoPadding(auto_padding=true)</code></h3>
+
+<p>Puedes desactivar el relleno automático si los datos se han cifrado sin el bloque de relleno estándar para evitar que <code>decipher.final</code> lo compruebe y elimine. Sólo puede funcionar si la longitud de los datos de entrada es un múltiplo del tamaño de los bloques cifrados. Lo debes llamar antes de transmitir los datos a <code>decipher.update</code>.</p>
+
+<h2><code>crypto.createSign(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve la firma de un objeto, con el algoritmo dado.
+En recientes versiones de OpenSSL, <code>openssl list-public-key-algorithms</code> muestra los algoritmos de firma disponibles. Ejemplo de ello son <code>'RSA-SHA256'</code>.</p>
+
+<h2>Clase: <code>Signer</code></h2>
+
+<p>Clase para generar firmas.</p>
+
+<p>Devuelta por <code>crypto.createSign</code>.</p>
+
+<h3><code>signer.update(</code><abbr title="data"><code>datos</code></abbr><code>)</code></h3>
+
+<p>Actualiza el objeto firmante con <abbr title="data"><code>datos</code></abbr>.
+Este se puede llamar varias veces con los nuevos datos que está transmitiendo.</p>
+
+<h3><code>signer.sign(</code><abbr title="private_key"><code>clavePrivada</code></abbr><code>, [</code><abbr title="output_format"><code>formatoSaliente</code></abbr><code>])</code></h3>
+
+<p>Calcula la firma de todos los datos actualizados pasados por el firmante.
+<abbr title="private_key"><code>clavePrivada</code></abbr> es una cadena que contiene la clave PEM privada codificada para firmar.</p>
+
+<p>Devuelve la firma en <abbr title="output_format"><code>formatoSaliente</code></abbr> que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Nota: El objeto <code>signer</code> no se puede utilizar después de llamar al método <code>sign()</code>.</p>
+
+<h2><code>crypto.createVerify(</code><abbr title="algorithm"><code>algoritmo</code></abbr><code>)</code></h2>
+
+<p>Crea y devuelve un objeto de verificación, con el algoritmo dado.
+Este es el espejo del objeto firmante anterior.</p>
+
+<h2>Clase: <code>Verify</code></h2>
+
+<p>Clase para verificar firmas.</p>
+
+<p>Devuelta por <code>crypto.createVerify</code>.</p>
+
+<h3><code>verifier.update(</code><abbr title="data"><code>datos</code></abbr><code>)</code></h3>
+
+<p>Actualiza el objeto verificador con datos.
+Este se puede llamar varias veces con los nuevos datos que está transmitiendo.</p>
+
+<h3><code>verifier.verify(</code><abbr title="object"><code>objeto</code></abbr><code>,</code> <abbr title="signature"><code>firma</code></abbr><code>, [</code><abbr title="signature_format"><code>formatoDeFirma</code></abbr><code>])</code></h3>
+
+<p>Verifica los datos firmados, utilizando el <abbr title="object"><code>objeto</code></abbr> y <abbr title="signature"><code>firma</code></abbr>. <abbr title="object"><code>objeto</code></abbr> es una cadena que contiene un objeto PEM codificado, que puede ser una clave RSA pública, una clave DSA pública, o un certificado X.509. <abbr title="signature"><code>firma</code></abbr> es la firma calculada anteriormente para los datos, en <abbr title="signature_format"><code>formatoDeFirma</code></abbr> que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<p>Devuelve <code>true</code> o <code>false</code>, dependiendo de la validez de la firma de los datos y la clave pública.</p>
+
+<p>Nota: El objeto <code>verifier</code> no se puede utilizar después de llamar al método <code>verify()</code>.</p>
+
+<h2><code>crypto.createDiffieHellman(</code><abbr title="prime_length"><code>largoPrima</code></abbr><code>)</code></h2>
+
+<p>Crea un objeto <code>Diffie-Hellman</code> para el intercambio de claves y genera una prima de los bits especificados por <abbr title="prime_length"><code>largoPrima</code></abbr>. El generador utilizado es el <code>2</code>.</p>
+
+<h2><code>crypto.createDiffieHellman(</code><abbr title="prime"><code>prima</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h2>
+
+<p>Crea un objeto de claves de intercambio <code>Diffie-Hellman</code> usando la <abbr title="prime"><code>prima</code></abbr> suministrada. El generador utilizado es el <code>2</code>. La <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<h2>Clase: <code>DiffieHellman</code></h2>
+
+<p>La clase para crear claves de intercambio <code>Diffie-Hellman</code>.</p>
+
+<p>Devuelta por <code>crypto.createDiffieHellman</code>.</p>
+
+<h3><code>diffieHellman.generateKeys([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Genera valores clave <code>Diffie-Hellman</code> públicos y privados, y devuelve la clave pública en la codificación especificada. Esta clave se debe transferir a la otra parte. La <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>.
+De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.computeSecret(</code><abbr title="other_public_key"><code>otraClavePublica</code></abbr><code>, [</code><abbr title="input_encoding"><code>codificacionEntrante</code></abbr><code>], [</code><abbr title="output_encoding"><code>codificacionSaliente</code></abbr><code>])</code></h3>
+
+<p>Calcula el secreto compartido usando <abbr title="other_public_key"><code>otraClavePublica</code></abbr> como la clave pública de la otra parte y devuelve el secreto compartido calculado. La clave suministrada se interpreta utilizando la <abbr title="input_encoding"><code>codificacionEntrante</code></abbr> especificada, y el secreto se codifica usando la <abbr title="output_encoding"><code>codificacionSaliente</code></abbr> especificada. La codificación puede ser <code>'binary'</code>, <code>'hex'</code>, o <code>'base64'</code>. La codificación de entrada por omisión es <code>'binary'</code>.
+Si no suministras la codificación saliente, se utiliza como salida la codificación entrante.</p>
+
+<h3><code>diffieHellman.getPrime([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Devuelve la prima <code>Diffie-Hellman</code> en la codificación especificada, que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.getGenerator([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Devuelve la prima <code>Diffie-Hellman</code> en la codificación especificada, que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.getPublicKey([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Devuelve la clave pública <code>Diffie-Hellman</code> en la codificación especificada, que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.getPrivateKey([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Devuelve la clave <code>Diffie-Hellman</code> privada en la codificación especificada, que puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.setPublicKey(</code><abbr title="public_key"><code>clavePublica</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Establece la clave <code>Diffie-Hellman</code> pública. La codificación de la clave puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h3><code>diffieHellman.setPrivateKey(</code><abbr title="public_key"><code>clavePublica</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Establece la clave <code>Diffie-Hellman</code> privada. La codificación de la clave puede ser <code>'binary'</code>, <code>'hex'</code> o <code>'base64'</code>. De manera predeterminada es <code>'binary'</code>.</p>
+
+<h2><code>crypto.getDiffieHellman(</code><abbr title="group_name"><code>nombreGrupo</code></abbr><code>)</code></h2>
+
+<p>Crea un objeto <code>Diffie-Hellman</code> predefinido para el intercambio de clave.
+Los grupos compatibles son: <code>'modp1'</code>, <code>'modp2'</code>, <code>'modp5'</code> (definido en <a href="http://www.rfc-editor.org/rfc/rfc2412.txt">RFC 2412</a>) y <code>'modp14'</code>, <code>'modp15'</code>, <code>'modp16'</code>, <code>'modp17'</code>, <code>'modp18'</code> (definido en <a href="http://www.rfc-editor.org/rfc/rfc3526.txt">RFC 3526</a>).
+El objeto devuelto imita la interfaz de los objetos creados por el <a href="#crypto_crypto_creatediffiehellman_prime_encoding">crypto.createDiffieHellman()</a> anterior, pero no permite cambiar las claves (con <a href="#crypto_diffiehellman_setpublickey_public_key_encoding">diffieHellman.setPublicKey()</a> por ejemplo).
+La ventaja de utilizar esta rutina es que las partes no lo tienen que generar de antemano ni el módulo de intercambio de grupo, ahorrando tanto tiempo del procesador como tiempo de comunicación.</p>
+
+<p>Ejemplo (obteniendo un secreto compartido):</p>
+
+<pre><code>var crypto = require('crypto');
+var alice = crypto.getDiffieHellman('modp5');
+var bob = crypto.getDiffieHellman('modp5');
+
+alice.generateKeys();
+bob.generateKeys();
+
+var secreto_alice = alice.computeSecret(bob.getPublicKey(), 'binary', 'hex');
+var secreto_bob = bob.computeSecret(alice.getPublicKey(), 'binary', 'hex');
+
+/* secreto_alice y secreto_bob deben ser el mismo */
+console.log(secreto_alice == secreto_bob);
+</code></pre>
+
+<h2><code>crypto.pbkdf2(</code><abbr title="password"><code>contrasenia</code></abbr><code>,</code> <abbr title="salt"><code>sal</code></abbr><code>,</code> <abbr title="iterations"><code>repeticiones</code></abbr><code>,</code> <abbr title="keyLen"><code>largoClave</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>PBKDF2 ASÍNCRONO se aplica a la función pseudoaleatoria <code>HMAC-SHA1</code> para obtener una clave de la longitud dada a partir de la <abbr title="password"><code>contrasenia</code></abbr>, <abbr title="salt"><code>sal</code></abbr> y <abbr title="iterations"><code>repeticiones</code></abbr>.
+La retrollamada recibe dos argumentos <code>(error, derivedKey)</code>.</p>
+
+<h2><code>crypto.randomBytes(</code><abbr title="size"><code>tamanio</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Genera datos pseudoaleatorios criptográficamente fuertes. Uso:</p>
+
+<pre><code>// asíncrono
+crypto.randomBytes(256, function (excepcion, bufer) {
+  if (excepcion) throw excepcion;
+  console.log('Tiene %d bytes de datos aleatorios: %s', bufer.length, bufer);
+});
+
+// sincrónico
+try {
+  var bufer = crypto.randomBytes(256);
+  console.log('Tiene %d bytes de datos aleatorios: %s', bufer.length, bufer);
+} catch (excepcion) {
+  // maneja el error
+}
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

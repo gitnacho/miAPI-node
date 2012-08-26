@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El módulo <code>Zlib</code></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Puedes acceder a este módulo con:</p>
+
+<pre><code>var zlib = require('zlib');
+</code></pre>
+
+<p>Esta biblioteca proporciona enlaces a las clases <code>Gzip/Gunzip, Deflate/Inflate</code> y <code>DeflateRaw/InflateRaw</code>.  Cada clase tiene las mismas opciones y es un flujo de lectura/escritura.</p>
+
+<h2>Ejemplos</h2>
+
+<p>La compresión o descompresión de un archivo se puede hacer entubando un <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.ReadStream</code> en un flujo <code>zlib</code>, y luego, en un <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.WriteStream</code>.</p>
+
+<pre><code>var gzip = zlib.createGzip();
+var sistemaDeArchivos = require('fs');
+var entrada = sistemaDeArchivos.createReadStream('entrada.txt');
+var salida = sistemaDeArchivos.createWriteStream('entrada.txt.gz');
+
+entrada.pipe(gzip).pipe(salida);
+</code></pre>
+
+<p>La compresión o descompresión de datos se puede hacer en un paso usando los métodos convenientes.</p>
+
+<pre><code>var entrada = '.................................';
+zlib.deflate(entrada, function (error, bufer) {
+  if (!error) {
+    console.log(bufer.toString('base64'));
+  }
+});
+
+var bufer = new Buffer('eJzT0yMAAGTvBe8=', 'base64');
+zlib.unzip(bufer, function (error, bufer) {
+  if (!error) {
+    console.log(bufer.toString());
+  }
+});
+</code></pre>
+
+<p>Para usar este módulo en un cliente o servidor HTTP, utiliza el <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3">accept-encoding</a> en las peticiones, y la cabecera <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11">content-encoding</a> en las respuestas.</p>
+
+<p><strong>Nota: estos ejemplos están simplificados drásticamente para mostrar el concepto básico.</strong>  La codificación con <code>Zlib</code> puede ser costosa, y los resultados se deben almacenar en caché.  Ve <a href="#zlib_memory_usage_tuning">Afinando el uso de la memoria</a> a continuación para más información sobre la velocidad de memoria/compresión de las compensaciones involucradas en el uso de <code>zlib</code>.</p>
+
+<pre><code>// ejemplo de una petición del cliente
+var zlib = require('zlib');
+var http = require('http');
+var sistemaDeArchivos = require('fs');
+var peticion = http.get({ host: 'izs.me',
+                         path: '/',
+                         port: 80,
+                         headers: { 'accept-encoding': 'gzip,deflate' } });
+peticion.on('response', function (respuesta) {
+  var resultado = sistemaDeArchivos.createWriteStream('izs.me_index.html');
+
+  switch (respuesta.headers['content-encoding']) {
+    // o, sólo tienes que usar zlib.createUnzip()
+    // para gestionar ambos casos
+    case 'gzip':
+      respuesta.pipe(zlib.createGunzip()).pipe(resultado);
+      break;
+    case 'deflate':
+      respuesta.pipe(zlib.createInflate()).pipe(resultado);
+      break;
+    default:
+      respuesta.pipe(resultado);
+      break;
+  }
+});
+
+// ejemplo de servidor
+// Ejecutar una operación gzip en cada petición es
+// bastante caro. Sería mucho más eficiente
+// almacenar el búfer comprimido.
+var zlib = require('zlib');
+var http = require('http');
+var sistemaDeArchivos = require('fs');
+servidor.createServer(function (peticion, respuesta) {
+  var primario = sistemaDeArchivos.createReadStream('index.html');
+  var codificacionAdmitida = peticion.headers['accept-encoding'];
+  if (!codificacionAdmitida) {
+    codificacionAdmitida = '';
+  }
+
+  // Nota: este no es un analizador conforme con accept-encoding.
+  // Consulta http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
+  if (codificacionAdmitida.match(/deflate/)) {
+    respuesta.writeHead(200, { 'content-encoding': 'deflate' });
+    primario.pipe(zlib.createDeflate()).pipe(respuesta);
+  } else if (acceptEncoding.match(/gzip/)) {
+    respuesta.writeHead(200, { 'content-encoding': 'gzip' });
+    primario.pipe(zlib.createGzip()).pipe(respuesta);
+  } else {
+    respuesta.writeHead(200, {});
+    primario.pipe(respuesta);
+  }
+}).listen(1337);
+</code></pre>
+
+<h2><code>zlib.createGzip([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_gzip">Gzip</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createGunzip([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_gunzip">Gunzip</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createDeflate([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_deflate">Deflate</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createInflate([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_inflate">Inflate</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createDeflateRaw([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_deflateraw">DeflateRaw</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createInflateRaw([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_inflateraw">InflateRaw</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2><code>zlib.createUnzip([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <a href="#zlib_class_zlib_unzip">Unzip</a> con <a href="#zlib_options">opciones</a>.</p>
+
+<h2>Clase: <code>zlib.Gzip</code></h2>
+
+<p>Comprime los datos utilizando <code>gzip</code>.</p>
+
+<h2>Clase: <code>zlib.Gunzip</code></h2>
+
+<p>Descomprime un flujo <code>gzip</code>.</p>
+
+<h2>Clase: <code>zlib.Deflate</code></h2>
+
+<p>Comprime los datos utilizando <code>deflate</code>.</p>
+
+<h2>Clase: <code>zlib.Inflate</code></h2>
+
+<p>Descomprime un flujo <code>deflate</code>.</p>
+
+<h2>Clase: <code>zlib.DeflateRaw</code></h2>
+
+<p>Comprime los datos utilizando <code>deflate</code> y no agrega una cabecera <code>zlib</code>.</p>
+
+<h2>Clase: <code>zlib.InflateRaw</code></h2>
+
+<p>Descomprime un flujo reducido sin procesar.</p>
+
+<h2>Clase: <code>zlib.Unzip</code></h2>
+
+<p>Descomprime un flujo comprimido ya sea con <code>Gzip</code> o <code>Deflate</code> detectando la cabecera automáticamente.</p>
+
+<h2>Métodos convenientes</h2>
+
+<!-- type=misc -->
+
+<p>Todos ellos toman una <abbr title="callback"><code>retrollamada</code></abbr><code>(error,</code><abbr title="result"><code>resultado</code></abbr><code>)</code>.  El motor de compresión/descompresión se crea usando la configuración predeterminada en todos los métodos de conveniencia.  Para proporcionar diferentes opciones, utiliza las clases <code>zlib</code> directamente.</p>
+
+<h2><code>zlib.deflate(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Comprime una cadena con <code>Deflate</code>.</p>
+
+<h2><code>zlib.deflateRaw(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Comprime una cadena con <code>DeflateRaw</code>.</p>
+
+<h2><code>zlib.gzip(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Comprime una cadena con <code>Gzip</code>.</p>
+
+<h2><code>zlib.gunzip(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Descomprime un Búfer sin procesar con <code>Gunzip</code>.</p>
+
+<h2><code>zlib.inflate(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Descomprime un búfer sin procesar con <code>Inflate</code>.</p>
+
+<h2><code>zlib.inflateRaw(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Descomprime un búfer sin procesar con <code>InflateRaw</code>.</p>
+
+<h2><code>zlib.unzip(</code><abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Descomprime un Búfer sin procesar con <code>Unzip</code>.</p>
+
+<h2><abbr title="Options">Opciones</abbr></h2>
+
+<!-- type=misc -->
+
+<p>Cada clase toma un objeto <abbr title="options"><code>opciones</code></abbr>.  Todos los ajustes son opcionales.  (Los métodos de conveniencia utilizan la configuración predeterminada para todas las opciones).</p>
+
+<p>Ten en cuenta que algunas opciones sólo son relevantes cuando se comprime, y son descartadas por las clases de descompresión.</p>
+
+<ul>
+<li>chunkSize (predeterminado: 16*1024)</li>
+<li>windowBits</li>
+<li>level (sólo compresión)</li>
+<li>memLevel (sólo compresión)</li>
+<li>strategy (sólo compresión)</li>
+<li>dictionary (sólo <code>deflate/inflate</code>, diccionario vació por omisión)</li>
+</ul>
+
+<p>Consulta la descripción de <code>deflateInit2</code> e <code>inflateInit2</code> en <a href="http://zlib.net/manual.html#Advanced">http://zlib.net/manual.html#Advanced</a> para conseguir más información.</p>
+
+<h2>Afinando el uso de la memoria</h2>
+
+<!-- type=misc -->
+
+<p>Desde <code>zlib/zconf.h</code>, modificada para usarla en Node:</p>
+
+<p>Los requisitos de memoria para <code>deflate</code> son (en bytes):</p>
+
+<pre><code>(1 &lt;&lt; (windowBits+2)) +  (1 &lt;&lt; (memLevel+9))
+</code></pre>
+
+<p>esto es: 128K por windowBits = 15 + 128K por memLevel = 8 (valores predeterminados), además de unos pocos kilobytes para objetos pequeños.</p>
+
+<p>Por ejemplo, si deseas reducir los requisitos de memoria predefinidos de 256K a 128K, define las opciones:</p>
+
+<pre><code>{ windowBits: 14, memLevel: 7 }
+</code></pre>
+
+<p>Por supuesto, esto generalmente degrada la compresión (no hay almuerzos gratis).</p>
+
+<p>Los requisitos de memoria para <code>inflate</code> (en bytes) son:</p>
+
+<pre><code>1 &lt;&lt; windowBits
+</code></pre>
+
+<p>es decir, 32K por <code>windowBits = 15</code> (valor predeterminado), además de unos pocos kilobytes para objetos pequeños.</p>
+
+<p>Esto es además de un único búfer de salida interna de tamaño <code>chunksize</code>, que de manera predeterminada es de 16K.</p>
+
+<p>La velocidad de compresión de <code>zlib</code> se ve afectada dramáticamente por la opción <code>level</code>.  Un nivel más alto se traducirá en una mejor compresión, pero se necesitará más tiempo para completarlo.  Un nivel más bajo se traducirá en una menor compresión, pero será mucho más rápido.</p>
+
+<p>En general, las mayores opciones de uso de memoria significan que Node tiene que hacer menos llamadas a <code>zlib</code>, ya que será capaz de procesar más datos en una sola operación de <code>escritura</code>.  Por lo tanto, este es otro factor que afecta a la velocidad, a costa del uso de la memoria.</p>
+
+<h2>Constantes</h2>
+
+<!-- type=misc -->
+
+<p>Todas las constantes definidas en <code>zlib.h</code> también se definen en <code>require ('zlib')</code>.
+En el curso normal de las operaciones, no tendrás que configurar ninguna de ellas cada vez.  Se documentan aquí para que no extrañe su presencia.  Esta sección está tomada casi directamente de la <a href="http://zlib.net/manual.html#Constants">documentación de zlib</a>.  Consulta <a href="http://zlib.net/manual.html#Constants">http://zlib.net/manual.html#Constants</a> para más detalles.</p>
+
+<p>Valores de descarga admitidos:</p>
+
+<ul>
+<li><code>zlib.Z_NO_FLUSH</code></li>
+<li><code>zlib.Z_PARTIAL_FLUSH</code></li>
+<li><code>zlib.Z_SYNC_FLUSH</code></li>
+<li><code>zlib.Z_FULL_FLUSH</code></li>
+<li><code>zlib.Z_FINISH</code></li>
+<li><code>zlib.Z_BLOCK</code></li>
+<li><code>zlib.Z_TREES</code></li>
+</ul>
+
+<p>Códigos de retorno para las funciones de compresión/descompresión. Los valores negativos son errores, los valores positivos se utilizan para eventos especiales, pero normales:</p>
+
+<ul>
+<li><code>zlib.Z_OK</code></li>
+<li><code>zlib.Z_STREAM_END</code></li>
+<li><code>zlib.Z_NEED_DICT</code></li>
+<li><code>zlib.Z_ERRNO</code></li>
+<li><code>zlib.Z_STREAM_ERROR</code></li>
+<li><code>zlib.Z_DATA_ERROR</code></li>
+<li><code>zlib.Z_MEM_ERROR</code></li>
+<li><code>zlib.Z_BUF_ERROR</code></li>
+<li><code>zlib.Z_VERSION_ERROR</code></li>
+</ul>
+
+<p>Niveles de compresión:</p>
+
+<ul>
+<li><code>zlib.Z_NO_COMPRESSION</code></li>
+<li><code>zlib.Z_BEST_SPEED</code></li>
+<li><code>zlib.Z_BEST_COMPRESSION</code></li>
+<li><code>zlib.Z_DEFAULT_COMPRESSION</code></li>
+</ul>
+
+<p>Estrategia de compresión:</p>
+
+<ul>
+<li><code>zlib.Z_FILTERED</code></li>
+<li><code>zlib.Z_HUFFMAN_ONLY</code></li>
+<li><code>zlib.Z_RLE</code></li>
+<li><code>zlib.Z_FIXED</code></li>
+<li><code>zlib.Z_DEFAULT_STRATEGY</code></li>
+</ul>
+
+<p>Posibles valores del campo <code>data_type</code>:</p>
+
+<ul>
+<li><code>zlib.Z_BINARY</code></li>
+<li><code>zlib.Z_TEXT</code></li>
+<li><code>zlib.Z_ASCII</code></li>
+<li><code>zlib.Z_UNKNOWN</code></li>
+</ul>
+
+<p>El método de compresión <code>deflate</code> (el único compatible en esta versión):</p>
+
+<ul>
+<li><code>zlib.Z_DEFLATED</code></li>
+</ul>
+
+<p>Para iniciar <code>zalloc</code>, <code>zfree</code>, <code>opaque</code>:</p>
+
+<ul>
+<li><code>zlib.Z_NULL</code></li>
+</ul>
+
+      </section>
+    </div>
+  </body>
+</html>

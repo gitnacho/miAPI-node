@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El módulo <code>http</code></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Para utilizar el servidor y cliente HTTP debes usar:</p>
+
+<pre><code>var http = require('http');
+</code></pre>
+
+<p>La interfaz HTTP en Node está diseñada para apoyar muchas de las características del protocolo, que tradicionalmente han sido difíciles de usar.
+En particular, grandes y posiblemente crípticos mensajes. La interfaz tiene cuidado de nunca guardar en la memoria intermedia peticiones o respuestas completas —el usuario es capaz de transmitir datos.</p>
+
+<p>Las cabeceras de los mensajes HTTP están representadas por un objeto como éste:</p>
+
+<pre><code>{ 'content-length': '123',
+  'content-type': 'text/plain',
+  'connection': 'keep-alive',
+  'accept': '*/*' }
+</code></pre>
+
+<p>Las claves están en minúsculas. Los valores no se modifican.</p>
+
+<p>Con el fin de apoyar todo el espectro de posibles aplicaciones HTTP, la <abbr title="Interfaz para Programar la Aplicación">API</abbr> HTTP de Node es de muy bajo nivel. Este trata con la manipulación del flujo y análisis de un único mensaje. Este analiza las cabeceras y el cuerpo de un mensaje, pero no analiza las cabeceras o cuerpo reales.</p>
+
+<h2><code>http.STATUS_CODES</code></h2>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Una colección con todos los códigos de estado de respuestas HTTP estándar y una breve descripción de cada uno.  Por ejemplo, <code>http.STATUS_CODES[404] === 'No encontrado'</code>.</p>
+
+<h2><code>http.createServer([</code><abbr title="requestListener"><code>escuchaDePeticion</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto servidor web.</p>
+
+<p><abbr title="requestListener"><code>escuchaDePeticion</code></abbr> es una función que se añade automáticamente al evento <code>'request'</code>.</p>
+
+<h2><code>http.createClient([</code><abbr title="port"><code>puerto</code></abbr><code>], [</code><abbr title="host"><code>servidor</code></abbr><code>])</code></h2>
+
+<p>Esta función está <strong>desaprobada</strong>; por favor, en su lugar usa <a href="#http_http_request_options_callback">http.request()</a>.
+Construye un nuevo cliente HTTP. <abbr title="port"><code>puerto</code></abbr> y <abbr title="host"><code>servidor</code></abbr> se refieren al servidor al cual conectarse.</p>
+
+<h2>Clase: <code>http.Server</code></h2>
+
+<p>Se trata de un <a href="events.html#events_class_events_eventemitter">EventEmitter</a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'request'</code></h3>
+
+<p><code>function (</code><abbr title="request"><code>peticion</code></abbr><code>,</code> <abbr title="response"><code>respuesta</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que hay una petición. Ten en cuenta que puede haber múltiples peticiones por conexión (en el caso de las conexiones <abbr title="keep-alive"><code>mantener-viva</code></abbr>).
+ <abbr title="Request"><code>peticion</code></abbr> es una instancia de <code>http.ServerRequest</code> y <abbr title="response"><code>respuesta</code></abbr> es una instancia de <code>http.ServerResponse</code></p>
+
+<h3>Evento: <code>'connection'</code></h3>
+
+<p><code>function (</code><abbr title="socket"><code>toma</code></abbr><code>) { }</code></p>
+
+<p>Al establecer un nuevo flujo <abbr title="Protocolo de control de transmisión">TCP</abbr>. <abbr title="socket"><code>toma</code></abbr> es un objeto de tipo <code>net.Socket</code>. Por lo general, los usuarios no quieren acceder a este evento. También puedes acceder a la <abbr title="socket"><code>toma</code></abbr> como <abbr title="request"><code>peticion</code></abbr><code>.connection</code>.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido cuando se cierra el servidor.</p>
+
+<h3>Evento: <code>'checkContinue'</code></h3>
+
+<p><code>function (</code><abbr title="request"><code>peticion</code></abbr><code>,</code> <abbr title="response"><code>respuesta</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que se recibe una petición con un <code>Expect: 100-continue</code> de http.
+Si este evento no tiene un escucha, el servidor responderá automáticamente con un <code>'100 Continue'</code> cuando sea adecuado.</p>
+
+<p>El manejo de este evento consiste en llamar a <abbr title="response"><code>respuesta</code></abbr><code>.writeContinue</code> si el cliente debe continuar enviando el cuerpo de la petición, o generar una respuesta HTTP adecuada (por ejemplo, 400 Petición incorrecta) si el cliente no debe continuar enviando el cuerpo de la petición.</p>
+
+<p>Ten en cuenta que al difundir y manipular este evento, no se emitirá el evento <code>'request'</code>.</p>
+
+<h3>Evento: <code>'connect'</code></h3>
+
+<p><code>function (</code><abbr title="request"><code>peticion</code></abbr><code>,</code> <abbr title="socket"><code>toma</code></abbr><code>,</code> <abbr title="head"><code>cabecera</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que un cliente solicita un método <code>CONNECT</code> de http. Si este evento no tiene un escucha, entonces se cerrarán las conexiones de los clientes que soliciten un método <code>CONNECT</code>.</p>
+
+<ul>
+<li><abbr title="request"><code>peticion</code></abbr> es el argumento para la petición http, ya que está en el evento de la petición.</li>
+<li><abbr title="socket"><code>toma</code></abbr> es la toma de red entre el servidor y el cliente.</li>
+<li><abbr title="head"><code>cabecera</code></abbr> es una instancia de <code>Buffer</code>, el primer paquete del flujo canalizado, este puede estar vacío.</li>
+</ul>
+
+<p>Después de emitir este evento, la toma de la petición no tendrá un escucha para el evento <code>'data'</code>, lo cual significa que lo tendrás que vincular a este con el fin de manejar los datos enviados al servidor en esa toma.</p>
+
+<h3>Evento: <code>'upgrade'</code></h3>
+
+<p><code>function (</code><abbr title="request"><code>peticion</code></abbr><code>,</code> <abbr title="socket"><code>toma</code></abbr><code>,</code> <abbr title="head"><code>cabecera</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que un cliente solicita una actualización http. Si no hay un escucha para este evento, entonces se cerrará la conexión de los clientes que soliciten una actualización.</p>
+
+<ul>
+<li><abbr title="request"><code>peticion</code></abbr> es el argumento para la petición http, ya que está en el evento de la petición.</li>
+<li><abbr title="socket"><code>toma</code></abbr> es la toma de red entre el servidor y el cliente.</li>
+<li><abbr title="head"><code>cabecera</code></abbr> es una instancia de <code>Búfer</code>, el primer paquete actualizado del flujo, este puede estar vacío.</li>
+</ul>
+
+<p>Después de emitir este evento, la toma de la petición no tendrá un escucha para el evento <code>'data'</code>, lo cual significa que lo tendrás que vincular a este con el fin de manejar los datos enviados al servidor en esa toma.</p>
+
+<h3>Evento: <code>'clientError'</code></h3>
+
+<p><code>function (</code><abbr title="exception"><code>excepcion</code></abbr><code>) { }</code></p>
+
+<p>Si una conexión cliente emite un evento <code>'error'</code> —este se envía aquí—.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="hostname"><code>nombreServidor</code></abbr><code>], [</code><abbr title="backlog"><code>conexionesPendientes</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Comenzará a aceptar conexiones en el puerto y el nombre de servidor especificado.  Si se omite el nombre del servidor, el servidor aceptará las conexiones dirigidas a cualquier dirección IPv4 (<code>INADDR_ANY</code>).</p>
+
+<p>Para escuchar una toma UNIX, suministra un nombre de archivo en lugar del puerto y nombre de servidor.</p>
+
+<p><abbr title="backlog"><code>conexionesPendientes</code></abbr> es la longitud máxima de la cola de conexiones pendientes.
+La longitud real será determinada por tu sistema operativo a través de la configuración de <code>sysctl</code> como <code>tcp_max_syn_backlog</code> y <code>SOMAXCONN</code> en linux. El valor predeterminado de este parámetro es 511 (no 512).</p>
+
+<p>Esta función es asíncrona. El último parámetro, <abbr title="callback"><code>retrollamada</code></abbr>, se añadirá como un escucha del evento <a href="net.html#net_event_listening">'listening'</a>.  Además consulta <a href="net.html#net_server_listen_port_host_backlog_listeninglistener">net.Server.listen(puerto)</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Inicia una toma para el servidor UNIX escuchando las conexiones en la <abbr title="path"><code>ruta</code></abbr> dada.</p>
+
+<p>Esta función es asíncrona. El último parámetro, <abbr title="callback"><code>retrollamada</code></abbr>, se añadirá como un escucha del evento <a href="net.html#net_event_listening">'listening'</a>.  Además consulta <a href="net.html#net_server_listen_path_listeninglistener">net.Server.listen(ruta)</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="handle"><code>controlador</code></abbr><code>, [</code><abbr title="listeningListener"><code>escuchaDeListening</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="handle"><code>controlador</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+<li><abbr title="listeningListener"><code>escuchaDeListening</code></abbr> {<abbr title="Function">Función</abbr>}</li>
+</ul>
+
+<p>El objeto <abbr title="handle"><code>controlador</code></abbr> se puede configurar como un servidor o una toma (cualquier cosa con un miembro <code>_handle</code> subyacente), o un objeto <code>{fd: &lt;n&gt;}</code>.</p>
+
+<p>Este hará que el servidor acepte conexiones en el <abbr title="handle"><code>controlador</code></abbr> especificado, pero se presume que el descriptor de archivo o controlador ya se ha vinculado a un puerto o a una toma del dominio.</p>
+
+<p>Escuchar en un descriptor de archivo no es compatible en Windows.</p>
+
+<p>Esta función es asíncrona. El último parámetro, <abbr title="callback"><code>retrollamada</code></abbr>, se añadirá como un escucha del evento <a href="net.html#event_listening_">'listening'</a>.
+Ve también <a href="net.html#server.listen">net.Server.listen()</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.close([</code><abbr title="rt"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>El servidor deja de aceptar nuevas conexiones.  Ve <a href="net.html#net_server_close_cb">net.Server.close()</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.maxHeadersCount</code></h3>
+
+<p>Limita la máxima cantidad de cabeceras entrantes, igual a 1000 de manera predeterminada. Si la configuras a 0 — no se aplicará límite.</p>
+
+<h2>Clase: <code>http.ServerRequest</code></h2>
+
+<p>Este objeto internamente es creado por un servidor HTTP —no por el usuario— y se pasa como primer argumento a un evento <code>'request'</code>.</p>
+
+<p>La petición implementa la interfaz <a href="stream.html#stream_readable_stream">Flujo de lectura</a>. Se trata de un <a href="events.html#events_class_events_eventemitter">EventEmitter</a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'data'</code></h3>
+
+<p><code>function (</code><abbr title="chunk"><code>fragmento</code></abbr><code>) { }</code></p>
+
+<p>Emitido cuando se recibe una pieza del cuerpo del mensaje. El <abbr title="chunk"><code>fragmento</code></abbr> es una cadena si se ha creado una codificación con <abbr title="request"><code>peticion</code></abbr><code>.setEncoding()</code>, de lo contrario se trata de un <a href="buffer.html#buffer_buffer">Búfer</a>.</p>
+
+<p>Ten en cuenta que <strong>se perderán datos</strong>  si no hay un evento <code>'data'</code>.</p>
+
+<h3>Evento: <code>'end'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido una sola vez por cada petición. Después de eso, no se emitirán más eventos <code>'data'</code> en la petición.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Indica que la conexión subyacente se interrumpió antes de llamar a <abbr title="response"><code>respuesta</code></abbr><code>.end()</code> o fue capaz de vaciarla.</p>
+
+<p>Al igual que <code>'end'</code>, este evento se produce sólo una vez por petición y después no se lanzarán más eventos <code>'data'</code>.</p>
+
+<p>Nota: <code>'close'</code> después puede lanzar <code>'end'</code>, pero no a la inversa.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.method</code></h3>
+
+<p>El método <abbr title="request"><code>petición</code></abbr> como una cadena. Sólo lectura. Ejemplo:
+<code>'GET'</code>, <code>'DELETE'</code>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.url</code></h3>
+
+<p>Cadena <abbr title="Localizador uniforme de recursos">URL</abbr> de la petición. Esta sólo contiene la dirección <abbr title="Localizador uniforme de recursos">URL</abbr> que está presente en la petición HTTP actual. Si la petición es:</p>
+
+<pre><code>GET /estado?nombre=ryan HTTP/1.1
+
+Accept: text/plain
+</code></pre>
+
+<p>Entonces <abbr title="request"><code>peticion</code></abbr><code>.url</code> será:</p>
+
+<pre><code>'/estado?nombre=ryan'
+</code></pre>
+
+<p>Si quisieras analizar las partes de la <abbr title="Localizador uniforme de recursos">URL</abbr>, puedes usar <code>require('url').parse(request.url)</code>.  Ejemplo:</p>
+
+<pre><code>node&gt; require('url').parse('/estado?nombre=ryan')
+{ href: '/estado?nombre=ryan',
+  search: '?nombre=ryan',
+  query: 'nombre=ryan',
+  pathname: '/estado' }
+</code></pre>
+
+<p>Si quieres extraer los parámetros de la cadena de consulta, puedes utilizar la función <code>require('querystring').parse</code>, o pasar <code>true</code> como segundo argumento de <code>require('url').parse</code>.  Ejemplo:</p>
+
+<pre><code>node&gt; require('url').parse('/estado?nombre=ryan', true)
+{ href: '/estado?nombre=ryan',
+  search: '?nombre=ryan',
+  query: { nombre: 'ryan' },
+  pathname: '/estado' }
+</code></pre>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.headers</code></h3>
+
+<p>Sólo lectura.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.trailers</code></h3>
+
+<p>Sólo lectura; HTTP finales (si existen). Poblado sólo después del evento <code>'end'</code>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.httpVersion</code></h3>
+
+<p>La versión del protocolo HTTP como una cadena. Sólo lectura. Ejemplos:
+<code>'1.1'</code>, <code>'1.0'</code>.
+También <abbr title="request"><code>peticion</code></abbr><code>.httpVersionMajor</code> es el primer número entero y <abbr title="request"><code>peticion</code></abbr><code>.httpVersionMinor</code> es el segundo.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.setEncoding([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Establece la codificación para el cuerpo de la petición. Ve <a href="stream.html#stream_stream_setencoding_encoding">stream.setEncoding()</a> para más información.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.pause()</code></h3>
+
+<p>Hace una pausa al emitir eventos en la petición.  Es útil para moderar el ritmo del proceso de carga.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.resume()</code></h3>
+
+<p>Reanuda una petición interrumpida.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.connection</code></h3>
+
+<p>El objeto <code>net.Socket</code> asociado con la conexión.</p>
+
+<p>Con apoyo HTTPS, usa <abbr title="request"><code>peticion</code></abbr><code>.connection.verifyPeer()</code> y <abbr title="request"><code>peticion</code></abbr><code>.connection.getPeerCertificate()</code> para obtener detalles de autenticación del cliente.</p>
+
+<h2>Clase: <code>http.ServerResponse</code></h2>
+
+<p>Este objeto lo crea internamente un servidor HTTP —no el usuario—. Se pasa como segundo parámetro al evento <code>'request'</code>.</p>
+
+<p>La respuesta implementa la interfaz <a href="stream.html#stream_writable_stream">Flujo de escritura</a>. Se trata de un <a href="events.html#events_class_events_eventemitter">EventEmitter</a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Indica que la conexión subyacente se interrumpió antes de llamar a <abbr title="response"><code>respuesta</code></abbr><code>.end()</code> o fue capaz de vaciarla.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.writeContinue()</code></h3>
+
+<p>Envía un mensaje <code>HTTP/1.1 100 Continue</code> al cliente, indicando que se debe enviar el cuerpo de la petición. Consulta el evento <a href="#http_event_checkcontinue">'checkContinue'</a> en <code>Server</code>.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.writeHead(</code><abbr title="statusCode"><code>codigoDeEstado</code></abbr><code>, [</code><abbr title="reasonPhrase"><code>fraseDeMotivo</code></abbr><code>], [</code><abbr title="headers"><code>cabeceras</code></abbr><code>])</code></h3>
+
+<p>Envía una cabecera de respuesta a la petición. El código de estado es un código de estado HTTP de tres dígitos, tal como <code>404</code>. El último argumento, <abbr title="headers"><code>cabeceras</code></abbr>, son las cabeceras de la respuesta.
+Opcionalmente puedes suministrar una <abbr title="reasonPhrase"><code>fraseDeMotivo</code></abbr> humanamente legible como segundo argumento.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var cuerpo = 'hola mundo';
+respuesta.writeHead(200, {
+  'Content-Length': cuerpo.length,
+  'Content-Type': 'text/plain' });
+</code></pre>
+
+<p>Este método sólo se debe llamar una vez en un mensaje y se debe invocar antes de llamar a <abbr title="response"><code>respuesta</code></abbr><code>.end()</code>.</p>
+
+<p>Si llamas a <abbr title="response"><code>respuesta</code></abbr><code>.write()</code> o <abbr title="response"><code>respuesta</code></abbr><code>.end()</code> antes de invocar a este, se calcularán las cabeceras implícitas/mutables y se llamará a esta función por ti.</p>
+
+<p>Nota: ese <code>Content-Length</code> se da en bytes, no en caracteres. El ejemplo anterior funciona porque la cadena <code>'Hola mundo'</code> sólo contiene caracteres individuales de un byte.
+Si el cuerpo contiene caracteres codificados mayores entonces debes usar <code>Buffer.byteLength()</code> para determinar el número de bytes en una codificación dada.
+Y Node no verifica si <code>Content-Length</code> y la longitud del cuerpo que se ha transmitido son iguales o no.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.statusCode</code></h3>
+
+<p>Cuando utilizas cabeceras implícitas (sin llamar explícitamente a <abbr title="response"><code>respuesta</code></abbr><code>.writeHead()</code>), esta propiedad controla el código de estado enviado al cliente al limpiar las cabeceras.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>respuesta.statusCode = 404;
+</code></pre>
+
+<p>Después de enviar la cabecera de la respuesta al cliente, esta propiedad indica el código de estado enviado.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.setHeader(</code><abbr title="name"><code>nombre</code></abbr><code>,</code> <abbr title="value"><code>valor</code></abbr><code>)</code></h3>
+
+<p>Establece un valor de cabecera para las cabeceras implícitas.  Si esta cabecera ya existe en las <abbr title="headers"><code>cabeceras</code></abbr> a enviar, su valor será reemplazado.  Aquí usa un <abbr title="array">arreglo</abbr> de cadenas si necesitas enviar varias cabeceras con el mismo nombre.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>respuesta.setHeader('Content-Type', 'text/html');
+</code></pre>
+
+<p>o</p>
+
+<pre><code>respuesta.setHeader('Set-Cookie', ['type=ninja', 'language=javascript']);
+</code></pre>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.sendDate</code></h3>
+
+<p>Cuando es <code>true</code>, la Fecha de la cabecera se genera automáticamente y se envía en la respuesta si no está presente en las cabeceras. El valor predeterminado es <code>true</code>.</p>
+
+<p>Esta sólo se debe desactivar para las pruebas; HTTP requiere la cabecera <code>Date</code> en las respuestas.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.getHeader(</code><abbr title="name"><code>nombre</code></abbr><code>)</code></h3>
+
+<p>Lee una cabecera que ya está en la cola pero no se ha enviado al cliente.  Ten en cuenta que el nombre distingue entre mayúsculas y minúsculas.  Esta sólo se puede llamar antes de volcar las cabeceras implícitas.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var contentType = response.getHeader('content-type');
+</code></pre>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.removeHeader(</code><abbr title="name"><code>nombre</code></abbr><code>)</code></h3>
+
+<p>Elimina una cabecera que está en la cola de envío implícito.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>respuesta.removeHeader('Content-Encoding');
+</code></pre>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.write(</code><abbr title="chunk"><code>fragmento</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Si se llama este método y no se ha llamado a <abbr title="response"><code>respuesta</code></abbr><code>.writeHead()</code>, se pasará al modo de cabecera implícita y se eliminarán las cabeceras implícitas.</p>
+
+<p>Este envía un <abbr title="chunk"><code>fragmento</code></abbr> del cuerpo de la respuesta. Este método se puede llamar varias veces para proporcionar partes sucesivas del cuerpo.</p>
+
+<p><abbr title="chunk"><code>fragmento</code></abbr> puede ser una cadena o un búfer. Si <abbr title="chunk"><code>fragmento</code></abbr> es una cadena, el segundo parámetro especifica cómo se codifica en un flujo de bytes.
+De manera predeterminada <abbr title="encoding"><code>codificacion</code></abbr> es <code>'utf8'</code>.</p>
+
+<p><strong>Nota</strong>: Este es el cuerpo HTTP sin procesar y no tiene nada que ver con la codificación multiparte de alto nivel del cuerpo que puedes utilizar.</p>
+
+<p>La primera vez que llames a <abbr title="response"><code>respuesta</code></abbr><code>.write()</code>, se enviará la información de la cabecera del búfer y el primer cuerpo para el cliente. La segunda vez que llames a <abbr title="response"><code>respuesta</code></abbr><code>.write()</code>, Node asume que se van a transmitir datos, y los envía por separado. Es decir, la respuesta se guarda en el búfer hasta la primer pieza del cuerpo.</p>
+
+<p>Devuelve <code>true</code> si todos los datos se drenaron satisfactoriamente al búfer del núcleo. Devuelve <code>false</code> si todo o parte de los datos se pusieron en la cola de la memoria del usuario.
+<code>'drain'</code> será emitido cuando el búfer de nuevo esté libre.</p>
+
+<h3><code>respuesta.addTrailers(</code><abbr title="headers"><code>cabeceras</code></abbr><code>)</code></h3>
+
+<p>Este método añade cabeceras HTTP finales (una cabecera pero al final del mensaje) a la respuesta.</p>
+
+<p>Las finales <strong>sólo</strong> se emiten si utilizas codificación fragmentada para la respuesta; si no (por ejemplo, si la petición era HTTP/1.0), se descartarán silenciosamente.</p>
+
+<p>Ten en cuenta que HTTP necesita enviar la cabecera <code>Trailer</code> si tienes la intención de emitir el final, con una lista de los campos de cabecera en su valor. Por ejemplo:</p>
+
+<pre><code>respuesta.writeHead(200, { 'Content-Type': 'text/plain',
+                          'Trailer': 'Content-MD5' });
+respuesta.write(datosDelArchivo);
+respuesta.addTrailers({'Content-MD5': '7895bf4b8828b55ceaf47747b4bca667'});
+respuesta.end();
+</code></pre>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.end([</code><abbr title="data"><code>datos</code></abbr><code>], [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Este método indica al servidor que se han enviado todas las cabeceras de la respuesta y el cuerpo; para que el servidor considere enviado este mensaje.
+El método, <abbr title="response"><code>respuesta</code></abbr><code>.end()</code>, se DEBE llamar en cada respuesta.</p>
+
+<p>Si especificas <abbr title="data"><code>datos</code></abbr>, es equivalente a llamar a <abbr title="response"><code>respuesta</code></abbr><code>.write(</code><abbr title="data"><code>datos</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>)</code> seguido por <abbr title="response"><code>respuesta</code></abbr><code>.end()</code>.</p>
+
+<h2><code>http.request(</code><abbr title="options"><code>opciones</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Node mantiene varias conexiones por servidor para hacer peticiones HTTP.
+Esta función te permite emitir peticiones transparentemente.</p>
+
+<p><abbr title="options"><code>opciones</code></abbr> puede ser un objeto o una cadena. Si <abbr title="options"><code>opciones</code></abbr> es una cadena, esta se interpreta automáticamente con <a href="url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost">url.parse()</a>.</p>
+
+<p>Opciones:</p>
+
+<ul>
+<li><code>host</code>: Un nombre de dominio o dirección <abbr title="Protocolo de Internet">IP</abbr> del servidor al cual emitir la petición.
+El valor predeterminado es <code>'localhost'</code>.</li>
+<li><code>hostname</code>: Para apoyar a <code>url.parse()</code> se prefiere <code>hostname</code> sobre <code>host</code></li>
+<li><code>port</code>: Puerto del servidor remoto. Predefinido a 80.</li>
+<li><code>localAddress</code>: Interfaz local para vincular las conexiones de red.</li>
+<li><code>socketPath</code>: toma de dominio Unix (usa una de <code>host:puerto</code> o <code>socketPath</code>) Una cadena que especifica el método de la petición HTTP. El valor predeterminado es <code>'GET'</code>.</li>
+<li><code>path</code>: Ruta de la petición. Predefinido a <code>'/'</code>. Debe incluir la cadena de consulta, si existe.
+Por ejemplo, <code>'/index.html?pagina=12'</code></li>
+<li><code>headers</code>: Un objeto que contiene las cabeceras de la petición.</li>
+<li><code>auth</code>: Autenticación básica, es decir, <code>'usuario:contraseña'</code> para calcular una cabecera <code>'Authorization'</code>.</li>
+<li><code>agent</code>: Controla la conducta del [Agente][]. Cuando se utiliza un agente, de manera predeterminada es una petición <code>Connection: keep-alive</code>. Valores posibles:
+<ul><li><abbr title="undefined"><code>indefinido</code></abbr> (predeterminado): usa <a href="#http_http_globalagent">Agente global</a> para este servidor y puerto.</li>
+<li>Objeto <abbr title="Agent"><code>Agente</code></abbr>: utiliza explícitamente el <abbr title="Agent"><code>Agente</code></abbr> suministrado.</li>
+<li><code>false</code>: opta por la conexión común con un agente, por omisión la petición es <code>Connection: close</code>.</li></ul></li>
+</ul>
+
+<p><code>http.request()</code> devuelve una instancia de la clase <code>http.ClientRequest</code>. La instancia de <code>ClientRequest</code> es un flujo de escritura. Si necesitas cargar un archivo con una petición POST, entonces, escribe al objeto <code>ClientRequest</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var opciones = {
+  host: 'www.google.com',
+  port: 80,
+  path: '/upload',
+  method: 'POST'
+};
+
+var peticion = servidor.request(opciones, function (respuesta) {
+  console.log('ESTADO: ' + respuesta.statusCode);
+  console.log('CABECERAS: ' + JSON.stringify(respuesta.headers));
+  respuesta.setEncoding('utf8');
+  respuesta.on('data', function (fragmento) {
+    console.log('CUERPO: ' + fragmento);
+  });
+});
+
+peticion.on('error', function (error) {
+  console.log('problema de la petición: ' + error.message);
+});
+
+// escribe datos al cuerpo de la petición
+peticion.write('datos
+</code></pre>
+
+<p>');
+    peticion.write('datos
+');
+    peticion.end();</p>
+
+<p>Ten en cuenta que en el ejemplo llamamos a <code>peticion.end()</code>. Con <code>http.request()</code> siempre debes llamar a <code>peticion.end()</code> para indicar que has terminado con la petición — incluso si no se escriben datos en el cuerpo de la petición.</p>
+
+<p>Si se detecta algún error en la petición (ya sea con la resolución <abbr title="Sistema de nombres de dominio">DNS</abbr>, errores a nivel de <abbr title="Protocolo de control de transmisión">TCP</abbr>, o verdaderos errores de análisis HTTP) se emite un evento <code>'error'</code> en el objeto petición devuelto.</p>
+
+<p>Hay unas cuantas cabeceras especiales que debemos ilustrar.</p>
+
+<ul>
+<li><p>Al enviar una cabecera 'Connection: keep-alive' notificará a Node que conserve la conexión con el servidor hasta la siguiente petición.</p></li>
+<li><p>Al enviar una cabecera <code>'Content-length'</code> desactivará la codificación de fragmentado predeterminada.</p></li>
+<li><p>Al enviar una cabecera <code>'Expect'</code> inmediatamente enviará las cabeceras de la petición.
+Normalmente, al enviar <code>'Expect: 100-continue'</code>, deberá contener un escucha para el evento <code>'continue'</code>. Ve la Sección 8.2.3 de la RFC2616 para más información.</p></li>
+<li><p>Al enviar una cabecera de autorización sustituirá la opción <code>auth</code> para calcular la autenticación básica.</p></li>
+</ul>
+
+<h2><code>http.get(</code><abbr title="options"><code>opciones</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Debido a que la mayoría de las peticiones son peticiones GET sin cuerpo, Node proporciona este conveniente método. La única diferencia entre este método y <code>http.request()</code> es que este establece el método para GET y automáticamente llama a <code>peticion.end()</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>http.get('http://www.google.com/index.html', function (respuesta) {
+  console.log('Obtuve la respuesta: ' + respuesta.statusCode);
+}).on('error', function (error) {
+  console.log('Obtuve el error: ' + error.message);
+});
+</code></pre>
+
+<h2>Clase: <code>http.Agent</code></h2>
+
+<p>En Node 0.5.3+ es una nueva implementación del Agente HTTP que se utiliza para las tomas comunes utilizadas en las peticiones de clientes HTTP.</p>
+
+<p>Anteriormente, una sola instancia del agente ayudó a agrupar un solo <abbr title="http"><code>servidor</code></abbr>+<abbr title="port"><code>puerto</code></abbr>. La implementación actual ahora tiene tomas para cualquier cantidad de equipos.</p>
+
+<p>El agente HTTP actual de manera predeterminada también solicita al cliente la utilización de <code>Connection: keep-alive</code>. Si no hay peticiones HTTP pendientes esperando a que una toma se vuelva libre se cierra la toma. Esto significa que el equipo de Node tiene la ventaja de mantenerla activa cuando está bajo carga, pero no necesitas cerrar manualmente los clientes HTTP que están usando <abbr title="keep-alive"><code>mantener-viva</code></abbr>.</p>
+
+<p>Las tomas se retiran de los agentes cuando la toma o bien emite un evento <code>'close'</code> o un evento especial <code>'agentRemove'</code>. Esto significa que si tienes la intención de mantener abierta durante mucho tiempo una petición HTTP y no quieres que se quede en la piscina puedes hacer algo entre líneas:</p>
+
+<pre><code>http.get(opciones, function (respuesta) {
+  // hace algo
+}).on('socket', function (toma) {
+  toma.emit('agentRemove');
+});
+</code></pre>
+
+<p>Alternativamente, puedes optar por agruparlos completamente usando <code>agent:false</code>:</p>
+
+<pre><code>http.get({host:'localhost',
+          port:80,
+          path:'/',
+          agent:false},
+         function (respuesta) {
+             // hace cosas
+         })
+</code></pre>
+
+<h3><abbr title="Agent"><code>agente</code></abbr><code>.maxSockets</code></h3>
+
+<p>De manera predeterminada se pone a 5. Determina cuantas tomas simultáneas puede tener abiertas por equipo el agente.</p>
+
+<h3><abbr title="Agent"><code>agente</code></abbr><code>.sockets</code></h3>
+
+<p>Un objeto que contiene los <abbr title="arrays">arreglos</abbr> de tomas usadas actualmente por el Agente. No lo modifiques.</p>
+
+<h3><abbr title="Agent"><code>agente</code></abbr><code>.requests</code></h3>
+
+<p>Un objeto que contiene la cola de peticiones que aún no tienen una toma asignada. No lo modifiques.</p>
+
+<h2><code>http.globalAgent</code></h2>
+
+<p>Instancia global del Agente que se utiliza como valor predeterminado para todas las peticiones HTTP cliente.</p>
+
+<h2>Clase: <code>http.ClientRequest</code></h2>
+
+<p>Este objeto se crea internamente y se devuelve desde <code>http.request()</code>.  Representa una petición <em>en progreso</em> cuya cabecera ya se ha puesto en la cola.  La cabecera sigue utilizando la <abbr title="Interfaz para Programar la Aplicación">API</abbr> mutable <code>setHeader(</code><abbr title="name"><code>nombre</code></abbr><code>,</code> <abbr title="value"><code>valor</code></abbr><code>)</code>, <code>getHeader(</code><abbr title="name"><code>nombre</code></abbr><code>)</code>, <code>removeHeader(</code><abbr title="name"><code>nombre</code></abbr><code>)</code>.  La cabecera real se envía junto con el primer bloque de información o cuando se cierra la conexión.</p>
+
+<p>Para obtener la <abbr title="response"><code>respuesta</code></abbr>, añade un escucha para el evento <code>'response'</code> al objeto <abbr title="request"><code>peticion</code></abbr>.
+<code>'response'</code> será emitido por el objeto <abbr title="request"><code>peticion</code></abbr>, al recibir las cabeceras de la respuesta.  El evento <code>'response'</code> se ejecuta con un argumento, el cual es una instancia de <code>http.ClientResponse</code>.</p>
+
+<p>Durante el evento <code>'response'</code>, puedes añadir escuchas al objeto <abbr title="Response"><code>Respuesta</code></abbr>; particularmente para escuchar el evento <code>'data'</code>. Ten en cuenta que el evento <code>'response'</code> se llama antes de recibir alguna parte del cuerpo de la respuesta, por lo tanto no hay necesidad de preocuparse en capturar la primera parte del cuerpo. Mientras agregues un escucha para el evento <code>'data'</code> durante el evento <code>'response'</code>, el cuerpo entero será capturado.</p>
+
+<pre><code>// Bien
+peticion.on('response', function (respuesta) {
+  respuesta.on('data', function (fragmento) {
+    console.log('CUERPO: ' + fragmento);
+  });
+});
+
+// Mal — pierde todo o parte del cuerpo
+peticion.on('response', function (respuesta) {
+  setTimeout(function () {
+    respuesta.on('data', function (fragmento) {
+      console.log('CUERPO: ' + fragmento);
+    });
+  }, 10);
+});
+</code></pre>
+
+<p>Nota: Node no comprueba si <code>Content-length</code> y la longitud del cuerpo que se han transmitido son iguales o no.</p>
+
+<p>La petición implementa la interfaz <a href="stream.html#stream_writable_stream">Flujo de escritura</a>. Se trata de un <a href="events.html#events_class_events_eventemitter">EventEmitter</a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'response'</code></h3>
+
+<p><code>function (</code><abbr title="response"><code>respuesta</code></abbr><code>) { }</code></p>
+
+<p>Emitido cuando se recibe una respuesta a esta petición. Este evento se emite sólo una vez. El argumento <abbr title="response"><code>respuesta</code></abbr> debe ser una instancia de <code>http.ClientResponse</code>.</p>
+
+<p>Opciones:</p>
+
+<ul>
+<li><code>host</code>: Un nombre de dominio o dirección <abbr title="Protocolo de Internet">IP</abbr> del servidor al cual emitir la petición.</li>
+<li><code>port</code>: Puerto del servidor remoto.</li>
+<li><code>socketPath</code>: Toma de dominio Unix (usa uno de <code>host:puerto</code> o <code>socketPath</code>)</li>
+</ul>
+
+<h3>Evento: <code>'socket'</code></h3>
+
+<p><code>function (</code><abbr title="socket"><code>toma</code></abbr><code>) { }</code></p>
+
+<p>Emitido después de asignar una toma a esta petición.</p>
+
+<h3>Evento: <code>'connect'</code></h3>
+
+<p><code>function (</code><abbr title="response"><code>respuesta</code></abbr><code>,</code> <abbr title="socket"><code>toma</code></abbr><code>,</code> <abbr title="head"><code>cabecera</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que un servidor responde a una petición con un método <code>CONNECT</code>. Si no se está escuchando este evento, se cerrarán las conexiones de los clientes que reciban un método <code>CONNECT</code>.</p>
+
+<p>Un par cliente/servidor que te muestra cómo escuchar el evento <code>'connect'</code>.</p>
+
+<pre><code>var http = require('http');
+var net = require('net');
+var url = require('url');
+
+// Crea un túnel HTTP delegado
+var delegado = http.createServer(function (peticion, respuesta) {
+  respuesta.writeHead(200, {'Content-Type': 'text/plain'});
+  respuesta.end('bien');
+});
+delegado.on('connect', function (peticion, tomaCliente, cabecera) {
+  // se conecta a un servidor origen
+  var urlServidor = url.parse('http://' + peticion.url);
+  var tomaServidor = net.connect(urlServidor.port,
+                                 urlServidor.hostname,
+                                 function () {
+    tomaCliente.write('HTTP/1.1 200 Connection Established
+</code></pre>
+
+<p>' +
+                        'Proxy-agent: Node-Proxy
+' +
+                        '
+');
+        tomaServidor.write(cabecera);
+        tomaServidor.pipe(tomaCliente);
+        tomaCliente.pipe(tomaServidor);
+      });
+    });</p>
+
+<pre><code>// ahora se está ejecutando el delegado
+delegado.listen(1337, '127.0.0.1', function() {
+
+  // hace una petición a un túnel delegado
+  var opciones = {
+    port: 1337,
+    host: '127.0.0.1',
+    method: 'CONNECT',
+    path: 'www.google.com:80'
+  };
+
+  var peticion = servidor.request(opciones);
+  peticion.end();
+
+  peticion.on('connect', function (respuesta, toma, cabecera) {
+    console.log('¡Se conectó!');
+
+    // hace una petición a través de un túnel HTTP
+    toma.write('GET / HTTP/1.1
+</code></pre>
+
+<p>' +
+                     'Host: www.google.com:80
+' +
+                     'Connection: close
+' +
+                     '
+');
+        toma.on('data', function (fragmento) {
+          console.log(fragmento.toString());
+        });
+        toma.on('end', function () {
+          delegado.close();
+        });
+      });
+    });</p>
+
+<h3>Evento: <code>'upgrade'</code></h3>
+
+<p><code>function (</code><abbr title="response"><code>respuesta</code></abbr><code>,</code> <abbr title="socket"><code>toma</code></abbr><code>,</code> <abbr title="head"><code>cabecera</code></abbr><code>) { }</code></p>
+
+<p>Emitido cada vez que un servidor responde a una petición con una actualización. Si no se está escuchando este evento, se cerrará la conexión de los clientes que reciben una cabecera de actualización.</p>
+
+<p>Un par cliente/servidor que te muestra cómo escuchar el evento <code>'upgrade'</code>.</p>
+
+<pre><code>var http = require('http');
+
+// Crea un servidor HTTP
+var servidor = http.createServer(function (peticion, respuesta) {
+  respuesta.writeHead(200, {'Content-Type': 'text/plain'});
+  respuesta.end('bien');
+});
+servidor.on('upgrade', function (peticion, toma, cabecera) {
+  toma.write('HTTP/1.1 101 Web Socket Protocol Handshake
+</code></pre>
+
+<p>' +
+                   'Upgrade: WebSocket
+' +
+                   'Connection: Upgrade
+' +
+                   '
+');</p>
+
+<pre><code>  toma.pipe(toma); // devuelve el eco
+});
+
+// ahora se está ejecutando el servidor
+servidor.listen(1337, '127.0.0.1', function() {
+
+  // hace una petición
+  var opciones = {
+    port: 1337,
+    host: '127.0.0.1',
+    headers: {
+      'Connection': 'Upgrade',
+      'Upgrade': 'websocket'
+    }
+  };
+
+  var peticion = servidor.request(opciones);
+  peticion.end();
+
+  peticion.on('upgrade', function (peticion, toma, actualizaCabecera) {
+    console.log('Conseguí actualizarlo!');
+    toma.end();
+    process.exit(0);
+  });
+});
+</code></pre>
+
+<h3>Evento: <code>'continue'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido cuando el servidor envía una respuesta HTTP <code>100 Continue</code>, generalmente debido a que la petición formulada contenía 'Expect: 100-continue'. Esta es una instrucción que el cliente debe enviar en el cuerpo de la petición.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.write(</code><abbr title="chunk"><code>fragmento</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Envía un <abbr title="chunk"><code>fragmento</code></abbr> del cuerpo.  Al llamar a este método en muchas ocasiones, el usuario puede transmitir el cuerpo de la petición a un servidor —en este caso se sugiere utilizar la línea de cabecera <code>['Transfer-Encoding', 'chunked']</code> al crear la petición.</p>
+
+<p>El argumento <abbr title="chunk"><code>fragmento</code></abbr> debe ser un <a href="buffer.html#buffer_buffer">Búfer</a> o una cadena.</p>
+
+<p>El argumento <abbr title="encoding"><code>codificacion</code></abbr> es opcional y sólo se aplica cuando <abbr title="chunk"><code>fragmento</code></abbr> es una cadena.
+El valor predeterminado es <code>'utf8'</code>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.end([</code><abbr title="data"><code>datos</code></abbr><code>], [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Termina de enviar la petición. Si algunas partes del cuerpo no se han enviado, se vuelcan al flujo. Si la petición es fragmentada, se le enviará el terminador `'0</p>
+
+<p>'`.</p>
+
+<p>Si se especifica <abbr title="data"><code>datos</code></abbr>, es equivalente a llamar a <abbr title="request"><code>peticion</code></abbr><code>.write(</code><abbr title="data"><code>datos</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>)</code> seguida por <abbr title="request"><code>peticion</code></abbr><code>.end()</code>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.abort()</code></h3>
+
+<p>Cancela una petición.  (Nueva desde v0.3.8.)</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.setTimeout(</code><abbr title="timeout"><code>tiempoDeEspera</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Una vez asignada una toma a esta petición y esté conectada se llamará a <a href="net.html#net_socket_settimeout_timeout_callback"><abbr title="socket">toma</abbr>.setTimeout()</a>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.setNoDelay([</code><abbr title="noDelay"><code>sinDemora</code></abbr><code>])</code></h3>
+
+<p>Una vez asignada una toma a esta petición y estar conectada se llamará a <a href="net.html#net_socket_setnodelay_nodelay"><abbr title="socket">toma</abbr>.setNoDelay()</a>.</p>
+
+<h3><abbr title="request"><code>peticion</code></abbr><code>.setSocketKeepAlive([</code><abbr title="enable"><code>activar</code></abbr><code>], [</code><abbr title="initialDelay"><code>demoraInicial</code></abbr><code>])</code></h3>
+
+<p>Una vez asignada una toma a esta petición y esté conectada se llama a <a href="net.html#net_socket_setkeepalive_enable_initialdelay"><abbr title="socket">toma</abbr>.setKeepAlive()</a>.</p>
+
+<h2><code>http.ClientResponse</code></h2>
+
+<p>Este objeto se crea al hacer una petición con <code>http.request()</code>. Este se pasa al evento <code>'response'</code> del objeto <abbr title="request"><code>peticion</code></abbr>.</p>
+
+<p>La respuesta implementa la interfaz <a href="stream.html#stream_readable_stream">Flujo de lectura</a>. Se trata de un <a href="events.html#events_class_events_eventemitter">EventEmitter</a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'data'</code></h3>
+
+<p><code>function (</code><abbr title="chunk"><code>fragmento</code></abbr><code>) { }</code></p>
+
+<p>Emitido cuando se recibe una pieza del cuerpo del mensaje.</p>
+
+<p>Ten en cuenta que <strong>se perderán datos</strong> si no hay escucha cuando un <code>'ClientResponse'</code> emite un evento <code>'data'</code>.</p>
+
+<h3>Evento: <code>'end'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido exactamente una vez por cada mensaje. Sin argumentos. Después de emitido ningún otro evento se emitirá en la respuesta.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function (error) { }</code></p>
+
+<p>Indica que finalizó la conexión subyacente antes de haber emitido el evento <code>'end'</code>.
+Ve el evento <a href="#http_class_http_serverrequest">http.serverRequest</a> <code>'close'</code> para más información.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.statusCode</code></h3>
+
+<p>El código de estado de 3 dígitos de la respuesta HTTP. Por ejemplo <code>404</code>.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.httpVersion</code></h3>
+
+<p>La versión HTTP del servidor conectado. Probablemente <code>'1.1'</code> o <code>'1.0'</code>.
+Además <abbr title="response"><code>respuesta</code></abbr><code>.httpVersionMajor</code> es el primer entero y <abbr title="response"><code>respuesta</code></abbr><code>.httpVersionMinor</code> el segundo.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.headers</code></h3>
+
+<p>El objeto <code>headers</code> de la respuesta.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.trailers</code></h3>
+
+<p>El objeto <code>trailers</code> de la respuesta. Poblado sólo después del evento <code>'end'</code>.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.setEncoding([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Establece la codificación para el cuerpo de la respuesta. Ve <a href="stream.html#stream_stream_setencoding_encoding">stream.setEncoding()</a> para más información.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.pause()</code></h3>
+
+<p>Hace una pausa al emitir eventos en la respuesta.  Útil para moderar una descarga.</p>
+
+<h3><abbr title="response"><code>respuesta</code></abbr><code>.resume()</code></h3>
+
+<p>Reanuda una respuesta en pausa.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

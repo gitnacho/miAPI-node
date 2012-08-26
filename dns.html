@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Sistema de nombres de dominio">DNS</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Para acceder a este módulo usa:</p>
+
+<pre><code>var dns = require('dns'); 
+</code></pre>
+
+<p>Todos los métodos en el módulo <abbr title="sistema de nombres de dominio"><code>dns</code></abbr> usan C-Ares, excepto <code>dns.lookup</code> que usa <code>getaddrinfo(3)</code> en un grupo de subprocesos. C-Ares es mucho más rápido que <code>getaddrinfo</code>, pero el sistema de resolución es más constante con la manera en que operan otros programas. Cuando un usuario hace <code>net.connect(80, 'google.com')</code> o <code>http.get({ host: host: 'google.com'})</code> utiliza el método <code>dns.lookup</code>. Los usuarios que necesitan hacer una gran cantidad de búsquedas rápidamente deben utilizar los métodos que pasan por C-Ares.</p>
+
+<p>Aquí hay un ejemplo que resuelve <code>'www.google.com'</code> a la dirección <abbr title="Protocolo de Internet">IP</abbr> inversa que es la que devuelve.</p>
+
+<pre><code>var dns = require('dns');
+
+dns.resolve4('www.google.com', function (error, direcciones) {
+  if (error) throw error;
+
+  console.log('direcciones: ' + JSON.stringify(direcciones));
+
+  direcciones.forEach(function (a) {
+    dns.reverse(a, function (error, dominios) {
+      if (error) {
+        throw error;
+      }
+
+      console.log('resolución para ' + a + ': ' + JSON.stringify(dominios));
+    });
+  });
+});
+</code></pre>
+
+<h2><code>dns.lookup(</code><abbr title="domain"><code>dominio</code></abbr><code>, [</code><abbr title="family"><code>familia</code></abbr><code>],</code><abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Resuelve un dominio (por ejemplo <code>'google.com'</code>) en el primer registro A (IPv4) o AAAA (IPv6) encontrado.
+La <abbr title="family"><code>familia</code></abbr> puede ser uno de los enteros <code>4</code> o <code>6</code>. El valor predeterminado es <abbr title="null"><code>nulo</code></abbr> que indica tanto la familia de direcciones <abbr title="Protocolo de Internet">IP</abbr> v4 como v6.</p>
+
+<p>La retrollamada tiene argumentos <code>(error,</code><abbr title="address"><code>direccion</code></abbr><code>,</code> <abbr title="family"><code>familia</code></abbr><code>)</code>.  El argumento <abbr title="address"><code>direccion</code></abbr> es una cadena que representa una dirección <abbr title="Protocolo de Internet">IP</abbr> v4 o v6. El argumento <abbr title="family"><code>familia</code></abbr> es o bien el número entero 4 o 6 y denota la familia de <abbr title="address"><code>direccion</code></abbr> (no necesariamente el valor inicialmente pasado a <code>lookup</code>).</p>
+
+<p>En caso de error, <code>error</code> es un objeto <code>Error</code>, donde <code>error.code</code> es el código del error.
+Ten en cuenta que <code>error.code</code> se establecerá en <code>'ENOENT'</code> no sólo cuando el dominio no existe, sino también cuando falla la búsqueda de otras formas, como descriptores de archivo no disponibles.</p>
+
+<h2><code>dns.resolve(</code><abbr title="domain"><code>dominio</code></abbr><code>, [</code><abbr title="rrtype"><code>tipoDeRegistro</code></abbr><code>],</code><abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Resuelve un dominio (por ejemplo <code>'google.com'</code>) en un arreglo de los tipos de registro especificados por <abbr title="rrtype"><code>tipoDeRegistro</code></abbr>. Los <abbr title="rrtype"><code>tipoDeRegistro</code></abbr> válidos son <code>'A'</code> (direcciones IPv4, por omisión), <code>'AAAA'</code> (direcciones IPv6), <code>'MX'</code> (registros de intercambio de correo electrónico), <code>'TXT'</code> (registros de texto), <code>'SRV'</code>(registros SRV), <code>'PTR'</code> (utilizado para la búsqueda inversa de la <abbr title="Protocolo de Internet"><code>ip</code></abbr>), <code>'NS'</code> (registro de nombres de servidor) y <code>'CNAME'</code> (registros de nombres canónicos).</p>
+
+<p>La retrollamada tiene argumentos <code>(error,</code><abbr title="addresses"><code>direcciones</code></abbr><code>)</code>.  El tipo de cada elemento en <abbr title="addresses"><code>direcciones</code></abbr> está determinado por el tipo de registro, y se describe en la documentación de los métodos de búsqueda correspondientes más adelante.</p>
+
+<p>En caso de error, <code>error</code> es un objeto <code>Error</code>, donde <code>error.code</code> es uno de los códigos de error enumerados abajo.</p>
+
+<h2><code>dns.resolve4(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Igual que <code>dns.resolve()</code>, pero sólo para consultas IPv4 (registros <code>A</code>).
+<abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de direcciones IPv4 (por ejemplo, <code>['74.125.79.104', '74.125.79.105', '74.125.79.106']</code>).</p>
+
+<h2><code>dns.resolve6(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>El mismo que <code>dns.resolve4()</code> a excepción de las consultas IPv6 (una consulta <code>AAAA</code>).</p>
+
+<h2><code>dns.resolveMx(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>El mismo que <code>dns.resolve()</code>, pero sólo para consultas de intercambio de correo (registros 'MX').</p>
+
+<p><abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de registros MX, cada uno con atributos prioridad e intercambio (por ejemplo, <code>[{'priority': 10, 'exchange': 'mx.ejemplo.com'},...]</code>).</p>
+
+<h2><code>dns.resolveTxt(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>El mismo que <code>dns.resolve()</code>, pero sólo para consultas de texto (registros <code>TXT</code>).
+<abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de registros de texto disponibles para <abbr title="domain"><code>dominio</code></abbr> (por ejemplo, <code>['v=spf1 ip4:0.0.0.0 ~all']</code>).</p>
+
+<h2><code>dns.resolveSrv(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Igual que <code>dns.resolve()</code>, pero sólo para los registros de servicio (registros <code>SRV</code>).
+<abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de los registros SRV disponibles del <abbr title="domain"><code>dominio</code></abbr>. Las propiedades de los registros SRV son <code>'priority'</code>, <code>'weight'</code>, <code>'port'</code> y <code>'name'</code> (por ejemplo, <code>[{'priority': 10, {'weight': 5, 'port': 21223, 'name': 'servicio.ejemplo.com'}, ...]</code>).</p>
+
+<h2><code>dns.resolveNs(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Igual que <code>dns.resolve()</code>, pero sólo para los registros servidor de nombres (registros <code>NS</code>).
+<abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de los registros de servidor de nombres disponibles para el <abbr title="domain"><code>dominio</code></abbr> (por ejemplo, <code>['ns1.ejemplo.com', 'ns2.ejemplo.com']</code>).</p>
+
+<h2><code>dns.resolveCname(</code><abbr title="domain"><code>dominio</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Igual que <code>dns.resolve()</code>, pero sólo para los registros de nombres canónicos (registros <code>CNAME</code>). <abbr title="addresses"><code>direcciones</code></abbr> es un arreglo de los registros de nombres canónicos disponibles para el <abbr title="domain"><code>dominio</code></abbr> (por ejemplo, <code>['bar.ejemplo.com']</code>).</p>
+
+<h2><code>dns.reverse(</code><abbr title="Protocolo de Internet"><code>ip</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Resuelve inversamente una dirección <abbr title="Protocolo de Internet">IP</abbr> a un arreglo de nombres de dominio.</p>
+
+<p>La retrollamada tiene argumentos <code>(error,</code><abbr title="domains"><code>dominios</code></abbr><code>)</code>.</p>
+
+<p>En caso de error, <code>error</code> es un objeto <code>Error</code>, donde <code>error.code</code> es uno de los códigos de error enumerados abajo.</p>
+
+<h2>Códigos de error</h2>
+
+<p>Cada consulta <abbr title="Sistema de nombres de dominio">DNS</abbr> puede devolver uno de los siguientes códigos de error:</p>
+
+<ul>
+<li><code>dns.NODATA</code>: Respuesta devuelta por el servidor <abbr title="Sistema de nombres de dominio">DNS</abbr> sin datos.</li>
+<li><code>dns.FORMERR</code>: El servidor <abbr title="Sistema de nombres de dominio">DNS</abbr> reclama que la consulta está mal formateada.</li>
+<li><code>dns.SERVFAIL</code>: Servidor <abbr title="Sistema de nombres de dominio">DNS</abbr> devolvió un error general.</li>
+<li><code>dns.NOTFOUND</code>: No se encuentra el nombre de dominio.</li>
+<li><code>dns.NOTIMP</code>: El servidor <abbr title="Sistema de nombres de dominio">DNS</abbr> no implementa la operación solicitada.</li>
+<li><code>dns.REFUSED</code>: El servidor <abbr title="Sistema de nombres de dominio">DNS</abbr> denegó la consulta.</li>
+<li><code>dns.BADQUERY</code>: Consulta <abbr title="Sistema de nombres de dominio">DNS</abbr> mal formada.</li>
+<li><code>dns.BADNAME</code>: Nombre de dominio mal formado.</li>
+<li><code>dns.BADFAMILY</code>: Familia de direcciones no compatible.</li>
+<li><code>dns.BADRESP</code>: Respuesta <abbr title="Sistema de nombres de dominio">DNS</abbr> mal formada.</li>
+<li><code>dns.CONNREFUSED</code>: No se pudo contactar con los servidores <abbr title="Sistema de nombres de dominio">DNS</abbr>.</li>
+<li><code>dns.TIMEOUT</code>: Tiempo de espera agotado mientras contactaba con los servidores <abbr title="Sistema de nombres de dominio">DNS</abbr>.</li>
+<li><code>dns.EOF</code>: Final del archivo.</li>
+<li><code>dns.FILE</code>: Error al leer el archivo.</li>
+<li><code>dns.NOMEM</code>: Fuera de memoria.</li>
+<li><code>dns.DESTRUCTION</code>: Se está destruyendo el canal.</li>
+<li><code>dns.BADSTR</code>: Cadena mal formada.</li>
+<li><code>dns.BADFLAGS</code>: Se especificaron indicadores ilegales.</li>
+<li><code>dns.NONAME</code>: El nombre del servidor no es numérico.</li>
+<li><code>dns.BADHINTS</code>: Se especificaron pistas indicadoras ilegales.</li>
+<li><code>dns.NOTINITIALIZED</code>: Aún no se ha iniciado la biblioteca c-ares.</li>
+<li><code>dns.LOADIPHLPAPI</code>: Error al cargar <code>iphlpapi.dll</code>.</li>
+<li><code>dns.ADDRGETNETWORKPARAMS</code>: No se pudo encontrar la función <code>GetNetworkParams</code>.</li>
+<li><code>dns.CANCELLED</code>: Consulta <abbr title="Sistema de nombres de dominio">DNS</abbr> cancelada.</li>
+</ul>
+
+      </section>
+    </div>
+  </body>
+</html>

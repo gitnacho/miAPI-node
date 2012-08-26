@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="OS">Sistema operativo</abbr></h1>
+
+<pre><code>Estabilidad: 4 — API congelada
+</code></pre>
+
+<p>Proporciona algunas funciones de utilidad básica relacionadas con el sistema operativo.</p>
+
+<p>Para acceder a este módulo usa:</p>
+
+<pre><code>var os = require('os');
+</code></pre>
+
+<h2><code>os.tmpDir()</code></h2>
+
+<p>Devuelve el directorio predeterminado del sistema operativo para los archivos temporales.</p>
+
+<h2><code>os.hostname()</code></h2>
+
+<p>Devuelve el nombre del servidor en el sistema operativo.</p>
+
+<h2><code>os.type()</code></h2>
+
+<p>Devuelve el nombre del sistema operativo.</p>
+
+<h2><code>os.platform()</code></h2>
+
+<p>Devuelve el ambiente del sistema operativo.</p>
+
+<h2><code>os.arch()</code></h2>
+
+<p>Devuelve la arquitectura del CPU en el sistema operativo.</p>
+
+<h2><code>os.release()</code></h2>
+
+<p>Devuelve la versión del sistema operativo.</p>
+
+<h2><code>os.uptime()</code></h2>
+
+<p>Devuelve la cantidad de tiempo en segundos que ha estado activo el sistema.</p>
+
+<h2><code>os.loadavg()</code></h2>
+
+<p>Devuelve un arreglo que contiene los promedios de carga de 1, 5 y 15 minutos.</p>
+
+<h2><code>os.totalmem()</code></h2>
+
+<p>Devuelve la cantidad total de memoria en bytes del sistema.</p>
+
+<h2><code>os.freemem()</code></h2>
+
+<p>Devuelve la cantidad de memoria libre del sistema, en bytes.</p>
+
+<h2><code>os.cpus()</code></h2>
+
+<p>Devuelve un arreglo de objetos que contienen información acerca de cada CPU/núcleo instalado: modelo, velocidad (en MHz) y tiempos (un objeto que contiene el número de pulsos del CPU pasado en: <code>user</code>, <code>nice</code>, <code>sys</code>, <code>idle</code> e <code>irq</code>).</p>
+
+<p>Ejemplo de una inspección de <code>os.cpus</code>:</p>
+
+<pre><code>[ { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 252020,
+       nice: 0,
+       sys: 30340,
+       idle: 1070356870,
+       irq: 0 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 306960,
+       nice: 0,
+       sys: 26980,
+       idle: 1071569080,
+       irq: 0 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 248450,
+       nice: 0,
+       sys: 21750,
+       idle: 1070919370,
+       irq: 0 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 256880,
+       nice: 0,
+       sys: 19430,
+       idle: 1070905480,
+       irq: 20 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 511580,
+       nice: 20,
+       sys: 40900,
+       idle: 1070842510,
+       irq: 0 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 291660,
+       nice: 0,
+       sys: 34360,
+       idle: 1070888000,
+       irq: 10 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 308260,
+       nice: 0,
+       sys: 55410,
+       idle: 1071129970,
+       irq: 880 } },
+  { model: 'Intel(R) Core(TM) i7 CPU         860  @ 2.80GHz',
+    speed: 2926,
+    times:
+     { user: 266450,
+       nice: 1480,
+       sys: 34920,
+       idle: 1072572010,
+       irq: 30 } } ]
+</code></pre>
+
+<h2><code>os.networkInterfaces()</code></h2>
+
+<p>Obtiene una lista de interfaces de red:</p>
+
+<pre><code>{ lo0: 
+   [ { address: '::1', family: 'IPv6', internal: true },
+     { address: 'fe80::1', family: 'IPv6', internal: true },
+     { address: '127.0.0.1', family: 'IPv4', internal: true } ],
+  en1: 
+   [ { address: 'fe80::cabc:c8ff:feef:f996', family: 'IPv6',
+       internal: false },
+     { address: '10.0.1.123', family: 'IPv4', internal: false } ],
+  vmnet1: [ { address: '10.99.99.254', family: 'IPv4', internal: false } ],
+  vmnet8: [ { address: '10.88.88.1', family: 'IPv4', internal: false } ],
+  ppp0: [ { address: '10.2.0.231', family: 'IPv4', internal: false } ] }
+</code></pre>
+
+<h2><code>os.EOL</code></h2>
+
+<p>Una constante definiendo el marcador de fin de línea apropiado para el sistema operativo.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

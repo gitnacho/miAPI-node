@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Stream">Flujo</abbr></h1>
+
+<pre><code>Estabilidad: 2 — Inestable
+</code></pre>
+
+<p>Un <abbr title="stream">flujo</abbr> es una interfaz abstracta implementada por diversos objetos en Node.  Por ejemplo, una petición a un servidor HTTP es un <abbr title="stream">flujo</abbr>, tal como <code>'stdout'</code>. Los <abbr title="streams">flujos</abbr> son de lectura, escritura o ambos. Todos los <abbr title="streams">flujos</abbr> son instancias de <a href="events.html#events_class_events_eventemitter">EventEmitter</a></p>
+
+<p>Puedes cargar la clase <abbr title="Stream"><code>Flujo</code></abbr> base usando <code>require('stream')</code>.</p>
+
+<h2>Flujo de lectura</h2>
+
+<!-- type=class -->
+
+<p>Un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr> tiene los siguientes métodos, miembros y eventos.</p>
+
+<h3>Evento: <code>'data'</code></h3>
+
+<p><code>function (datos) { }</code></p>
+
+<p>El evento <code>'data'</code> emite o bien un <abbr title="buffer"><code>búfer</code></abbr> (de manera predeterminada) o una cadena si se utilizó <code>setEncoding()</code>.</p>
+
+<p>Ten en cuenta que <strong>se perderán datos</strong> si no hay algún <abbr title="listener"><code>escucha</code></abbr> cuando un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr> emita un evento <code>'data'</code>.</p>
+
+<h3>Evento: <code>'end'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido cuando el flujo ha recibido un <abbr title="End of file">EOF</abbr> (FIN en terminología <abbr title="Protocolo de control de transmisión">TCP</abbr>).
+Indica que no van a suceder más eventos <code>'data'</code>. Si el flujo también es de escritura, posiblemente continúe escribiendo.</p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<p><code>function (</code><abbr title="exception"><code>excepcion</code></abbr><code>) { }</code></p>
+
+<p>Emitido si hubo un error al recibir los datos.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido cuando se ha cerrado el recurso subyacente (por ejemplo, el descriptor de archivo de respaldo). No todos los flujos emitirán este evento.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.readable</code></h3>
+
+<p>Un valor lógico que es <code>true</code> de forma predeterminada, pero se torna <code>false</code> después de ocurrir un <code>'error'</code>, el flujo llegó a un <code>'end'</code> o se llamó a <code>destroy()</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.setEncoding([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Hace que el evento <code>'data'</code> emita una cadena en lugar de un <code>búfer</code>. <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'utf8'</code>, <code>'utf16le'</code> (<code>'ucs2'</code>), <code>'ascii'</code> o <code>'hex'</code>. El valor predeterminado es <code>'utf8'</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.pause()</code></h3>
+
+<p>Emite una señal de asesoramiento a la capa de comunicación subyacente, solicitando que no envíe ningún dato adicional hasta que se llame a <code>resume()</code>.</p>
+
+<p>Ten en cuenta que, debido a la naturaleza consultiva, ciertos flujos no se interrumpirán inmediatamente, y por lo tanto pueden emitir eventos <code>'data'</code> por un indeterminado período de tiempo incluso después de llamar a <code>pause()</code>. Quizás desees poner en un búfer tales eventos <code>'data'</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.resume()</code></h3>
+
+<p>Reanuda los eventos <code>'data'</code> entrantes después de un <code>pause()</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.destroy()</code></h3>
+
+<p>Cierra el descriptor de archivo subyacente. El flujo ya no es <code>de escritura</code> ni <code>de lectura</code>.  El flujo no emitirá más eventos <code>'data'</code> o <code>'end'</code>. No se enviarán datos a la cola de escritura.  El flujo debe emitir el evento <code>'close'</code> una vez que sus recursos se han eliminado.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.pipe(</code><abbr title="destination"><code>destino</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h3>
+
+<p>Este es un método de <code>Stream.prototype</code> disponible en todos los <abbr title="Stream"><code>Flujo</code></abbr>s.</p>
+
+<p>Conecta este flujo de lectura al flujo de escritura <abbr title="destination"><code>destino</code></abbr>. Los datos entrantes en este flujo se escriben a <abbr title="destination"><code>destino</code></abbr>. Los flujos destino y origen se mantienen sincronizados para pausar y reanudar según sea necesario.</p>
+
+<p>Esta función devuelve el flujo <abbr title="destination"><code>destino</code></abbr>.</p>
+
+<p>Emulando la orden <code>cat</code> de Unix:</p>
+
+<pre><code>process.stdin.resume(); process.stdin.pipe(process.stdout);
+</code></pre>
+
+<p>De manera predeterminada se llama a <code>end()</code> en el <abbr title="destination"><code>destino</code></abbr> cuando el flujo origen emite un evento <code>'end'</code>, por lo tanto <abbr title="destination"><code>destino</code></abbr> ya no es de escritura. Pasa <code>{ end:
+false }</code> como <abbr title="options"><code>opciones</code></abbr> para mantener abierto el flujo <abbr title="destination"><code>destino</code></abbr>.</p>
+
+<p>Esto mantiene abierto <code>process.stdout</code> por lo que al final puede escribir «Adiós».</p>
+
+<pre><code>process.stdin.resume();
+
+process.stdin.pipe(process.stdout, { end: false });
+
+process.stdin.on('end', function () {
+process.stdout.write('Adiós
+</code></pre>
+
+<p>'); });</p>
+
+<h2>Flujo de escritura</h2>
+
+<!-- type=class -->
+
+<p>Un <abbr title="Writable Stream"><code>Flujo de escritura</code></abbr> tiene los siguientes métodos, miembros y eventos.</p>
+
+<h3>Evento: <code>'drain'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Después de llamar al método <code>write()</code> devuelve <code>false</code>, este evento es emitido para indicar que es seguro volver a escribir.</p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<p><code>function (</code><abbr title="exception"><code>excepcion</code></abbr><code>) { }</code></p>
+
+<p>Emitido al ocurrir un error con la excepción <abbr title="exception"><code>excepcion</code></abbr>.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () { }</code></p>
+
+<p>Emitido cuando se ha cerrado el descriptor de archivo subyacente.</p>
+
+<h3>Evento: <code>'pipe'</code></h3>
+
+<p><code>function (</code><abbr title="source"><code>fuente</code></abbr><code>) { }</code></p>
+
+<p>Emitido cuando el flujo es pasado a un flujo de lectura con un método que lo canaliza.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.writable</code></h3>
+
+<p>Un valor booleano que es <code>true</code> de forma predeterminada, pero se vuelve <code>false</code> después de que se ha producido un <code>'error'</code> o se llamó al método <code>end()</code>/<code>destroy()</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.write(</code><abbr title="String"><code>cadena</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>], [</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>])</code></h3>
+
+<p>Escribe flujo.  Devuelve <code>true</code> si la cadena se enjuagó en el búfer del núcleo.  Devuelve <code>false</code> para indicar que el búfer del núcleo está lleno y los datos se enviarán en el futuro. El evento <code>'drain'</code> indicará cuando el búfer del núcleo esté vacío de nuevo. El valor predeterminado de <code>codificación</code> es <code>'utf8'</code>.</p>
+
+<p>Si se especifica el parámetro opcional <abbr title="fd"><code>descriptorArchivo</code></abbr>, se interpreta como un descriptor de archivo integral a ser enviado a través del flujo. Este sólo se admite para los flujos UNIX y de lo contrario se omite silenciosamente. Al escribir un descriptor de archivo de esta manera y cerrar el descriptor antes de drenar el flujo, te arriesgas a enviar un descriptor de archivo no válido (cerrado).</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.write(</code><abbr title="buffer"><code>bufer</code></abbr><code>)</code></h3>
+
+<p>Igual que el anterior, salvo que con un búfer sin procesar.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.end()</code></h3>
+
+<p>Termina el flujo con <abbr title="End of file">EOF</abbr> o FIN.  Esta llamada te permitirá enviar datos a la cola de escritura antes de cerrar el flujo.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.end(</code><abbr title="string"><code>cadena</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>)</code></h3>
+
+<p>Envía la <abbr title="string"><code>cadena</code></abbr> con la <abbr title="encoding"><code>codificacion</code></abbr> suministrada y termina el flujo con <abbr title="End of file">EOF</abbr> o FIN. Este es útil para reducir el número de paquetes enviados.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.end(</code><abbr title="buffer"><code>bufer</code></abbr><code>)</code></h3>
+
+<p>Lo mismo que el anterior pero con un <code>búfer</code>.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.destroy()</code></h3>
+
+<p>Cierra el descriptor de archivo subyacente. El flujo ya no es <code>de escritura</code> ni <code>de lectura</code>.  El flujo no emitirá más eventos <code>'data'</code> o <code>'end'</code>. No se enviarán datos a la cola de escritura.  El flujo debe emitir el evento <code>'close'</code> una vez que sus recursos se han eliminado.</p>
+
+<h3><abbr title="stream"><code>flujo</code></abbr><code>.destroySoon()</code></h3>
+
+<p>Después de drenar la cola de escritura, cierra el descriptor de archivo.
+<code>destroySoon()</code> todavía se puede destruir inmediatamente, mientras no queden datos en la cola de escritura.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

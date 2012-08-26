@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Domain">Dominio</abbr></h1>
+
+<pre><code>Estabilidad: 1 — Experimental
+</code></pre>
+
+<p>Los dominios proporcionan una manera de manejar múltiples operaciones de diferentes tipos de E/S como un solo grupo.  Si alguno de los emisores de eventos o retrollamadas registradas a un dominio emiten un evento <code>'error'</code>, o producen un error, entonces el objeto <code>domain</code> será notificado, en lugar de perder el contexto del error en el controlador <code>process.on('uncaughtException')</code>, o provocar que el programa termine con un código de error.</p>
+
+<p>Esta función es nueva en la versión 0.8 de Node.  Es un primer paso y se espera que cambie significativamente en futuras versiones.  Por favor, úsala y proporciona retroalimentación.</p>
+
+<p>Debido a su carácter experimental, las características de <abbr title="Domains"><code>Dominios</code></abbr> se inhabilitan cuando el módulo <code>domain</code> se ha cargado por lo menos una vez.  No se crean o registran dominios de forma predeterminada.  Esto es por diseño, para evitar efectos adversos en los programas actuales.  Se espera que esté habilitado de manera predeterminada en versiones futuras de Node.js.</p>
+
+<h2>Adiciones a los objetos <code>Error</code></h2>
+
+<!-- type=misc -->
+
+<p>Cada vez que se enruta un objeto <code>Error</code> a través de un dominio, se le agregan algunos campos extra.</p>
+
+<ul>
+<li><code>error.domain</code> El dominio que manipuló primero el error.</li>
+<li><code>error.domain_emitter</code> El emisor del evento que difundió un evento <code>'error'</code> con el objeto <code>Error</code>.</li>
+<li><code>error.domain_bound</code> La función retrollamada vinculada al dominio y que pasó un error como su primer argumento.</li>
+<li><code>error.domain_thrown</code> Un booleano indicando cuándo se produjo el error, se emitió, o se pasó a una función retrollamada vinculada.</li>
+</ul>
+
+<h2>Vínculo implícito</h2>
+
+<!-- type=misc -->
+
+<p>Si los dominios están en uso, entonces todos los nuevos objetos <code>EventEmitter</code> (incluidos los objetos <abbr title="stream"><code>flujo</code></abbr>, <abbr title="request"><code>peticion</code></abbr>, <abbr title="response"><code>respuesta</code></abbr>, etc.) implícitamente serán ligados al dominio activo en el momento de su creación.</p>
+
+<p>Además, las retrollamadas pasadas al bucle de eventos <code>'petición'</code> de bajo nivel (tal como <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.open</code>, u otro tipo que tienen métodos retrollamados) automáticamente serán ligadas al dominio activo.  Si ellas las lanzan, entonces el dominio deberá capturar el error.</p>
+
+<p>Con el fin de evitar el uso excesivo de memoria, los objetos <code>Domain</code> en sí mismos no se agregan implícitamente como hijos del dominio activo.  Si así fuera, entonces sería demasiado fácil evitar que los objetos <abbr title="Request"><code>Peticion</code></abbr> y <abbr title="Response"><code>Respuesta</code></abbr> sean recolectados con la basura adecuadamente.</p>
+
+<p>Si <em>quieres</em> anidar objetos <code>Dominio</code> como hijos de un <code>Dominio</code> principal, entonces, los debes agregar explícitamente y deshacerte de ellos más tarde.</p>
+
+<p>Al vincular rutas implícitas lanza errores y eventos <code>'error'</code> al evento <code>error</code> del dominio, pero no registra el <code>EventEmitter</code> en el dominio, por lo tanto <abbr title="domain"><code>dominio</code></abbr><code>.dispose()</code> no apaga el <code>EventEmitter</code>.
+La vinculación implícita sólo se ocupa de lanzar errores y eventos <code>'error'</code>.</p>
+
+<h2>Vínculo explícito</h2>
+
+<!-- type=misc -->
+
+<p>A veces, el dominio en uso no es el que se debe utilizar como el emisor específico del evento.  O bien, el emisor del evento se pudo haber creado en el contexto de un dominio, pero en su lugar debe estar vinculado a algún otro dominio.</p>
+
+<p>Por ejemplo, un servidor HTTP podría estar usando un dominio, pero tal vez te gustaría utilizar un dominio separado para cada petición.</p>
+
+<p>Esto es posible a través del vínculo explícito.</p>
+
+<p>Por ejemplo:</p>
+
+<p>```
+// Crea un dominio de primer nivel para el servidor
+var dominioServidor = domain.create();</p>
+
+<p>dominioServidor.run(function () {
+  // el servidor se crea en el ámbito de dominioServidor
+  http.createServer(function (peticion, respuesta) {
+    // 'peticion' y 'respuesta' también se crean en el ámbito de
+    // dominioServidor sin embargo, preferiríamos tener un dominio
+    // separado para cada petición.
+    // Lo primero es crear y agregar peticion y respuesta al mismo.
+    var peticiond = domain.create();
+    peticiond.add(peticion);
+    peticiond.add(respuesta);
+    peticiond.on('error', function (error) {
+      console.error('Error', error, peticion.url);
+      try {
+        respuesta.writeHead(500);
+        respuesta.end('Ocurrió un error, lo siento.');
+        respuesta.on('close', function () {
+          // fuerza el cierre de cualquier otra cosa añadida a este
+          // dominio
+          peticiond.dispose();
+        });
+      } catch (er) {
+        console.error('Enviando el error 500', error, peticion.url);
+        // probemos mejor.  Limpia todo lo demás.
+        peticiond.dispose();
+      }
+    });
+  }).listen(1337);
+});
+```</p>
+
+<h2><abbr title="domain"><code>dominio</code></abbr><code>.create()</code></h2>
+
+<ul>
+<li>Devuelve: {<abbr title="Domain">Dominio</abbr>}</li>
+</ul>
+
+<p>Devuelve un objeto <code>Dominio</code>.</p>
+
+<h2>Clase: <code>Domain</code></h2>
+
+<p>La clase <code>Domain</code> encapsula la funcionalidad de encaminamiento de errores y excepciones no capturadas con el objeto <code>Dominio</code> activo.</p>
+
+<p><code>Domain</code> es una clase descendiente de <a href="events.html#events_class_events_eventemitter">EventEmitter</a>.  Para manipular los errores que captura, escucha su evento <code>'error'</code>.</p>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.run(</code><abbr title="fn"><code>funcion</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="fn"><code>funcion</code></abbr> {<abbr title="Function">Función</abbr>}</li>
+</ul>
+
+<p>Ejecuta la función suministrada en el contexto del dominio, vinculada implícitamente a todos los emisores, temporizadores y peticiones de bajo nivel creados en ese contexto.</p>
+
+<p>Esta es la forma más básica de utilizar un dominio.</p>
+
+<p>Ejemplo:</p>
+
+<p><code>
+var dominio = domain.create();
+dominio.on('error', function (error) {
+  console.error('¡Se detectó un error!', error);
+});
+dominio.run(function () {
+  process.nextTick(function () {
+    setTimeout(function () { // simulando algunas cosas asíncronas
+      sistemaDeArchivos.open('archivo inexistente', 'r', function (error, descriptorArchivo) {
+        if (error) throw error;
+        // procede...
+      });
+    }, 100);
+  });
+});
+</code></p>
+
+<p>En este ejemplo, se desencadena el controlador <code>dominio.on('error')</code>, en lugar de colgar el programa.</p>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.members</code></h3>
+
+<ul>
+<li>{<abbr title="Array">Arreglo</abbr>}</li>
+</ul>
+
+<p>Un <abbr title="array">arreglo</abbr> de temporizadores y emisores de eventos que se han agregado explícitamente al dominio.</p>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.add(</code><abbr title="emitter"><code>emisor</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="emitter"><code>emisor</code></abbr> { <code>EventEmitter</code> | <abbr title="Timer"><code>Temporizador</code></abbr> } un emisor o temporizador por añadir al dominio</li>
+</ul>
+
+<p>Añade explícitamente un emisor al dominio.  Si los controladores de eventos convocados por el emisor lanzan un error, o si el emisor desencadena un evento <code>'error'</code> del dominio, igual que con el vínculo implícito.</p>
+
+<p>Esto también funciona con temporizadores devueltos desde <code>setInterval</code> y <code>setTimeout</code>.  Si lo lanza la función retrollamada, será capturado por un controlador de <code>'error'</code> del dominio.</p>
+
+<p>Si el temporizador o <code>EventEmitter</code> ya estuviera vinculado a un dominio, se quita uno y en su lugar se vincula este.</p>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.remove(</code><abbr title="emitter"><code>emisor</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="emitter"><code>emisor</code></abbr> { <code>EventEmitter</code> | <abbr title="Timer"><code>Temporizador</code></abbr> } <abbr title="emitter"><code>emisor</code></abbr> o <abbr title="timer"><code>temporizador</code></abbr> a retirar del dominio</li>
+</ul>
+
+<p>Lo opuesto de <abbr title="domain"><code>dominio</code></abbr><code>.add(</code><abbr title="emitter"><code>emisor</code></abbr><code>)</code>.  Elimina el manejo del dominio del emisor especificado.</p>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.bind(</code><abbr title="rt"><code>retrollamada</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="rt"><code>retrollamada</code></abbr> {<abbr title="Function">Función</abbr>} La función retrollamada</li>
+<li>Devuelve: {<abbr title="Function">Función</abbr>} La función vinculada</li>
+</ul>
+
+<p>La función devuelta debe ser una envoltura en torno a la función retrollamada suministrada.  Cuando la función devuelta es llamada, los errores que se producen se dirigirán al evento <code>'error'</code> del dominio.</p>
+
+<h4>Ejemplo</h4>
+
+<pre><code>var dominio = domain.create();
+
+function leeAlgunArchivo(nombreArchivo, retrollamada) {
+  fs.readFile(nombreArchivo, 'utf8', dominio.bind(function (error, datos) {
+    // Si se lanza, también se pasa al dominio
+    return retrollamada(error, datos ? JSON.parse(datos) : null);
+  }));
+}
+
+dominio.on('error', function (error) {
+  // se ha producido un error en alguna parte.
+  // Si lo lanzamos ahora, se colgará el programa con el
+  // número de línea normal y el mensaje de la pila.
+});
+</code></pre>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.intercept(</code><abbr title="rt"><code>retrollamada</code></abbr><code>)</code></h3>
+
+<ul>
+<li><abbr title="rt"><code>retrollamada</code></abbr> {<abbr title="Function">Función</abbr>} La función retrollamada</li>
+<li>Devuelve: {<abbr title="Function">Función</abbr>} La función interceptada</li>
+</ul>
+
+<p>Este método es casi idéntico a <abbr title="domain"><code>dominio</code></abbr><code>.bind(</code><abbr title="rt"><code>retrollamada</code></abbr><code>)</code>.  Sin embargo, además de capturar los errores generados, este también intercepta los objetos <code>Error</code> enviados como primer argumento de la función.</p>
+
+<p>De esta manera, el <code>if (error)</code> común devuelve el patrón <code>retrollamada(error);</code> que puedes reemplazar por un solo controlador de errores en un único lugar.</p>
+
+<h4>Ejemplo</h4>
+
+<pre><code>var dominio = domain.create();
+
+function leeAlgunArchivo(nombreArchivo, retrollamada) {
+  fs.readFile(nombreArchivo, 'utf8', dominio.intercept(function (datos) {
+    // Nota, el primer argumento no se pasa a la retrollamada,
+    // ya que se supone que es el argumento 'Error' y de este
+    // modo interceptado por el dominio.
+
+    // Si esta lo lanza, también se pasa el dominio por lo que
+    // la lógica para controlar errores se puede mover al
+    // evento «error» en el dominio en lugar de repetirlo
+    // a lo largo del programa.
+    return retrollamada(null, JSON.parse(datos));
+  }));
+}
+
+dominio.on('error', function (error) {
+  // se ha producido un error en alguna parte.
+  // Si lo lanzamos ahora, se colgará el programa con el
+  // número de línea normal y el mensaje de la pila.
+});
+</code></pre>
+
+<h3><abbr title="domain"><code>dominio</code></abbr><code>.dispose()</code></h3>
+
+<p>El método <code>dispose</code> destruye un dominio, y hace su mejor esfuerzo para limpiar todas y cada una de las E/S que están asociadas al dominio.  Las transmisiones son abortadas, terminadas, cerradas, y/o destruidas.  Los temporizadores se borran.
+Las retrollamadas vinculadas explícitamente ya no son convocadas.  Cualquier evento de error que se produzca como resultado de esta se omite.</p>
+
+<p>La intención de llamar a <code>dispose</code> generalmente es para evitar errores en cascada cuando una parte crítica del contexto del dominio se encuentra en un estado de error.</p>
+
+<p>Una vez que el dominio se ha eliminado el evento <code>'dispose'</code> será emitido.</p>
+
+<p>Ten en cuenta que aún podrías llevar a cabo E/S.  Sin embargo, en el mayor grado posible, una vez que un dominio es destruido, todos los errores de los emisores de ese conjunto serán omitidos.  Por lo tanto, incluso si algunas de las acciones restantes aún están en vuelo, Node.js no comunicará más información acerca de ellas.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

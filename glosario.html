@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>Glosario</h1>
+
+<p><a id="menu">
+<a href="#a">A</a> <a href="#b">B</a> <a href="#c">C</a> <a href="#d">D</a> <a href="#e">E</a> <a href="#f">F</a> <a href="#g">G</a> <a href="#h">H</a>
+<a href="#i">I</a> <a href="#k">K</a> <a href="#l">L</a> <a href="#m">M</a> <a href="#n">N</a> <a href="#o">O</a> <a href="#p">P</a> <a href="#q">Q</a>
+<a href="#r">R</a> <a href="#s">S</a> <a href="#t">T</a> <a href="#u">U</a> <a href="#v">V</a> <a href="#w">W</a> <a href="#y">Y</a> </a></p>
+
+<hr />
+
+<h2><a id="a">A</a></h2>
+
+<p><a id="actual">«actual» → real</a></p>
+
+<p><a id="Addons">«Addons» → Agregados</a></p>
+
+<p><a id="address">«address» → direccion</a></p>
+
+<p><a id="addresses">«addresses» → direcciones</a></p>
+
+<p><a id="Agent">«Agent» → Agente</a></p>
+
+<p><a id="algorithm">«algorithm» → algoritmo</a></p>
+
+<p><a id="array">«array» → arreglo/matriz</a> <br />
+En la documentación se da preferencia a la primer palabra porque es más parecida a la original.</p>
+
+<p><a id="arrays">«arrays» → arreglos</a> <br />
+Ve <a href="#array">«array»</a></p>
+
+<p><a id="assert>«assert» → acierta</a></p>
+
+<p><a id="Assertions">«Assertions» → Aserciones</a></p>
+
+<p><a id="aTime">«aTime» → instanteApertura</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="b">B</a></h2>
+
+<p><a id="backlog">«backlog» → conexionesPendientes</a></p>
+
+<p><a id="block">«block» → bloque</a></p>
+
+<p><a id="bold">«bold» → negrita</a></p>
+
+<p><a id="Boolean">«Boolean» → Booleano</a></p>
+
+<p><a id="buffer">«buffer» → búfer<abbr title="en código de programación">/≈</abbr>bufer</a></p>
+
+<p><a id="bytesRead">«bytesRead» → bytesLeidos</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="c">C</a></h2>
+
+<p><a id="CA">CA → Autoridad certificadora</a></p>
+
+<p><a id="callback">«callback» → retrollamada</a></p>
+
+<p><a id="Callbacks">«Callbacks» → Retrollamadas</a></p>
+
+<p><a id="Certificate Signing Request">«Certificate Signing Request» → Solicitud de firma del certificado</a> <br />
+Ve <a href="#CSR">CSR</a></p>
+
+<p><a id="child>«child» → hijo</a></p>
+
+<p><a id="Child Process">«Child Process» → Proceso hijo</a></p>
+
+<p><a id="chunk">«chunk» → fragmento</a></p>
+
+<p><a id="Cluster">«Cluster» → Agrupar</a></p>
+
+<p><a id="code">«code» → código<abbr title="en código de programación">/≈</abbr>codigo</a></p>
+
+<p><a id="codePoints">«codePoints» → puntosDeCodificacion</a></p>
+
+<p><a id="colors">«colors» → colores</a></p>
+
+<p><a id="command">«command» → orden</a></p>
+
+<p><a id="connectionListener">«connectionListener» → escuchaDeConexion</a></p>
+
+<p><a id="connectListener">«connectListener» → escuchaDeConexion</a></p>
+
+<p><a id="context">«context» → contexto</a></p>
+
+<p><a id="credentials">«credentials» → credenciales</a></p>
+
+<p><a id="CSR">CRS → «Certificate Signing Request»</a> <br />
+Ve <a href="#Certificate Signing Request">«Certificate Signing Request»</a></p>
+
+<p><a id="cTime">«cTime» → instanteCreacion</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="d">D</a></h2>
+
+<p><a id="data">«data» → datos</a></p>
+
+<p><a id="date">«date» → fecha</a></p>
+
+<p><a id="debugger">«debugger» → depurador</a></p>
+
+<p><a id="delay">«delay» → demora</a></p>
+
+<p><a id="depth">«depth» → profundidad</a></p>
+
+<p><a id="descriptorArchivo">descriptorArchivo → fd</a> <br />
+«fd» surge de las siglas de «file descriptor».</p>
+
+<p><a id="destination">«destination» → destino</a></p>
+
+<p><a id="details">«details» → detalles</a></p>
+
+<p><a id="dgram">«dgram» → datagrama</a> <br />
+«dgram» es la contracción de «datagrama»</p>
+
+<p><a id="directory">«directory» → directorio</a></p>
+
+<p><a id="DNS">DNS → «Domain Name System»</a> <br />
+Ve <a href="#Sistema de nombres de dominio">Sistema de nombres de dominio</a></p>
+
+<p><a id="Domain">«Domain» → Dominio</a></p>
+
+<p><a id="Domains">«Domains» → Dominios</a></p>
+
+<p><a id="dstpath">«dstpath» → rutadestino</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="e">E</a></h2>
+
+<p><a id="emitter">«emitter» → emisor</a></p>
+
+<p><a id="enable">«enable» → activar</a></p>
+
+<p><a id="encoding">«encoding» → codificacion</a></p>
+
+<p><a id="End of file">«End of file» → EOF</a></p>
+
+<p><a id="end">«end» → fin</a></p>
+
+<p><a id="Entorno de Desarrollo Integrado">Entorno de Desarrollo Integrado → IDE</a></p>
+
+<p><a id="env">«env» → entorno</a></p>
+
+<p><a id="eq">«eq» → asignacion</a></p>
+
+<p><a id="event">«event» → evento</a></p>
+
+<p><a id="eventos">«events» → eventos</a></p>
+
+<p><a id="EventEmitter">«EventEmitter» → EmisorDeEventos</a></p>
+
+<p><a id="Events">«Events» → Eventos</a></p>
+
+<p><a id="exception">«exception» → excepción<abbr title="en código de programación">/≈</abbr>excepcion</a></p>
+
+<p><a id="expected">«expected» → esperado</a></p>
+
+<p><a id="expression">«expression» → expresión<abbr title="en código de programación">/≈</abbr>expresion</a></p>
+
+<p><a id="ext">«ext» → extensión<abbr title="en código de programación">/≈</abbr>extension</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="f">F</a></h2>
+
+<p><a id="family">«family» → familia</a></p>
+
+<p><a id="fd">«fd» → descriptorArchivo</a> <br />
+«fd» surge de las siglas de «file descriptor».</p>
+
+<p><a id="fds">«fds» → descriptoresDeArchivo</a> <br />
+Ve <a href="#fd">fd</a></p>
+
+<p><a id="File System">«File System» → Sistema de archivos</a></p>
+
+<p><a id="file">«file» → archivo</a></p>
+
+<p><a id="filename">«filename» → nombreArchivo</a></p>
+
+<p><a id="files">«files» → archivos</a></p>
+
+<p><a id="flag">«flag» → indicador</a></p>
+
+<p><a id="flags">«flags» → indicadores</a></p>
+
+<p><a id="fn">«fn» → funcion</a></p>
+
+<p><a id="foo">«foo» → loquesea</a></p>
+
+<p><a id="format">«format» → formato</a></p>
+
+<p><a id="from">«from» → desde</a></p>
+
+<p><a id="fs">«fs» → «File System»<abbr title="en código de programación">/≈</abbr>sistemaDeArchivos</a> <br />
+«fs» surge de las siglas de <a href="#File System">«File System»</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="g">G</a></h2>
+
+<p><a id="green">«green» → verde</a></p>
+
+<p><a id="grey">«grey» → gris</a></p>
+
+<p><a id="group_name">«<code>group_name</code>» → nombreGrupo</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="h">H</a></h2>
+
+<p><a id="handle">«handle» → controlador</a></p>
+
+<p><a id="head">«head» → cabecera</a></p>
+
+<p><a id="headers">«headers» → cabeceras</a></p>
+
+<p><a id="host">«host» → servidor</a></p>
+
+<p><a id="hostname">«hostname» → nombreServidor</a></p>
+
+<p><a id="http">«http» → servidor</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="i">I</a></h2>
+
+<p><a id="index">«index» → índice<abbr title="en código de programación">/≈</abbr>indice</a></p>
+
+<p><a id="initialDelay">«initialDelay» → demoraInicial</a></p>
+
+<p><a id="initSandbox">«initSandbox» → iniciaRecintoDeSeguridad</a></p>
+
+<p><a id="immediateId">«immediateId» → idInmediato</a></p>
+
+<p><a id="input">«input» → entrada</a></p>
+
+<p><a id="input_encoding">«<code>input_encoding</code>» → codificacionEntrante</a></p>
+
+<p><a id="Integer">«Integer» → Entero</a></p>
+
+<p><a id="Inter-process communication">«Inter-process communication» → IPC</a> <br />
+Ve <a href="#IPC">IPC</a></p>
+
+<p><a id="Interfaz portable del sistema operativo">Interfaz portable del sistema operativo → POSIX</a></p>
+
+<p><a id="intervalID">«intervalID» → idDeIntervalo</a></p>
+
+<p><a id="IP">IP → Protocolo de Internet</a></p>
+
+<p><a id="IPC">Inter-process communication → Comunicación entre procesos</a></p>
+
+<p><a id="isServer">«isServer» → esServidor</a></p>
+
+<p><a id="iterations">«iterations» → repeticiones</a></p>
+
+<p><a id="iv">«iv» → vectorDeInicio</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="k">K</a></h2>
+
+<p><a id="keep-alive">keep-aliVe → mantener-viva</a></p>
+
+<p><a id="keepalive">«keepalive» → mantener-viva</a></p>
+
+<p><a id="key">«key» → clave/tecla</a></p>
+
+<p><a id="keyLen">«keyLen» → largoClave</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="l">L</a></h2>
+
+<p><a id="label">«label» → etiqueta</a></p>
+
+<p><a id="len">«len» → longitud</a></p>
+
+<p><a id="length">«length» → largo</a></p>
+
+<p><a id="line">«line» → línea<abbr title="en código de programación">/≈</abbr>linea</a></p>
+
+<p><a id="linkString">«linkString» → cadenaDeEnlace</a></p>
+
+<p><a id="list">«list» → lista</a></p>
+
+<p><a id="listener">«listener» → escucha</a></p>
+
+<p><a id="listeningListener">«listeningListener» → escuchaDeListening</a></p>
+
+<p><a id="Localizador uniforme de recursos">Localizador uniforme de recursos → URL</a> <br />
+Ve <a href="#URL">URL</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="m">M</a></h2>
+
+<p><a id="magenta">«magenta» → magenta</a></p>
+
+<p><a id="mask">«mask» → máscara<abbr title="en código de programación">/≈</abbr>mascara</a></p>
+
+<p><a id="message">«message» → mensaje</a></p>
+
+<p><a id="Middleware">«Middleware» → Semiware</a></p>
+
+<p><a id="mode">«mode» → modo</a></p>
+
+<p><a id="modulePath">«modulePath» → rutaModulo</a></p>
+
+<p><a id="msg">«msg» → mensaje</a></p>
+
+<p><a id="mTime">«mTime» → instanteModificacion</a></p>
+
+<p><a id="multicastAddress">«multicastAddress» → direccionDeMultidifucion</a></p>
+
+<p><a id="multicastInterface">«multicastInterface» → interfazDeMultidifucion</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="n">N</a></h2>
+
+<p><a id="n">«n» → cantidad</a></p>
+
+<p><a id="name">«name» → nombre</a></p>
+
+<p><a id="newPath">«newPath» → rutaNueva</a></p>
+
+<p><a id="noAssert">«noAssert» → noAcertar</a></p>
+
+<p><a id="noDelay">«noDelay» → sinDemora</a></p>
+
+<p><a id="null">«null» → nulo</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="o">O</a></h2>
+
+<p><a id="obj">«obj» → objeto</a></p>
+
+<p><a id="object">«object» → objeto</a></p>
+
+<p><a id="offset">«offset» → desplazamiento</a></p>
+
+<p><a id="oldPath">«oldPath» → rutaAnt</a></p>
+
+<p><a id="operator">«operator» → operador</a></p>
+
+<p><a id="options">«options» → opciones</a></p>
+
+<p><a id="Options">«Options» → Opciones</a></p>
+
+<p><a id="OS">«OS» → Sistema operativo</a></p>
+
+<p><a id="other_public_key">«<code>other_public_key</code>» → otraClavePublica</a></p>
+
+<p><a id="out">«out» → salida</a></p>
+
+<p><a id="output_encoding">«<code>output_encoding</code>» → codificacionSaliente</a></p>
+
+<p><a id="output_format">«<code>output_format</code>» → formatoSaliente</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="p">P</a></h2>
+
+<p><a id="p">«p» → ruta</a></p>
+
+<p><a id="parseQueryString">«parseQueryString» → cadenaDeConsultaPorAnalizar</a></p>
+
+<p><a id="password">«password» → contraseña<abbr title="en código de programación">/≈</abbr>contrasenia</a></p>
+
+<p><a id="Path">«Path» → Ruta</a></p>
+
+<p><a id="port">«port» → puerto</a></p>
+
+<p><a id="position">«position» → posición<abbr title="en código de programación">/≈</abbr>posicion</a></p>
+
+<p><a id="POSIX">POSIX → «Portable Operating System Interface»</a> <br />
+Ve <a href="#Interfaz portable del sistema operativo">Interfaz portable del sistema operativo</a></p>
+
+<p><a id="preserveCursor">«preserveCursor» → preservaCursor</a></p>
+
+<p><a id="prime">«prime» → prima</a></p>
+
+<p><a id="prime_length">«<code>prime_length</code>» → largoPrima</a></p>
+
+<p><a id="private_key">«<code>private_key</code>» → clavePrivada</a></p>
+
+<p><a id="prompt">«prompt» → indicador</a></p>
+
+<p><a id="Protocolo de datagramas de usuario">«Protocolo de datagramas de usuario» → UDP</a> <br />
+Ve <a href="#UDP">UDP</a></p>
+
+<p><a id="Protocolo de Internet">Protocolo de Internet → IP</a> <br />
+Ve <a href="#IP">IP</a></p>
+
+<p><a id="public_key">«<code>public_key</code>» → clavePublica</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="q">Q</a></h2>
+
+<p><a id="querystring">«querystring» → cadenaDeConsulta</a></p>
+
+<p><a id="Query String">«Query String» → Cadena de consulta</a></p>
+
+<p><a id="query">«query» → pregunta</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="r">R</a></h2>
+
+<p><a id="Readable Stream">«Readable Stream» → Flujo de lectura</a></p>
+
+<p><a id="readableStream">«readableStream» → flujoDeLectura</a></p>
+
+<p><a id="reasonPhrase">«reasonPhrase» → fraseDeMotivo</a></p>
+
+<p><a id="red">«red» → rojo</a></p>
+
+<p><a id="rejectUnauthorized">«rejectUnauthorized» → rechazaNoAutorizado</a></p>
+
+<p><a id="request">«request» → peticion</a></p>
+
+<p><a id="requestCert">«requestCert» → solicitaCertificado</a></p>
+
+<p><a id="requestListener">«requestListener» → escuchaDePeticion</a></p>
+
+<p><a id="response">«response» → respuesta</a></p>
+
+<p><a id="Response">«Response» → Respuesta</a></p>
+
+<p><a id="result">«result» → resultado</a></p>
+
+<p><a id="rrtype">«rrtype» → tipoDeRegistro</a></p>
+
+<p><a id="rt">«rt» → retrollamada</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="s">S</a></h2>
+
+<p><a id="salt">«salt» → sal</a></p>
+
+<p><a id="sandbox">«sandbox» → recintoDeSeguridad</a></p>
+
+<p><a id="Sandboxes">«Sandboxes» → Recintos de seguridad</a></p>
+
+<p><a id="sandboxs">«sandboxs» → recintos de seguridad</a></p>
+
+<p><a id="secure sockets layer">«secure sockets layer» → seguridad en la capa de tomas</a> <br />
+Ve <a href="#SSL">SSL</a></p>
+
+<p><a id="Secure Sockets Layer">«Secure Sockets Layer» → SSL</a></p>
+
+<p><a id="secureConnectionListener">«secureConnectionListener» → escuchaDeConexionSegura</a></p>
+
+<p><a id="sendHandle">«sendHandle» → gestionaEnvio</a></p>
+
+<p><a id="sep">«sep» → separador</a></p>
+
+<p><a id="server">«server» → servidor</a></p>
+
+<p><a id="settings">«settings» → ajustes</a></p>
+
+<p><a id="showHidden">«showHidden» → muestraOculto</a></p>
+
+<p><a id="signal">«signal» → senial</a></p>
+
+<p><a id="signature">«signature» → firma</a></p>
+
+<p><a id="signature_format">«<code>signature_format</code>» → formatoDeFirma</a></p>
+
+<p><a id="Sistema de nombres de dominio">Sistema de nombres de dominio → DNS</a></p>
+
+<p><a id="size">«size» → tamanio</a></p>
+
+<p><a id="slashesDenoteHost">«slashesDenoteHost» → barrasDenotanServidor</a></p>
+
+<p><a id="socket">«socket» → toma</a></p>
+
+<p><a id="Sockets">«Sockets» → Tomas</a></p>
+
+<p><a id="sockets">«sockets» → tomas</a></p>
+
+<p><a id="source">«source» → fuente</a></p>
+
+<p><a id="sourceEnd">«sourceEnd» → finFuente</a></p>
+
+<p><a id="sourceStart">«sourceStart» → inicioFuente</a></p>
+
+<p><a id="srcpath">«srcpath» → rutafuente</a></p>
+
+<p><a id="SSL">SSL → «Secure Sockets Layer»</a> <br />
+Ve <a href="#Secure Sockets Layer">Capa de seguridad en tomas</a></p>
+
+<p><a id="start">«start» → inicio</a></p>
+
+<p><a id="stats">«stats» → estadísticas<abbr title="en código de programación">/≈</abbr>estadisticas</a></p>
+
+<p><a id="statusCode">«statusCode» → codigoDeEstado</a></p>
+
+<p><a id="stream">«stream» → flujo</a></p>
+
+<p><a id="Stream">«Stream» → Flujo</a></p>
+
+<p><a id="streams">«streams» → flujos</a></p>
+
+<p><a id="string">«string» → cadena</a></p>
+
+<p><a id="StringDecoder">«StringDecoder» → DecodificadorDeCadena</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="t">T</a></h2>
+
+<p><a id="targetBuffer">«targetBuffer» → buferDestino</a></p>
+
+<p><a id="targetStart">«targetStart» → inicioDestino</a></p>
+
+<p><a id="Teletypewriter">«Teletypewriter» → TTY</a></p>
+
+<p><a id="temporizador">«temporizador» → t</a></p>
+
+<p><a id="tiempo de vida">«tiempo de vida» → ttl</a></p>
+
+<p><a id="timeout">«timeout» → tiempoDeEspera</a></p>
+
+<p><a id="timeoutId">«timeoutId» → idDeTiempoDeEspera</a></p>
+
+<p><a id="Timer">«Timer» → Temporizador</a></p>
+
+<p><a id="Timers">«Timers» → Temporizadores</a></p>
+
+<p><a id="TLS">TLS → «Transport Layer Security»</a> <br />
+Ve <a href="#transport layer security">transport layer security</a></p>
+
+<p><a id="to">«to» → hasta</a></p>
+
+<p><a id="toma">«toma» → socket</a></p>
+
+<p><a id="totalLength">«totalLength» → longitudTotal</a></p>
+
+<p><a id="transport layer security">«transport layer security» → seguridad en la capa de transporte</a></p>
+
+<p><a id="Transport Layer Security">«Transport Layer Security» → TLS</a> <br />
+Ve <a href="#TLS">TLS</a></p>
+
+<p><a id="type">«type» → tipo</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="u">U</a></h2>
+
+<p><a id="UDP">UDP → Protocolo de datagramas de usuario</a></p>
+
+<p><a id="undefined">«undefined» → indefinido</a></p>
+
+<p><a id="URL">URL → Localizador uniforme de recursos</a></p>
+
+<p><a id="urlObj">«urlObj» → objetoUrl</a></p>
+
+<p><a id="urlStr">«urlStr» → cadenaUrl</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="v">V</a></h2>
+
+<p><a id="value">«value» → valor</a></p>
+
+<p><a id="VIP">«VIP» → Dirección IP virtual</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="w">W</a></h2>
+
+<p><a id="web server">«web server» → servidor web</a></p>
+
+<p><a id="worker">«worker» → trabajador</a></p>
+
+<p><a id="Writable Stream">«Writable Stream» → Flujo de escritura</a></p>
+
+<p><a id="writableStream">«writableStream» → flujoDeEscritura</a></p>
+
+<p><a id="written">«written» → escritos</a></p>
+
+<p><a href="#menu">Ir arriba</a></p>
+
+<hr />
+
+<h2><a id="y">Y</a></h2>
+
+<p><a id="yellow">«yellow» → amarillo</a></p>
+
+      </section>
+    </div>
+  </body>
+</html>

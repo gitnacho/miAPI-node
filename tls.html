@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Transport Layer Security">TLS</abbr> (<abbr title="Secure Sockets Layer">SSL</abbr>)</h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>Para acceder a este módulo usa:</p>
+
+<pre><code>var tls = require('tls');
+</code></pre>
+
+<p>El módulo <code>tls</code> utiliza OpenSSL para proporcionar <abbr title="transport layer security">seguridad en la capa de transporte</abbr> o <abbr title="secure sockets layer">seguridad en la capa de tomas</abbr>: flujo de comunicación cifrado.</p>
+
+<p><abbr title="Transport Layer Security">TLS</abbr>/<abbr title="Secure Sockets Layer">SSL</abbr> es una infraestructura de clave pública y privada. Cada cliente y cada servidor debe tener una clave privada. Una clave privada se crea con algo como esto:</p>
+
+<pre><code>openssl genrsa -out ryans-key.pem 1024
+</code></pre>
+
+<p>Todos los servidores y algunos clientes necesitan tener un certificado. Los certificados son claves públicas firmadas o bien por una autoridad certificadora o autofirmados. El primer paso para obtener un certificado es crear un archivo con la «Petición de firma certificada» (<abbr title="Certificate Signing Request">CSR</abbr>). Esto se hace con:</p>
+
+<pre><code>openssl req -new -key ryans-key.pem -out ryans-csr.pem
+</code></pre>
+
+<p>Para crear un certificado autofirmado con el <abbr title="Certificate Signing Request">CSR</abbr>, haz lo siguiente:</p>
+
+<pre><code>openssl x509 -req -in ryans-csr.pem -signkey ryans-key.pem -out ryans-cert.pem
+</code></pre>
+
+<p>Alternativamente puedes enviar el <abbr title="Certificate Signing Request">CSR</abbr> a una autoridad certificadora para firmarlo.</p>
+
+<p>(TODO: los documentos sobre la creación de una entidad emisora de certificados, por ahora sólo para los usuarios que estén interesados vean el <code>test/fixtures/keys/Makefile</code> en el código fuente de Node)</p>
+
+<p>Para crear .pfx o .p12, haz lo siguiente:</p>
+
+<pre><code>openssl pkcs12 -export -in agent5-cert.pem -inkey agent5-key.pem \
+    -certfile ca-cert.pem -out agent5.pfx
+</code></pre>
+
+<ul>
+<li><code>in</code>:  certificate</li>
+<li><code>inkey</code>: private key</li>
+<li><code>certfile</code>: todos los certificados de una <abbr title="Autoridad certificadora">CA</abbr> concatenados en un archivo como <code>cat ca1-cert.pem ca2-cert.pem &gt; ca-cert.pem</code></li>
+</ul>
+
+<h2>Mitigación del ataque de renegociación iniciada por el cliente</h2>
+
+<!-- type=misc -->
+
+<p>El protocolo <abbr title="Transport Layer Security">TLS</abbr> permite que el cliente renegocie ciertos aspectos de la sesión <abbr title="Transport Layer Security">TLS</abbr>.
+Lamentablemente, la renegociación de sesión requiere una desproporcionada cantidad de recursos del servidor, lo cual hace que sea un potencial vector para ataques de denegación del servicio.</p>
+
+<p>Para mitigar esto, las renegociaciones se limitan a tres veces cada 10 minutos. Un error es emitido en la instancia de <a href="#tls_class_tls_cleartextstream">CleartextStream</a> cuando se supera el umbral. Los límites son configurables:</p>
+
+<ul>
+<li><p><code>tls.CLIENT_RENEG_LIMIT</code>: límite de renegociación, de manera predeterminada es 3.</p></li>
+<li><p><code>tls.CLIENT_RENEG_WINDOW</code>: ventana de renegociación en segundos, el valor predeterminado es 10 minutos.</p></li>
+</ul>
+
+<p>No cambies los valores predeterminados a menos que sepas lo que estás haciendo.</p>
+
+<p>Para probar el servidor, conéctate a él con <code>openssl s_client -connect</code> <abbr title="address"><code>direccion</code></abbr><code>:</code><abbr title="port"><code>puerto</code></abbr> y pulsa unas cuantas veces <code>R&lt;CR&gt;</code> (es la letra 'R' seguida de un retorno de carro).</p>
+
+<h2><abbr title="Próximo protocolo de negociación">NPN</abbr> y <abbr title="indicación del nombre de servidor">SNI</abbr></h2>
+
+<!-- type=misc -->
+
+<p>NPN (Próximo protocolo de negociación) y SNI (Indicación del nombre de servidor) son las extensiones del protocolo de enlaces <abbr title="Transport Layer Security">TLS</abbr> mismas que te permiten:</p>
+
+<ul>
+<li>NPN — utilizar un servidor <abbr title="Transport Layer Security">TLS</abbr> para múltiples protocolos (HTTP, SPDY)</li>
+<li><abbr title="Indicación del nombre de servidor">SNI</abbr> — utilizar un servidor <abbr title="Transport Layer Security">TLS</abbr> para múltiples nombres de servidores con diferentes certificados <abbr title="Secure Sockets Layer">SSL</abbr>.</li>
+</ul>
+
+<h2><code>tls.createServer(</code><abbr title="options"><code>opciones</code></abbr><code>, [</code><abbr title="secureConnectionListener"><code>escuchaDeConexionSegura</code></abbr><code>])</code></h2>
+
+<p>Crea un nuevo <a href="#tls_class_tls_server">tls.Server</a>.  El argumento <abbr title="connectionListener"><code>escuchaDeConexion</code></abbr> se establece automáticamente como un escucha para el evento <a href="#tls_event_secureconnection">secureConnection</a>.  El objeto <abbr title="options"><code>opciones</code></abbr> tiene estas posibilidades:</p>
+
+<ul>
+<li><p><code>pfx</code>: Una cadena o <code>Búfer</code> conteniendo la clave privada, certificado y certificados de la entidad emisora de certificados del servidor en formato PFX o PKCS12. (Mutuamente excluyentes con las opciones <code>key</code>, <code>cert</code> y <code>ca</code>).</p></li>
+<li><p><code>key</code>: Una cadena o <code>Búfer</code> que contiene la clave privada del servidor en formato PEM. (Requerido)</p></li>
+<li><p><code>passphrase</code>: Una cadena con una frase de contraseña para la clave privada o pfx.</p></li>
+<li><p><code>cert</code>: Una cadena o <code>Búfer</code> que contiene la clave de certificado del servidor en formato PEM. (Requerido)</p></li>
+<li><p><code>ca</code>: Un <abbr title="array"><code>arreglo</code></abbr> de cadenas o un <code>Búfer</code> de certificados de confianza. Si este se omite utilizará varias <abbr title="Autoridad certificadora">CA</abbr> «raíz» conocidas, como VeriSign.
+Se utilizan para autorizar conexiones.</p></li>
+<li><p><code>crl</code> : O bien una cadena o una lista de cadenas PEM codificadas con CRL (Lista de revocación de certificados)</p></li>
+<li><p><code>ciphers</code>: Una cadena describiendo las claves a utilizar o excluir. Consulta <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT</a> para detalles del formato.
+Para mitigar los <a href="http://blog.ivanristic.com/2011/10/mitigating-the-beast-attack-on-tls.html">ataques BEAST</a>, se recomienda que utilices esta opción junto con la opción de 'honorCipherOrder' descrita más adelante para priorizar el algoritmo RC4, ya que es un cifrado no-CBC. Una lista de cifrado recomendada:
+<code>ECDHE-RSA-AES256-SHA:AES256-SHA:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM</code></p></li>
+<li><p><code>honorCipherOrder</code> :
+Al elegir un algoritmo de cifrado, utiliza las preferencias del servidor en lugar de las preferencias del cliente.
+Ten en cuenta que si utilizas SSLv2, el servidor enviará su lista de preferencias al cliente y el cliente elige el cifrado.
+Aunque esta opción está desactivada de forma predeterminada, es <em>recomendable</em> que utilices esta opción junto con la opción de <code>cifrado</code> para mitigar los ataques de la BESTIA.</p></li>
+<li><p><abbr title="requestCert"><code>solicitaCertificado</code></abbr>: Si es <code>true</code> el servidor solicitará un certificado a los clientes que se conectan e intenta verificar dicho certificado. Predefinido:
+<code>false</code>.</p></li>
+<li><p><abbr title="rejectUnauthorized"><code>rechazaNoAutorizado</code></abbr>: Si es <code>true</code> el servidor rechazará cualquier conexión no autorizada con la lista de entidades emisoras de certificados suministrada. Esta opción sólo tiene efecto si <code>requestCert</code> es <code>true</code>. Predefinido: <code>false</code>.</p></li>
+<li><p><code>NPNProtocols</code>: Un arreglo o un <code>Búfer</code> de posibles protocolos <abbr title="Próximo protocolo de negociación">NPN</abbr>. (Los protocolos se deben ordenar por su prioridad).</p></li>
+<li><p><code>SNICallback</code>: Una función que se llamará si el cliente admite extensión <abbr title="indicación del nombre de servidor">SNI</abbr> <abbr title="Transport Layer Security">TLS</abbr>. Sólo un argumento se le pasará: <code>servername</code>. Y <code>SNICallback</code> debe devolver la instancia de <code>SecureContext</code>.
+(Puedes usar <code>crypto.createCredentials(...).context</code> para obtener el <code>SecureContext</code> correcto). Si no suministras <code>SNICallback</code> — se utilizará la <abbr title="Interfaz para Programar la Aplicación">API</abbr> de alto nivel (ve más adelante).</p></li>
+<li><p><code>sessionIdContext</code>: Una cadena que contiene un identificador opaco para la reanudación de la sesión. Si <code>requestCert</code> es <code>true</code>, el valor predeterminado es el valor codificado por el MD5 generado desde la línea de ordenes. De lo contrario, no tiene uno predefinido.</p></li>
+</ul>
+
+<p>Aquí tienes un ejemplo de servidor de eco sencillo:</p>
+
+<pre><code>var tls = require('tls');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  key: sistemaDeArchivos.readFileSync('server-key.pem'),
+  cert: sistemaDeArchivos.readFileSync('server-cert.pem'),
+
+  // Este es necesario sólo si utilizas la autenticación del
+  // certificado cliente.
+  requestCert: true,
+
+  // Este es necesario sólo si el cliente utiliza el certificado
+  // autofirmado.
+  ca: [ sistemaDeArchivos.readFileSync('client-cert.pem') ]
+};
+
+var servidor = tls.createServer(opciones, function (cleartextStream) {
+  console.log('servidor conectado',
+              cleartextStream.authorized ? 'authorized' : 'unauthorized');
+  cleartextStream.write('¡Bienvenido!
+</code></pre>
+
+<p>');
+      cleartextStream.setEncoding('utf8');
+      cleartextStream.pipe(cleartextStream);
+    });
+    servidor.listen(8000, function () {
+      console.log('servidor vinculado');
+    });</p>
+
+<p>O</p>
+
+<pre><code>var tls = require('tls');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  pfx: sistemaDeArchivos.readFileSync('servidor.pfx'),
+
+  // Este es necesario sólo si utilizas la autenticación del
+  // certificado cliente.
+  requestCert: true,
+
+};
+
+var servidor = tls.createServer(opciones, function (cleartextStream) {
+  console.log('servidor conectado',
+              cleartextStream.authorized ? 'authorized' : 'unauthorized');
+  cleartextStream.write('¡Bienvenido!
+</code></pre>
+
+<p>');
+      cleartextStream.setEncoding('utf8');
+      cleartextStream.pipe(cleartextStream);
+    });
+    servidor.listen(8000, function () {
+      console.log('servidor vinculado');
+    });</p>
+
+<p>Puedes probar este servidor conectándote a él con <code>openssl s_client</code>:</p>
+
+<pre><code>openssl s_client -connect 127.0.0.1:8000
+</code></pre>
+
+<h2><code>tls.connect(</code><abbr title="options"><code>opciones</code></abbr><code>, [</code><abbr title="secureConnectionListener"><code>escuchaDeConexionSegura</code></abbr><code>])</code></h2>
+
+<h2><code>tls.connect(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="options"><code>opciones</code></abbr><code>], [</code><abbr title="secureConnectionListener"><code>escuchaDeConexionSegura</code></abbr><code>])</code></h2>
+
+<p>Crea una nueva conexión cliente al <abbr title="port"><code>puerto</code></abbr> y <abbr title="host"><code>servidor</code></abbr> (antigua <abbr title="Interfaz para Programar la Aplicación">API</abbr>) u <code>opciones.port</code> y <code>opciones.host</code>. (Si omites <abbr title="host"><code>servidor</code></abbr>, utiliza <code>localhost</code> de manera predeterminada). <abbr title="options"><code>opciones</code></abbr> debe ser un objeto que especifica:</p>
+
+<ul>
+<li><p><code>host</code>: El servidor al cual se debe conectar el cliente</p></li>
+<li><p><code>port</code>: El puerto al que se debe conectar el cliente</p></li>
+<li><p><code>socket</code>: Establece una conexión segura en una determinada toma, en lugar de crear una nueva. Si especificas esta opción, se omiten <abbr title="host"><code>servidor</code></abbr> y <abbr title="port"><code>puerto</code></abbr>.</p></li>
+<li><p><code>pfx</code>: Una cadena o <code>Búfer</code> conteniendo la clave privada, certificado y certificados de la entidad emisora de certificados del servidor en formato PFX o PKCS12.</p></li>
+<li><p><code>key</code>: Una cadena o <code>Búfer</code> que contiene la clave privada del cliente en formato PEM.</p></li>
+<li><p><code>passphrase</code>: Una cadena con una frase de contraseña para la clave privada o pfx.</p></li>
+<li><p><code>cert</code>: Una cadena o <code>Búfer</code> que contiene la clave del certificado del cliente en formato PEM.</p></li>
+<li><p><code>ca</code>: Un <abbr title="array"><code>arreglo</code></abbr> de cadenas o un <code>Búfer</code> de certificados de confianza. Si este se omite utilizará varias <abbr title="Autoridad certificadora">CA</abbr> «raíz» conocidas, como VeriSign.
+Se utilizan para autorizar conexiones.</p></li>
+<li><p><abbr title="rejectUnauthorized"><code>rechazaNoAutorizado</code></abbr>: Si es <code>true</code>, el certificado del servidor se verifica contra la lista suministrada de entidades emisoras de certificados. Emite un evento <code>'error'</code> si la verificación falla. Predefinido: <code>false</code>.</p></li>
+<li><p><code>NPNProtocols</code>: Un <abbr title="Array"><code>arreglo</code></abbr> de cadenas o un <code>Búfer</code> conteniendo los protocolos <abbr title="Próximo protocolo de negociación">NPN</abbr> admitidos. <code>Búfer</code> debe tener el siguiente formato: <code>0x05hola0x05mundo</code>, donde el primer byte está seguido por la longitud del nombre de protocolo. (Pasar un arreglo debería ser mucho más simple: <code>['hola', 'mundo']</code>).</p></li>
+<li><p><code>servername</code>: <code>ServerName</code> para la extensión <abbr title="Indicación del nombre de servidor">SNI</abbr> (indicando el nombre del servidor) <abbr title="Transport Layer Security">TLS</abbr>.</p></li>
+</ul>
+
+<p>El argumento <abbr title="secureConnectionListener"><code>escuchaDeConexionSegura</code></abbr> se agregará como un escucha para el evento <a href="#tls_event_secureconnect">'secureConnect'</a>.</p>
+
+<p><code>tls.connect()</code> devuelve un objeto <a href="#tls_class_tls_cleartextstream">CleartextStream</a>.</p>
+
+<p>Aquí está un ejemplo de un cliente del servidor de eco como se describió anteriormente:</p>
+
+<pre><code>var tls = require('tls');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  // Estas son necesarias sólo si utilizas la autenticación
+  // de certificado cliente
+  key: sistemaDeArchivos.readFileSync('client-key.pem'),
+  cert: sistemaDeArchivos.readFileSync('client-cert.pem'),
+
+  // Este es necesario sólo si el servidor utiliza
+  // el certificado autofirmado
+  ca: [ sistemaDeArchivos.readFileSync('server-cert.pem') ]
+};
+
+var cleartextStream = tls.connect(8000, opciones, function () {
+  console.log('cliente conectado',
+              cleartextStream.authorized ? 'authorized' : 'unauthorized');
+  process.stdin.pipe(cleartextStream);
+  process.stdin.resume();
+});
+cleartextStream.setEncoding('utf8');
+cleartextStream.on('data', function (datos) {
+  console.log(datos);
+});
+cleartextStream.on('end', function () {
+  servidor.close();
+});
+</code></pre>
+
+<p>O</p>
+
+<pre><code>var tls = require('tls');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  pfx: sistemaDeArchivos.readFileSync('client.pfx')
+};
+
+var cleartextStream = tls.connect(8000, opciones, function () {
+  console.log('cliente conectado',
+              cleartextStream.authorized ? 'authorized' : 'unauthorized');
+  process.stdin.pipe(cleartextStream);
+  process.stdin.resume();
+});
+cleartextStream.setEncoding('utf8');
+cleartextStream.on('data', function (datos) {
+  console.log(datos);
+});
+cleartextStream.on('end', function () {
+  servidor.close();
+});
+</code></pre>
+
+<h2><code>tls.createSecurePair([</code><abbr title="credentials"><code>credenciales</code></abbr><code>], [</code><abbr title="isServer"><code>esServidor</code></abbr><code>], [</code><abbr title="requestCert"><code>solicitaCertificado</code></abbr><code>], [</code><abbr title="rejectUnauthorized"><code>rechazaNoAutorizado</code></abbr><code>])</code></h2>
+
+<p>Crea un nuevo par de objetos seguros con dos flujos, uno que lee y escribe datos cifrados y uno que lee y escribe datos de texto no cifrado.
+Generalmente el cifrado se canaliza a/desde un flujo inicial cifrado.</p>
+
+<ul>
+<li><p><abbr title="credentials"><code>credenciales</code></abbr>: Un objeto <code>credentials</code> de <code>crypto.createCredentials(...)</code></p></li>
+<li><p><abbr title="isServer"><code>esServidor</code></abbr>: Un valor booleano que indica si esta conexión <abbr title="Transport Layer Security">TLS</abbr> se debe abrir como servidor o cliente.</p></li>
+<li><p><abbr title="requestCert"><code>solicitaCertificado</code></abbr>: Un valor booleano que indica si un servidor debe solicitar un certificado del que intenta conectarse. Sólo se aplica a las conexiones de servidor.</p></li>
+<li><p><abbr title="rejectUnauthorized"><code>rechazaNoAutorizado</code></abbr>: Un valor booleano que indica si un servidor debe rechazar automáticamente clientes con certificados no válidos. Sólo se aplica a los servidores con <abbr title="requestCert"><code>solicitaCertificado</code></abbr> habilitado.</p></li>
+</ul>
+
+<p><code>tls.createSecurePair()</code> devuelve un objeto <code>SecurePair</code> con las propiedades <code>encrypted</code> y [cleartext][] del flujo.</p>
+
+<h2>Clase: <code>SecurePair</code></h2>
+
+<p>Devuelto por <code>tls.createSecurePair</code>.</p>
+
+<h3>Evento: <code>'secure'</code></h3>
+
+<p>El evento se emite desde el <code>SecurePair</code> una vez establecida satisfactoriamente una conexión segura con su pareja.</p>
+
+<p>Similar a la verificación del evento <code>'secureConnection'</code> del servidor, <code>pair.cleartext.authorized</code> se debe verificar para confirmar si el certificado utilizado está debidamente autorizado.</p>
+
+<h2>Clase: <code>tls.Server</code></h2>
+
+<p>Esta clase es una subclase de <code>net.Server</code> y tiene los mismos métodos.
+En lugar de sólo aceptar simples conexiones <abbr title="Protocolo de control de transmisión">TCP</abbr>, esta acepta conexiones cifradas utilizando <abbr title="Transport Layer Security">TLS</abbr> o <abbr title="Secure Sockets Layer">SSL</abbr>.</p>
+
+<h3>Evento: <code>'secureConnection'</code></h3>
+
+<p><code>function (cleartextStream) {}</code></p>
+
+<p>Este evento se emite después de crear correctamente una nueva conexión. El argumento es una instancia de <a href="#tls_class_tls_cleartextstream">CleartextStream</a>. Tiene todos los métodos y eventos comunes del flujo.</p>
+
+<p><code>cleartextStream.authorized</code> es un valor booleano que indica si una de las autoridades de certificado suministrada por el servidor ha verificado al cliente. Si <code>cleartextStream.authorized</code> es <code>false</code>, se ajusta <code>cleartextStream.authorizationError</code> para describir cómo falló la autorización. Es implícito pero vale la pena mencionarlo aquí: dependiendo de la configuración del servidor <abbr title="Transport Layer Security">TLS</abbr>, puedes aceptar conexiones no autorizadas.
+<code>cleartextStream.npnProtocol</code> es una cadena que contiene el protocolo <abbr title="Próximo protocolo de negociación">NPN</abbr> seleccionado.
+<code>cleartextStream.servername</code> es una cadena que contiene el <code>nombredeservidor</code> solicitado con <abbr title="Indicación del nombre de servidor">SNI</abbr>.</p>
+
+<h3>Evento: <code>'clientError'</code></h3>
+
+<p><code>function (</code><abbr title="exception"><code>excepcion</code></abbr><code>) { }</code></p>
+
+<p>Cuando una conexión cliente emite un evento <code>'error'</code> antes de establecer una conexión segura — esta se reenviará aquí.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Comenzará a aceptar conexiones en el <abbr title="port"><code>puerto</code></abbr> y <abbr title="host"><code>servidor</code></abbr> especificados.  Si omites <abbr title="host"><code>servidor</code></abbr>, el servidor aceptará las conexiones dirigidas a cualquier dirección IPv4 (<code>INADDR_ANY</code>).</p>
+
+<p>Esta función es asíncrona. El último argumento <abbr title="callback"><code>retrollamada</code></abbr> se invocará al vincular el servidor.</p>
+
+<p>Consulta <code>net.Server</code> para más información</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.close()</code></h3>
+
+<p>El servidor deja de aceptar nuevas conexiones. Esta función es asíncrona, el servidor finalmente se cierra cuando el servidor emite un evento <code>'close'</code>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.address()</code></h3>
+
+<p>Devuelve la dirección vinculada, el nombre de la familia de la dirección y el puerto del servidor según lo reportado por el sistema operativo.  Consulta <a href="net.html#net_server_address">net.Server.address()</a> para más información.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.addContext(</code><abbr title="hostname"><code>nombreServidor</code></abbr><code>,</code> <abbr title="credentials"><code>credenciales</code></abbr><code>)</code></h3>
+
+<p>Añade el contexto seguro que se utilizará si la solicitud del cliente coincide con el <abbr title="hostname"><code>nombreServidor</code></abbr> <abbr title="Indicación del nombre de servidor">SNI</abbr> (puedes utilizar comodines). <abbr title="credentials"><code>credenciales</code></abbr> puede contener <code>key</code>, <code>cert</code> y <code>ca</code>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.maxConnections</code></h3>
+
+<p>Establece esta propiedad para rechazar conexiones cuando la cantidad de conexiones al servidor se eleve.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.connections</code></h3>
+
+<p>La cantidad de conexiones simultáneas en el servidor.</p>
+
+<h2>Clase: <code>tls.CleartextStream</code></h2>
+
+<p>Este es un flujo en la parte superior del flujo <em>cifrado</em> que posibilita la lectura/escritura de datos cifrados como datos en texto plano.</p>
+
+<p>Esta instancia implementa una interfaz de <a href="stream.html#stream_stream">Flujo</a> dúplex.  Tiene todos los métodos y eventos comunes del flujo.</p>
+
+<p>Un <code>ClearTextStream</code> es el miembro <code>clear</code> de un objeto <code>SecurePair</code>.</p>
+
+<h3>Evento: <code>'secureConnect'</code></h3>
+
+<p>Este evento se emite después de crear correctamente una nueva conexión. 
+El escucha se llamará no importando si el certificado del servidor fue autorizado o no. Corresponde al usuario verificar <code>cleartextStream.authorized</code> para ver si el certificado del servidor fue firmado por una de la <abbr title="Autoridad certificadora">CA</abbr> especificadas.
+Si <code>cleartextStream.authorized === false</code> entonces el error se encuentra en <code>cleartextStream.authorizationError</code>. Además, si utilizas <abbr title="Próximo protocolo de negociación">NPN</abbr> — puedes verificar <code>cleartextStream.npnProtocol</code> por el protocolo negociado.</p>
+
+<h3><code>cleartextStream.authorized</code></h3>
+
+<p>Un valor booleano que es <code>true</code> si el par de certificados fue firmado por una de las <abbr title="Autoridad certificadora">CA</abbr> especificadas, <code>false</code> en caso contrario.</p>
+
+<h3><code>cleartextStream.authorizationError</code></h3>
+
+<p>La razón por la cual no se ha verificado el certificado. Esta propiedad se vuelve disponible sólo cuando <code>cleartextStream.authorized === false</code>.</p>
+
+<h3><code>cleartextStream.getPeerCertificate()</code></h3>
+
+<p>Devuelve un objeto que representa el certificado equivalente. El objeto devuelto tiene algunas propiedades correspondientes al campo del certificado.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>{ subject: 
+   { C: 'UK',
+     ST: 'Acknack Ltd',
+     L: 'Rhys Jones',
+     O: 'node.js',
+     OU: 'Test TLS Certificate',
+     CN: 'localhost' },
+  issuer: 
+   { C: 'UK',
+     ST: 'Acknack Ltd',
+     L: 'Rhys Jones',
+     O: 'node.js',
+     OU: 'Test TLS Certificate',
+     CN: 'localhost' },
+  valid_from: 'Nov 11 09:52:22 2009 GMT',
+  valid_to: 'Nov  6 09:52:22 2029 GMT',
+  fingerprint: '2A:7A:C2:DD:E5:F9:CC:53:72:35:99:7A:02:5A:71:38:52:EC:8A:DF' }
+</code></pre>
+
+<p>Si el interlocutor no proporciona un certificado, devuelve <abbr title="null"><code>nulo</code></abbr> o un objeto vacío.</p>
+
+<h3><code>cleartextStream.getCipher()</code></h3>
+
+<p>Devuelve un objeto que representa el nombre y el sistema de cifrado <abbr title="Secure Sockets Layer">SSL</abbr>/<abbr title="Transport Layer Security">TLS</abbr>  versión del protocolo de la conexión actual</p>
+
+<p>Ejemplo:
+{ nombre: 'AES256-SHA', version: 'TLSv1/SSLv3' }</p>
+
+<p>Consulta <code>SSL_CIPHER_get_name()</code> y <code>SSL_CIPHER_get_version()</code> en http://www.openssl.org/docs/ssl/ssl.html#DEALING<em>WITH</em>CIPHERS para más información.</p>
+
+<h3><code>cleartextStream.address()</code></h3>
+
+<p>Devuelve la dirección vinculada, el nombre de la familia de la dirección <abbr title="Protocolo de Internet">IP</abbr> y el puerto de la toma subyacente como lo reportó el sistema operativo. Devuelve un objeto con tres propiedades, por ejemplo:
+<code>{ port: 12346, family: 'IPv4', address: '127.0.0.1' }</code></p>
+
+<h3><code>cleartextStream.remoteAddress</code></h3>
+
+<p>La cadena con la representación de la dirección <abbr title="Protocolo de Internet">IP</abbr> remota. Por ejemplo, <code>'74.125.127.100'</code> o <code>2001:4860:A005::68'</code>.</p>
+
+<h3><code>cleartextStream.remotePort</code></h3>
+
+<p>La representación numérica del puerto remoto. Por ejemplo, <code>443</code>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

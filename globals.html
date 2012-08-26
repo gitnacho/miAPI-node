@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>Objetos globales</h1>
+
+<!-- type=misc -->
+
+<p>Estos objetos están disponibles en todos los módulos. Algunos de estos objetos en realidad no están en el ámbito global, sino en el ámbito del módulo —esto se notará—.</p>
+
+<h2><code>global</code></h2>
+
+<!-- type=global -->
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>} El objeto del espacio de nombres global.</li>
+</ul>
+
+<p>En los navegadores, el ámbito de nivel superior es el ámbito global. Esto significa que en los navegadores si estás en el ámbito global <code>var algo</code> definirá una variable global. En Node esto es diferente. El ámbito de nivel superior no es el ámbito global; <code>var algo</code> dentro de un módulo de Node será local a dicho módulo.</p>
+
+<h2><code>process</code></h2>
+
+<!-- type=global -->
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>El objeto «process». Consulta la sección del <a href="process.html#process_process">objeto «process»</a>.</p>
+
+<h2><code>console</code></h2>
+
+<!-- type=global -->
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Se utiliza para imprimir en la salida y error estándar; <code>'stdout'</code> y <code>'stderr'</code> respectivamente. Consulta la sección <a href="stdio.html">Entrada y salida estándar</a>.</p>
+
+<h2>Clase: <code>Buffer</code></h2>
+
+<!-- type=global -->
+
+<ul>
+<li>{<abbr title="Function">Función</abbr>}</li>
+</ul>
+
+<p>Se utiliza para procesar datos binarios. Consulta la <a href="buffer.html">sección «buffer»</a></p>
+
+<h2><code>require()</code></h2>
+
+<!-- type=var -->
+
+<ul>
+<li>{<abbr title="Function">Función</abbr>}</li>
+</ul>
+
+<p>Sirve para requerir módulos. Consulta la sección <a href="modules.html#modules_modules">Módulos</a>.  En realidad, <code>require</code> no es global sino más bien local a cada módulo.</p>
+
+<h3><code>require.resolve()</code></h3>
+
+<p>Usa la maquinaria del <code>require()</code> interno para encontrar la ubicación de un módulo, pero en lugar de cargar el módulo, simplemente devuelve el nombre del archivo resuelto.</p>
+
+<h3><code>require.cache</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Los módulos se almacenan en caché en este objeto al ser requeridos. Al eliminar un valor clave de este objeto, el siguiente <code>require</code> volverá a cargar el módulo.</p>
+
+<h3><code>require.extensions</code></h3>
+
+<ul>
+<li>{<abbr title="Array">Arreglo</abbr>}</li>
+</ul>
+
+<p>Instruye a <code>require</code> sobre cómo manejar determinadas extensiones de archivo.</p>
+
+<p>Procesa los archivos con la extensión <code>.sjs</code> como <code>.js</code>:</p>
+
+<pre><code>require.extensions['.sjs'] = require.extensions['.js'];
+</code></pre>
+
+<p>Escribe tu propio controlador de extensión:</p>
+
+<pre><code>require.extensions['.sjs'] = function (modulo, nombreArchivo) {
+  var contenido = sistemaDeArchivos.readFileSync(nombreArchivo, 'utf8');
+  // analiza el contenido del archivo y lo devuelve
+  // a module.exports
+  module.exports = contenido;
+};
+</code></pre>
+
+<h2><code>__filename</code></h2>
+
+<!-- type=var -->
+
+<ul>
+<li>{<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>Esta variable contiene el nombre de archivo del código que se está ejecutando.  Esta es la ruta absoluta resuelta de este archivo de código.  Para un programa principal este no necesariamente es el mismo nombre de archivo utilizado en la línea de ordenes.  El valor dentro de un módulo es la ruta al archivo del módulo.</p>
+
+<p>Ejemplo: ejecutando <code>node ejemplo-na.js</code> desde <code>/Users/mjr</code></p>
+
+<pre><code>console.log(__filename);
+// /Users/mjr/ejemplo-na.js
+</code></pre>
+
+<p>En realidad, <code>__filename</code> no es global sino local a cada módulo.</p>
+
+<h2><code>__dirname</code></h2>
+
+<!-- type=var -->
+
+<ul>
+<li>{<abbr title="String">Cadena</abbr>}</li>
+</ul>
+
+<p>El nombre del directorio en que reside el programa que se está ejecutando actualmente.</p>
+
+<p>Ejemplo: ejecutando <code>node ejemplo-nd.js</code> desde <code>/Users/mjr</code></p>
+
+<pre><code>console.log(__dirname);
+// /Users/mjr
+</code></pre>
+
+<p>En realidad, <code>__dirname</code> no es global sino más bien local a cada módulo.</p>
+
+<h2><code>module</code></h2>
+
+<!-- type=var -->
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<p>Una referencia al módulo actual. En particular, <code>module.exports</code> es el mismo objeto que <code>exports</code>.
+En realidad, <code>module</code> no es global sino más bien local a cada módulo.</p>
+
+<p>Consulta la <a href="modules.html">documentación del sistema de módulos</a> para más información.</p>
+
+<h2><code>exports</code></h2>
+
+<!-- type=var -->
+
+<p>Un objeto que se comparte entre todas las instancias del módulo actual y se hace accesible a través de <code>require()</code>.
+El objeto <code>exports</code> es el mismo que <code>module.exports</code>.
+En realidad, <code>exports</code> no es global sino más bien local a cada módulo.</p>
+
+<p>Consulta la <a href="modules.html">documentación del sistema de módulos</a> para más información.</p>
+
+<p>Ve la <a href="modules.html">sección módulo</a> para más información.</p>
+
+<h2><code>setTimeout(</code><abbr title="rt"><code>retrollamada</code></abbr><code>, ms)</code></h2>
+
+<p>Ejecuta la retrollamada <abbr title="rt"><code>retrollamada</code></abbr> después de <em>al menos</em> <code>ms</code> milisegundos. La demora real depende de factores externos como la granularidad del reloj del sistema operativo y la carga del sistema.</p>
+
+<p>El tiempo de espera debe estar en el intervalo de 1 — 2,147,483,647 inclusive. Si el valor está fuera de ese rango, se cambia a 1 milisegundo. En términos generales, un temporizador no puede abarcar más de 24.8 días.</p>
+
+<p>Devuelve un valor opaco que representa al temporizador.</p>
+
+<h2><code>clearTimeout(</code><abbr title="temporizador"><code>t</code></abbr><code>)</code></h2>
+
+<p>Detiene el temporizador <code>t</code> creado previamente con <code>setTimeout()</code>. La retrollamada no se ejecutará.</p>
+
+<h2><code>setInterval(</code><abbr title="rt"><code>retrollamada</code></abbr><code>, ms)</code></h2>
+
+<p>Ejecuta repetidamente la retrollamada <abbr title="rt"><code>retrollamada</code></abbr> cada <code>ms</code> milisegundos. Ten en cuenta que el intervalo real puede variar, dependiendo de factores externos como la granularidad del reloj del sistema operativo y la carga del sistema. Nunca es menor que <code>ms</code> pero puede ser mayor.</p>
+
+<p>El intervalo debe estar en el rango de 1 — 2,147,483,647 inclusive. Si el valor está fuera de ese rango, se cambia a 1 milisegundo. En términos generales, un temporizador no puede abarcar más de 24.8 días.</p>
+
+<p>Devuelve un valor opaco que representa al temporizador.</p>
+
+<h2><code>clearInterval(</code><abbr title="temporizador"><code>t</code></abbr><code>)</code></h2>
+
+<p>Detiene el temporizador <code>t</code> creado previamente con <code>setInterval()</code>. La retrollamada no se ejecutará.</p>
+
+<!-- type=global -->
+
+<p>Las funciones temporizadoras son variables globales. Consulta la sección <a href="timers.html">temporizadores</a>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

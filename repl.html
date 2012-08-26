@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El <em>REPL</em></h1>
+
+<p>Un bucle de lectura evaluación e impresión (<em>REPL</em> son las siglas de <em>«Read-Eval-Print-Loop»</em>) está disponible como un programa autónomo y fácilmente incluible en otros programas. El <em>REPL</em> proporciona una manera para ejecutar JavaScript y ver los resultados de manera interactiva.  Lo puedes utilizar para depurar, probar o simplemente para intentar cosas.</p>
+
+<p>Al ejecutar <code>node</code> sin argumentos en la línea de ordenes llegas al <em>REPL</em>. Cuenta con un simplista editor de líneas estilo emacs.</p>
+
+<pre><code>mjr:~$ node
+Escribe '.help' para ver las opciones.
+&gt; a = [ 1, 2, 3];
+[ 1, 2, 3 ]
+&gt; a.forEach(function (v) {
+...   console.log(v);
+...   });
+1
+2
+3
+</code></pre>
+
+<p>Para el editor de línea avanzado, inicia Node con la variable de entorno <code>NODE_NO_READLINE=1</code>. Esto iniciará el <em>REPL</em> principal y depurador en una terminal canónica con la configuración que te permitirá utilizar <code>rlwrap</code>.</p>
+
+<p>Por ejemplo, podrías agregar esto a tu archivo <code>bashrc</code>:</p>
+
+<pre><code>alias node='env NODE_NO_READLINE=1 rlwrap node'
+</code></pre>
+
+<h2><code>repl.start(</code><abbr title="options"><code>opciones</code></abbr><code>)</code></h2>
+
+<p>Devuelve e inicia una instancia de <code>REPLServer</code>. Acepta un objeto «<abbr title="options"><code>opciones</code></abbr>» que toma los siguientes valores:</p>
+
+<ul>
+<li><p><code>prompt</code> — la invitación y <abbr title="stream"><code>flujo</code></abbr> para todas las operaciones de E/S El valor predeterminado es <code>&gt;</code>.</p></li>
+<li><p><code>input</code> — el flujo de lectura a escuchar. El valor predeterminado es <code>process.stdin</code>.</p></li>
+<li><p><code>output</code> — el flujo de escritura para escribir datos a <code>readline</code>. El valor predeterminado es <code>process.stdout</code>.</p></li>
+<li><p><code>terminal</code> — pasa <code>true</code> si el <abbr title="stream"><code>flujo</code></abbr> se debe tratar como <abbr title="teletypewriter">tty</abbr>, y has escrito códigos de escape ANSI/VT100. De manera predeterminada al comprobar <code>isTTY</code> en el <abbr title="stream">flujo</abbr> de <abbr title="stdout">salida estándar</abbr> en la creación de la instancia.</p></li>
+<li><p><code>eval</code> — función a utilizar para evaluar cada línea introducida. El valor predeterminado es un contenedor asíncrono para <code>eval()</code>. Ve más adelante un ejemplo de un <code>eval</code> personalizado.</p></li>
+<li><p><code>useColors</code> — un valor lógico que especifica si o no la función <code>writer</code> debe mostrar su resultado coloreado. Si defines una función <code>writer</code> diferente, entonces, esto no hace nada. Los valores predefinidos para la <code>terminal</code> del <em>repl</em>.</p></li>
+<li><p><code>useGlobal</code> — si la pones a <code>true</code>, entonces el <em>repl</em> utilizará el objeto <code>global</code>, en lugar de ejecutar tus programas en un contexto independiente. De manera predeterminada es <code>false</code>.</p></li>
+<li><p><code>ignoreUndefined</code> — si la pones a <code>true</code>, entonces el <em>repl</em> no producirá el valor devuelto de la orden si es <abbr title="undefined"><code>indefinido</code></abbr>. De manera predeterminada es <code>false</code>.</p></li>
+<li><p><code>writer</code> — la función a invocar por cada orden que sea evaluada y devuelva el formato (incluyendo coloración) a mostrar. El valor predeterminado es <code>util.inspect</code>.</p></li>
+</ul>
+
+<p>Puedes utilizar tu propia función <code>eval</code> si tiene la siguiente firma:</p>
+
+<pre><code>function eval(orden, contexto, nombredearchivo, retrollamada) {
+  retrollamada(null, resultado);
+}
+</code></pre>
+
+<p>Puedes iniciar múltiples <em>REPL</em>is contra la misma instancia en ejecución de Node.  Cada una compartirá el mismo objeto global pero tendrá E/S única.</p>
+
+<p>Aquí hay un ejemplo que inicia un <em>REPL</em> en la <abbr title="stdin">entrada estándar</abbr>, una <abbr title="socket"><code>toma</code></abbr> Unix y una <abbr title="socket"><code>toma</code></abbr> <abbr title="Protocolo de control de transmisión">TCP</abbr>:</p>
+
+<pre><code>var net = require('net'),
+    repl = require('repl');
+
+conexiones = 0;
+
+repl.start({
+  prompt: 'node vía stdin&gt; ',
+  input: process.stdin,
+  output: process.stdout
+});
+
+net.createServer(function (toma) {
+  conexiones += 1;
+  repl.start({
+    prompt: 'node vía toma Unix&gt; ',
+    input: socket,
+    output: socket
+  }).on('exit', function () {
+    toma.end();
+  })
+}).listen('/tmp/node-toma-repl');
+
+net.createServer(function (toma) {
+  conexiones += 1;
+  repl.start({
+    prompt: 'node vía toma TCP&gt; ',
+    input: socket,
+    output: socket
+  }).on('exit', function () {
+    toma.end();
+  });
+}).listen(5001);
+</code></pre>
+
+<p>Al ejecutar este programa desde la línea de ordenes se iniciará un <em>REPL</em> en la <abbr title="stdin">entrada estándar</abbr>.  Otros clientes del <em>REPL</em> se pueden conectar a través de la toma Unix o la toma <abbr title="Protocolo de control de transmisión">TCP</abbr>. <code>telnet</code> es útil para conectar a tomas <abbr title="Protocolo de control de transmisión">TCP</abbr>, y puedes utilizar <code>'socat'</code> para conectar en ambas tomas Unix y <abbr title="Protocolo de control de transmisión">TCP</abbr>.</p>
+
+<p>Al iniciar un <em>REPL</em> desde un servidor basado en una toma Unix en lugar de <code>'stdin'</code>, te puedes conectar a un proceso en ejecución de Node sin reiniciarlo.</p>
+
+<p>Para ver un ejemplo de un <em>REPL</em> «completamente caracterizado» (como <code>terminal</code>) que se está ejecutando sobre una instancia de <code>net.Server</code> y <code>net.Socket</code>, consulta: https://gist.github.com/2209310</p>
+
+<p>Para ver un ejemplo de la ejecución de una instancia del <em>REPL</em> sobre 'curl(1)', consulta: https://gist.github.com/2053342</p>
+
+<h3>Evento: <code>'exit'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido cuando el usuario sale del <em>REPL</em> en cualquiera de las formas definidas. Es decir, escribió <code>.exit</code> en el <em>REPL</em>, presionó Ctrl+C dos veces para señalar <code>SIGINT</code>, o pulsó Ctrl+D para emitir el evento <code>'end'</code> en el flujo de entrada —<code>'input'</code>—.</p>
+
+<p>Ejemplo de escucha para <code>'exit'</code>:</p>
+
+<pre><code>r.on('exit', function () {
+  console.log('¡Capturé el evento «exit» desde el repl!');
+  process.exit();
+});
+</code></pre>
+
+<h2>Características del <em>REPL</em></h2>
+
+<!-- type=misc -->
+
+<p>Dentro del <em>REPL</em> Control+D saldrá.  Puedes introducir expresiones multilínea.
+El completado automático con la tecla <code>TAB</code> es compatible con las variables globales y locales.</p>
+
+<p>La variable especial <code>_</code> (subrayado) contiene el resultado de la última expresión.</p>
+
+<pre><code>&gt; [ 'a', 'b', 'c' ]
+[ 'a', 'b', 'c' ]
+&gt; _.length
+3
+&gt; _ += 1
+4
+</code></pre>
+
+<p>El <em>REPL</em> proporciona acceso a cualquier variable en el ámbito global. Puedes exponer una variable al <em>REPL</em> explícitamente asignando el objeto <code>context</code> asociado con cada <code>REPLServer</code>.  Por ejemplo:</p>
+
+<pre><code>// prueba_repl.js
+var repl = require('repl'),
+    mensaje = 'mensaje';
+
+repl.start().context.m = mensaje;
+</code></pre>
+
+<p>Las cosas en el objeto <code>context</code> aparecen como locales dentro del <em>REPL</em>:</p>
+
+<pre><code>mjr:~$ node prueba_repl.js
+&gt; m
+'mensaje'
+</code></pre>
+
+<p>Hay unas cuantas ordenes especiales para el <em>REPL</em>:</p>
+
+<ul>
+<li><code>.break</code> — Al introducir una expresión multilínea, a veces te perderás o simplemente no te preocupa completarla. <code>.break</code> comenzará de nuevo.</li>
+<li><code>.clear</code> — Restablece el objeto <code>context</code> a un objeto vacío y borra cualquier expresión multilínea.</li>
+<li><code>.exit</code> — Cierra el flujo de E/S, lo cual provocará la salida del <em>REPL</em>.</li>
+<li><code>.help</code> — Muestra esta lista de ordenes especiales.</li>
+<li><code>.save</code> — Guarda la sesión actual del <em>REPL</em> en un archivo
+<code>&gt;.save ./archivo/a/guardar.js</code></li>
+<li><code>.load</code> — Carga un archivo en la sesión actual del <em>REPL</em>.
+<code>&gt;.load ./archivo/a/cargar.js</code></li>
+</ul>
+
+<p>Las siguientes combinaciones de teclas en el <em>REPL</em> tienen los siguientes efectos especiales:</p>
+
+<ul>
+<li><code>&lt;ctrl&gt;C</code> — Similar a la palabra clave <code>.break</code>.  Termina la orden actual.  Pulsa dos veces en una línea en blanco para forzar la salida.</li>
+<li><code>&lt;ctrl&gt;D</code> — Similar a la palabra clave <code>.exit</code>.</li>
+</ul>
+
+      </section>
+    </div>
+  </body>
+</html>

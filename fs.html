@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="File System">Sistema de archivos</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<!-- name=fs -->
+
+<p>La E/S desde archivos es proporcionada por sencillas envolturas en torno a las funciones <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> estándar.  Para utilizar este módulo usa:</p>
+
+<pre><code>var sistemaDeArchivos = require('fs');  // 'fs' viene de las siglas
+                                        // de «File System» 
+</code></pre>
+
+<p>Todos los métodos del módulo tienen formas sincrónicas y asíncronas.</p>
+
+<p>La forma asíncrona siempre toma una retrollamada de terminación como último argumento.
+Los argumentos pasados a la retrollamada de terminación dependerán del método, pero el primer argumento siempre está reservado para una excepción. Si la operación se completó satisfactoriamente, entonces el primer argumento será <abbr title="null"><code>nulo</code></abbr> o <abbr title="undefined"><code>indefinido</code></abbr>.</p>
+
+<p>Cuando se utiliza la forma sincrónica las excepciones se lanzan inmediatamente.
+Puedes usar <code>try/catch</code> para manipular las excepciones o permitir su propagación.</p>
+
+<p>Aquí tienes un ejemplo de la versión asincrónica:</p>
+
+<pre><code>var sistemaDeArchivos = require('fs');
+
+sistemaDeArchivos.unlink('/tmp/hola', function (error) {
+  if (error) throw error;
+  console.log('/tmp/hola eliminado satisfactoriamente');
+});
+</code></pre>
+
+<p>Aquí está la versión sincrónica:</p>
+
+<pre><code>var sistemaDeArchivos = require('fs');
+
+sistemaDeArchivos.unlinkSync('/tmp/hola')
+console.log('/tmp/hola eliminado satisfactoriamente');
+</code></pre>
+
+<p>Con los métodos asíncronos no hay orden garantizado. Por lo tanto lo siguiente es propenso a errores:</p>
+
+<pre><code>sistemaDeArchivos.rename('/tmp/hola', '/tmp/mundo', function (error) {
+  if (error) throw error;
+  console.log('renombrado completo');
+});
+sistemaDeArchivos.stat('/tmp/mundo', function (error, estadisticas) {
+  if (error) throw error;
+  console.log('estadísticas: ' + JSON.stringify(estadisticas));
+});
+</code></pre>
+
+<p>Podría ser que <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.stat</code> se ejecutara antes que <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.rename</code>.
+La forma correcta de hacerlo es encadenando las retrollamadas.</p>
+
+<pre><code>sistemaDeArchivos.rename('/tmp/hola', '/tmp/mundo', function (error) {
+  if (error) throw error;
+  sistemaDeArchivos.stat('/tmp/mundo', function (error, estadisticas) {
+    if (error) throw error;
+    console.log('estadísticas: ' + JSON.stringify(estadisticas));
+  });
+});
+</code></pre>
+
+<p>En los procesos ocupados, se <em>recomienda enfáticamente</em> al programador utilizar las versiones asíncronas de estas llamadas. Las versiones sincrónicas bloquearán todo el proceso hasta que se complete —interrumpiendo todas las conexiones—.</p>
+
+<p>Puedes utilizar la ruta de acceso relativa al nombre del archivo, no obstante, recuerda que esta ruta será relativa a <code>process.cwd()</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.rename(</code><abbr title="oldPath"><code>rutaAnt</code></abbr><code>,</code> <abbr title="newPath"><code>rutaNueva</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>rename(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.renameSync(</code><abbr title="oldPath"><code>rutaAnt</code></abbr><code>,</code> <abbr title="newPath"><code>rutaNueva</code></abbr><code>)</code></h2>
+
+<p>rename(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.ftruncate(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="len"><code>longitud</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>ftruncate(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.ftruncateSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="len"><code>longitud</code></abbr><code>)</code></h2>
+
+<p>ftruncate(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.truncate(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="len"><code>longitud</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>truncate(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.truncateSync(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="len"><code>longitud</code></abbr><code>)</code></h2>
+
+<p>truncate(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.chown(</code><abbr title="path"><code>ruta</code></abbr><code>, uid, gid, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>chown(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.chownSync(</code><abbr title="path"><code>ruta</code></abbr><code>, uid, gid)</code></h2>
+
+<p>chown(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fchown(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>, uid, gid, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>fchown(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fchownSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>, uid, gid)</code></h2>
+
+<p>fchown(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lchown(</code><abbr title="path"><code>ruta</code></abbr><code>, uid, gid, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>lchown(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lchownSync(</code><abbr title="path"><code>ruta</code></abbr><code>, uid, gid)</code></h2>
+
+<p>lchown(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.chmod(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>chmod(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.chmodSync(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>)</code></h2>
+
+<p>chmod(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fchmod(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>fchmod(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fchmodSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>)</code></h2>
+
+<p>fchmod(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lchmod(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>lchmod(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<p>Disponible únicamente en Mac OS X.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lchmodSync(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="mode"><code>modo</code></abbr><code>)</code></h2>
+
+<p>lchmod(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.stat(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>stat(2) asíncrona. La retrollamada recibe dos argumentos <code>(error,</code><abbr title="stats"><code>estadisticas</code></abbr><code>)</code> donde <abbr title="stats"><code>estadisticas</code></abbr> es un objeto <a href="#fs_class_fs_stats"><abbr title="fs">sistemaDeArchivos</abbr>.Stats</a>.  Consulta la sección <a href="#fs_class_fs_stats"><abbr title="fs">sistemaDeArchivos</abbr>.Stats</a> más adelante para más información.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lstat(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>lstat(2) asíncrona. La retrollamada recibe dos argumentos <code>(error,</code><abbr title="stats"><code>estadisticas</code></abbr><code>)</code> donde <abbr title="stats"><code>estadisticas</code></abbr> es un objeto <a href="#fs_class_fs_stats"><abbr title="fs">sistemaDeArchivos</abbr>.Stats</a>. <code>lstat()</code> es idéntica a <code>stat()</code>, salvo que si <abbr title="path"><code>ruta</code></abbr> es un enlace simbólico, se declara el enlace en sí mismo, no el archivo a que se refiere.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fstat(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>fstat(2) asíncrona. La retrollamada recibe dos argumentos <code>(error,</code><abbr title="stats"><code>estadisticas</code></abbr><code>)</code> donde <abbr title="stats"><code>estadisticas</code></abbr> es un objeto <a href="#fs_class_fs_stats"><abbr title="fs">sistemaDeArchivos</abbr>.Stats</a>. <code>fstat()</code> es idéntica a <code>stat()</code>, salvo que el archivo a declarar está especificado por el <abbr title="fd"><code>descriptorArchivo</code></abbr>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.statSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>stat(2) sincrónica. Devuelve una instancia de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.Stats</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lstatSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>lstat(2) sincrónica. Devuelve una instancia de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.Stats</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fstatSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>)</code></h2>
+
+<p>fstat(2) sincrónica. Devuelve una instancia de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.Stats</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.link(</code><abbr title="srcpath"><code>rutafuente</code></abbr><code>,</code> <abbr title="dstpath"><code>rutadestino</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>link(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.linkSync(</code><abbr title="srcpath"><code>rutafuente</code></abbr><code>,</code> <abbr title="dstpath"><code>rutadestino</code></abbr><code>)</code></h2>
+
+<p>link(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.symlink(</code><abbr title="srcpath"><code>rutafuente</code></abbr><code>,</code> <abbr title="dstpath"><code>rutadestino</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>symlink(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.
+El argumento <abbr title="type"><code>tipo</code></abbr> puede ser <code>'dir'</code>, <code>'file'</code> o <code>'junction'</code> (el predeterminado es <code>'file'</code>).  Este sólo se utiliza en Windows (se omite en otros ambientes).
+Ten en cuenta que los puntos de conexión de Windows requieren que la ruta de destino sea absoluta.  Cuando se utiliza <code>'junction'</code>, el argumento <abbr title="destination"><code>destino</code></abbr> se normalizará automáticamente a la ruta de acceso absoluta.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.symlinkSync(</code><abbr title="srcpath"><code>rutaFuente</code></abbr><code>,</code> <abbr title="dstpath"><code>rutaDestino</code></abbr><code>, [</code><abbr title="type"><code>tipo</code></abbr><code>])</code></h2>
+
+<p>symlink(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readlink(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>readlink(2) asíncrona. La retrollamada recibe dos argumentos <code>(error,</code><abbr title="linkString"><code>cadenaDeEnlace</code></abbr><code>)</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readlinkSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>readlink(2) sincrónica. Devuelve el valor del enlace simbólico de la cadena.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.realpath(</code><abbr title="path"><code>ruta</code></abbr><code>, [cache],</code><abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>realpath(2) asíncrona. La <abbr title="callback"><code>retrollamada</code></abbr> recibe dos argumentos <code>(error, resolvedPath)</code>. Puedes usar <code>process.cwd</code> para resolver rutas relativas. <code>cache</code> es un objeto de rutas literales asignadas que se pueden usar para forzar una resolución de ruta específica o evitar llamadas adicionales a <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.stat</code> para rutas reales conocidas.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var cache = {'/etc':'/private/etc'};
+sistemaDeArchivos.realpath('/etc/passwd',
+                           cache,
+                           function (error, rutaResuelta) {
+  if (error) throw error;
+  console.log(rutaResuelta);
+});
+</code></pre>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.realpathSync(</code><abbr title="path"><code>ruta</code></abbr><code>, [cache])</code></h2>
+
+<p>realpath(2) sincrónica. Devuelve la ruta de acceso resuelta.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.unlink(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>unlink(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.unlinkSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>unlink(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.rmdir(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>rmdir(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.rmdirSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>rmdir(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.mkdir(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="mode"><code>modo</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>mkdir(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación. <abbr title="mode"><code>modo</code></abbr> de manera predeterminada es <code>0777</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.mkdirSync(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="mode"><code>modo</code></abbr><code>])</code></h2>
+
+<p>mkdir(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readdir(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>readdir(3) asíncrona.  Lee el contenido de un directorio.
+La retrollamada recibe dos argumentos <code>(error,</code><abbr title="files"><code>archivos</code></abbr><code>)</code> donde <abbr title="files"><code>archivos</code></abbr> es un <abbr title="array">arreglo</abbr> con los nombres de los archivos en el directorio excluyendo <code>'.'</code> y <code>'..'</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readdirSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>readdir(3) sincrónica. Devuelve un arreglo de nombres de archivo excluyendo <code>'.'</code> y <code>'..'</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.close(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>close(2) asíncrona.  No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.closeSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>)</code></h2>
+
+<p>close(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.open(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="flags"><code>indicadores</code></abbr><code>, [</code><abbr title="mode"><code>modo</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Abre un archivo asíncronamente. Ve open(2). <abbr title="flags"><code>indicadores</code></abbr> puede ser:</p>
+
+<ul>
+<li><p><code>'r'</code> — Abre el archivo para lectura.
+Provoca una excepción si el archivo no existe.</p></li>
+<li><p><code>'r+'</code> — Abre el archivo para lectura y escritura.
+Provoca una excepción si el archivo no existe.</p></li>
+<li><p><code>'rs'</code> — Abre el archivo para lectura en modo sincrónico. Instruye al sistema operativo para evitar la memorización en caché de archivos del sistema local.</p>
+
+<p>Esto resulta especialmente útil para la apertura de archivos en NFS, ya que te permite omitir la caché local potencialmente vieja. Tiene un impacto muy importante en el rendimiento de E/S así que no uses este modo a menos que lo necesites.</p>
+
+<p>Ten en cuenta que esta no se convierte a <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.open()</code> en una llamada sincrónica bloqueante.
+Si eso es lo que quieres, entonces debes utilizar <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.openSync()</code></p></li>
+<li><p><code>'rs+'</code> — Abre el archivo para lectura y escritura, diciendo al sistema operativo que lo abra sincrónicamente. Ve las notas precautorias de <code>'rs'</code> para su uso.</p></li>
+<li><p><code>'w'</code> — Abre el archivo para escritura.
+Crea el archivo (si no existe) o lo trunca (de existir).</p></li>
+<li><p><code>'wx'</code> — Igual que <code>'w'</code> pero abre el archivo en modo exclusivo.</p></li>
+<li><p><code>'w+'</code> — Abre el archivo para lectura y escritura.
+Crea el archivo (si no existe) o lo trunca (de existir).</p></li>
+<li><p><code>'wx+'</code> — Igual que <code>'w+'</code> pero abre el archivo en modo exclusivo.</p></li>
+<li><p><code>'a'</code> — Abre el archivo para agregar.
+Crea el archivo si no existe.</p></li>
+<li><p><code>'ax'</code> — Igual que <code>'a'</code>, pero abre el archivo en modo exclusivo.</p></li>
+<li><p><code>'a+'</code> — Abre el archivo para lectura y agregar.
+Crea el archivo si no existe.</p></li>
+<li><p><code>'ax+'</code> — Igual que <code>'a+'</code>, pero abre el archivo en modo exclusivo.</p></li>
+</ul>
+
+<p><abbr title="mode"><code>modo</code></abbr> de manera predeterminada es <code>0666</code>. La retrollamada recibe dos argumentos <code>(error,</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>)</code>.</p>
+
+<p>El modo exclusivo (<code>O_EXCL</code>) garantiza que <abbr title="path"><code>ruta</code></abbr> se ha creado recientemente. <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.open()</code> falla si ya existe un archivo con ese nombre. En los sistemas <abbr title="Interfaz portable del sistema operativo">POSIX</abbr>, no se siguen los enlaces simbólicos. El modo exclusivo puede o no trabajar con sistemas de archivos en red.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.openSync(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="flags"><code>indicadores</code></abbr><code>, [</code><abbr title="mode"><code>modo</code></abbr><code>])</code></h2>
+
+<p>open(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.utimes(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="aTime"><code>instanteApertura</code></abbr><code>,</code> <abbr title="mTime"><code>instanteModificacion</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.utimesSync(</code><abbr title="path"><code>ruta</code></abbr><code>,</code> <abbr title="aTime"><code>instanteApertura</code></abbr><code>,</code> <abbr title="mTime"><code>instanteModificacion</code></abbr><code>)</code></h2>
+
+<p>Cambia las marcas de tiempo del archivo referido en la ruta suministrada.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.futimes(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="aTime"><code>instanteApertura</code></abbr><code>,</code> <abbr title="mTime"><code>instanteModificacion</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.futimesSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="aTime"><code>instanteApertura</code></abbr><code>,</code> <abbr title="mTime"><code>instanteModificacion</code></abbr><code>)</code></h2>
+
+<p>Cambia las marcas de tiempo de un archivo referido en el descriptor de archivo proporcionado.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fsync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>fsync(2) asíncrona. No hay más argumentos que una posible excepción para la retrollamada de terminación.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fsyncSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>)</code></h2>
+
+<p>fsync(2) sincrónica.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.write(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="offset"><code>desplazamiento</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>,</code> <abbr title="position"><code>posicion</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Escribe <abbr title="buffer"><code>bufer</code></abbr> en el archivo especificado por <abbr title="fd"><code>descriptorArchivo</code></abbr>.</p>
+
+<p>El <abbr title="offset"><code>desplazamiento</code></abbr> y <abbr title="length"><code>largo</code></abbr> determinan la parte del búfer a escribir.</p>
+
+<p><abbr title="position"><code>posicion</code></abbr> se refiere a la posición desde el principio del archivo, donde estos datos se deben escribir. Si <abbr title="position"><code>posicion</code></abbr> es <abbr title="null"><code>nulo</code></abbr>, los datos se escriben en la posición actual.
+Ve pwrite(2).</p>
+
+<p>Le debes suministrar tres argumentos a la retrollamada <code>(error,</code><abbr title="written"><code>escritos</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>)</code> donde <abbr title="written"><code>escritos</code></abbr> especifica cuántos <em>bytes</em> fueron escritos desde <abbr title="buffer"><code>bufer</code></abbr>.</p>
+
+<p>Ten en cuenta que no es seguro usar varias veces <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.write</code> en el mismo archivo sin esperar a la retrollamada. Para este escenario, <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.createWriteStream</code> es muy recomendable.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.writeSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="offset"><code>desplazamiento</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>,</code> <abbr title="position"><code>posicion</code></abbr><code>)</code></h2>
+
+<p>Versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.write()</code>. Devuelve el número de bytes escritos.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.read(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="offset"><code>desplazamiento</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>,</code> <abbr title="position"><code>posicion</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Lee los datos del archivo especificado por <abbr title="fd"><code>descriptorArchivo</code></abbr>.</p>
+
+<p><abbr title="buffer"><code>bufer</code></abbr> es el búfer en que se escribirán los datos.</p>
+
+<p>El <abbr title="offset"><code>desplazamiento</code></abbr> compensa dónde inicia la escritura en el búfer.</p>
+
+<p><abbr title="length"><code>largo</code></abbr> es un número entero que especifica la cantidad de bytes a leer.</p>
+
+<p><abbr title="position"><code>posicion</code></abbr> es un entero que especifica dónde comenzar a leer en el archivo.
+Si <abbr title="position"><code>posicion</code></abbr> es <abbr title="null"><code>nulo</code></abbr>, los datos se leen desde la posición actual en el archivo.</p>
+
+<p>La retrollamada recibe tres argumentos, <code>(error,</code><abbr title="bytesRead"><code>bytesLeidos</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>)</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readSync(</code><abbr title="fd"><code>descriptorArchivo</code></abbr><code>,</code> <abbr title="buffer"><code>bufer</code></abbr><code>,</code> <abbr title="offset"><code>desplazamiento</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>,</code> <abbr title="position"><code>posicion</code></abbr><code>)</code></h2>
+
+<p>Versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.read</code>. Devuelve la cantidad de <abbr title="bytesRead"><code>bytesLeidos</code></abbr>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readFile(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Lee asíncronamente el contenido completo de un archivo. Ejemplo:</p>
+
+<pre><code>sistemaDeArchivos.readFile('/etc/passwd', function (error, datos) {
+  if (error) throw error;
+  console.log(datos);
+});
+</code></pre>
+
+<p>Debes suministrar dos argumentos a la retrollamada <code>(error,</code><abbr title="data"><code>datos</code></abbr><code>)</code>, donde <abbr title="data"><code>datos</code></abbr> es el contenido del archivo.</p>
+
+<p>Si no especificas la codificación, entonces se devuelve el búfer tal cual.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readFileSync(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h2>
+
+<p>Versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.readFile</code>. Devuelve el contenido de <abbr title="filename"><code>nombreArchivo</code></abbr>.</p>
+
+<p>Si especificas la <code>codificación</code> entonces, esta función devuelve una cadena. De lo contrario, devuelve un búfer.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.writeFile(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>,</code> <abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Escribe datos en un archivo de forma asincrónica, reemplazando el archivo si ya existe.
+<abbr title="data"><code>datos</code></abbr> puede ser una cadena o un búfer. El argumento <abbr title="encoding"><code>codificacion</code></abbr> se descarta si <code>datos</code> es un búfer. De manera predeterminada es <code>'utf8'</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>sistemaDeArchivos.writeFile('mensaje.txt', 'Hola Node', function (error) {
+  if (error) throw error;
+  console.log('¡Se ha guardado!');
+});
+</code></pre>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.writeFileSync(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>,</code> <abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h2>
+
+<p>La versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.writeFile</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.appendFile(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>,</code> <abbr title="data"><code>datos</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>= 'utf8', [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Añade datos a un archivo de manera asincrónica, creando el archivo si todavía no existe.
+<abbr title="data"><code>datos</code></abbr> puede ser una cadena o un búfer. El argumento <abbr title="encoding"><code>codificacion</code></abbr> se descarta si <code>datos</code> es un búfer.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>sistemaDeArchivos.appendFile('mensaje.txt', 'datos por agregar', function (error) {
+  if (error) throw error;
+  console.log('¡Los «datos por agregar» se añadieron al archivo!');
+});
+</code></pre>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.appendFileSync(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>,</code> <abbr title="data"><code>datos</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>= 'utf8')</code></h2>
+
+<p>La versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.appendFile</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watchFile(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>],</code><abbr title="listener"><code>escucha</code></abbr><code>)</code></h2>
+
+<pre><code>Estabilidad: 2 — Inestable.  
+</code></pre>
+
+<p>En su lugar usa <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch</code>, si está disponible.</p>
+
+<p>Vigila los cambios en <abbr title="filename"><code>nombreArchivo</code></abbr>. La retrollamada de <abbr title="listener"><code>escucha</code></abbr> se invocará cada vez que se acceda al archivo.</p>
+
+<p>El segundo argumento es opcional. Si suministras <abbr title="options"><code>opciones</code></abbr> debe ser un objeto que contiene dos miembros, un booleano, <code>persistent</code> e <code>interval</code>. <code>persistent</code> indica si el proceso debe seguir funcionando siempre y cuando se estén observando archivos. <code>interval</code> indica la frecuencia con la que se debería encuestar, en milisegundos. El predeterminado es <code>{ persistent: true, interval: 5007 }</code>.</p>
+
+<p>El <abbr title="listener"><code>escucha</code></abbr> recibe dos argumentos el objeto <code>stat</code> actual y el objeto <code>stat</code> anterior:</p>
+
+<pre><code>sistemaDeArchivos.watchFile('mensaje.text', function (actual, previo) {
+  console.log('el instanteModificacion actual es: ' + actual.mtime);
+  console.log('el instanteModificacion anterior era: ' + previo.mtime);
+});
+</code></pre>
+
+<p>Estos objetos <code>stat</code> son instancias de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.Stat</code>.</p>
+
+<p>Si quieres recibir una notificación cuando el archivo sea modificado, no sólo accedes a lo que necesitas para comparar <code>actual.mtime</code> y <code>previo.mtime</code>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.unwatchFile(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>, [</code><abbr title="listener"><code>escucha</code></abbr><code>])</code></h2>
+
+<pre><code>Estabilidad: 2 — Inestable.  
+</code></pre>
+
+<p>En su lugar usa <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch</code>, si está disponible.</p>
+
+<p>Deja de vigilar los cambios en <abbr title="filename"><code>nombreArchivo</code></abbr>. Si especificas el <abbr title="listener"><code>escucha</code></abbr>, únicamente ese <abbr title="listener"><code>escucha</code></abbr> en particular es eliminado. De lo contrario, <em>todos</em> los escuchas se quitan y  efectivamente has dejado de vigilar <abbr title="filename"><code>nombreArchivo</code></abbr>.</p>
+
+<p>Llamar a <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.unwatchFile()</code> con un nombre de archivo que no se está vigilando es un <abbr title="sin operación"><code>no-op</code></abbr>
+, no un error.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch(</code><abbr title="filename"><code>nombreArchivo</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>], [</code><abbr title="listener"><code>escucha</code></abbr><code>])</code></h2>
+
+<pre><code>Estabilidad: 2 — Inestable.  No disponible en todos los ambientes.
+</code></pre>
+
+<p>Observa los cambios en <abbr title="filename"><code>nombreArchivo</code></abbr>, donde <abbr title="filename"><code>nombreArchivo</code></abbr> es un archivo o un directorio.  El objeto devuelto es un <a href="#fs_class_fs_fswatcher"><abbr title="fs">sistemaDeArchivos</abbr>.FSWatcher</a>.</p>
+
+<p>El segundo argumento es opcional. Si suministras <abbr title="options"><code>opciones</code></abbr> debe ser un objeto que contiene un miembro booleano <code>persistent</code>, que indica si el proceso debe seguir funcionando siempre y cuando se estén vigilando archivos. El predeterminado es
+<code>{ persistent: true }</code>.</p>
+
+<p>El escucha de la retrollamada toma dos argumentos <code>(</code><abbr title="event"><code>evento</code></abbr><code>,</code> <abbr title="filename"><code>nombreArchivo</code></abbr><code>)</code>.  <abbr title="event"><code>evento</code></abbr> es o bien <code>'rename'</code> o <code>'change'</code>, y <abbr title="filename"><code>nombreArchivo</code></abbr> es el nombre del archivo que desencadenó el evento.</p>
+
+<h3>Salvedades</h3>
+
+<!-- type=misc -->
+
+<p>La <abbr title="Interfaz para Programar la Aplicación">API</abbr> de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch</code> no es 100% compatible entre ambientes, y en algunas situaciones no está disponible.</p>
+
+<h4>Disponibilidad</h4>
+
+<!-- type=misc -->
+
+<p>Esta función depende de si el sistema operativo subyacente proporciona una manera de ser notificado de los cambios en el sistema de archivos.</p>
+
+<ul>
+<li>En los sistemas Linux, se utiliza <code>inotify</code>.</li>
+<li>En los sistemas BSD (incluyendo OS X), se utiliza <code>kqueue</code>.</li>
+<li>En los sistemas SunOS (incluyendo Solaris y SmartOS), se utiliza <code>event ports</code>.</li>
+<li>En los sistemas Windows, esta característica depende de <code>ReadDirectoryChangesW</code>.</li>
+</ul>
+
+<p>Si —por alguna razón— la funcionalidad subyacente no está disponible, entonces <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch</code> no será capaz de hacer su trabajo.  Puedes seguir utilizando <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watchFile</code>, que utiliza encuestas estadísticas, pero es más lento y menos fiable.</p>
+
+<h4>Argumento <abbr title="filename"><code>nombreArchivo</code></abbr></h4>
+
+<!-- type=misc -->
+
+<p>Proporcionar el argumento <abbr title="filename"><code>nombreArchivo</code></abbr> en la retrollamada no es compatible con todos los ambientes (actualmente sólo es compatible en Linux y Windows).  Incluso, en los ambientes compatibles <abbr title="filename"><code>nombreArchivo</code></abbr> no siempre se garantiza que sea provisto.
+Por lo tanto, no asumas que el argumento <abbr title="filename"><code>nombreArchivo</code></abbr> siempre se proporciona en la retrollamada, y tiene algo de lógica inversa si es <abbr title="null"><code>nulo</code></abbr>.</p>
+
+<pre><code>sistemaDeArchivos.watch('algundir', function (evento, nombreArchivo) {
+  console.log('el evento es: ' + evento);
+  if (nombreArchivo) {
+    console.log('El nombre de archivo suministrado es: ' + nombreArchivo);
+  } else {
+    console.log('no se suministró el nombre de archivo');
+  }
+});
+</code></pre>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.exists(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<p>Prueba cuando existe o no, la ruta suministrada examinando el sistema de archivos.
+Luego llama al argumento <abbr title="callback"><code>retrollamada</code></abbr> con <code>true</code> o <code>false</code>.  Ejemplo:</p>
+
+<pre><code>sistemaDeArchivos.exists('/etc/passwd', function (exists) {
+  util.debug(exists ? 'ahí está' : '¡No hay contraseña!');
+});
+</code></pre>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.existsSync(</code><abbr title="path"><code>ruta</code></abbr><code>)</code></h2>
+
+<p>Versión sincrónica de <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.exists</code>.</p>
+
+<h2>Clase: <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.Stats</code></h2>
+
+<p>Los objetos devueltos por <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.stat()</code>, <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lstat()</code> y <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.fstat()</code> y sus contrapartes sincrónicas son de este tipo.</p>
+
+<ul>
+<li><code>stats.isFile()</code></li>
+<li><code>stats.isDirectory()</code></li>
+<li><code>stats.isBlockDevice()</code></li>
+<li><code>stats.isCharacterDevice()</code></li>
+<li><code>stats.isSymbolicLink()</code> (válido únicamente con <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.lstat()</code>)</li>
+<li><code>stats.isFIFO()</code></li>
+<li><code>stats.isSocket()</code></li>
+</ul>
+
+<p>Para un archivo regular <code>util.inspect(stats)</code> devolverá una cadena muy similar a esta:</p>
+
+<pre><code>{ dev: 2114,
+  ino: 48064969,
+  mode: 33188,
+  nlink: 1,
+  uid: 85,
+  gid: 100,
+  rdev: 0,
+  size: 527,
+  blksize: 4096,
+  blocks: 8,
+  atime: Mon, 10 Oct 2011 23:24:11 GMT,
+  mtime: Mon, 10 Oct 2011 23:24:11 GMT,
+  ctime: Mon, 10 Oct 2011 23:24:11 GMT }
+</code></pre>
+
+<p>Ten en cuenta que <abbr title="aTime"><code>instanteApertura</code></abbr>, <abbr title="mTime"><code>instanteModificacion</code></abbr> e <abbr title="cTime"><code>instanteCreacion</code></abbr> son instancias del objeto [Date][MDN-Fecha] y para comparar los valores de estos objetos debes utilizar los métodos adecuados. Para la mayoría de los usos generales <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/getTime">getTime()</a> devolverá el número de milisegundos transcurridos desde <em>1° de Enero de 1970 00:00:00 UTC</em> y este entero debería ser suficiente para cualquier comparación, sin embargo, hay otros métodos que puedes utilizar para mostrar información parcial. Puedes encontrar más detalles en la página de la <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date">Referencia MDN de JavaScript</a>.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.createReadStream(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <code>ReadStream</code> (Ve <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr>).</p>
+
+<p><abbr title="options"><code>opciones</code></abbr> es un objeto con los siguientes valores predefinidos:</p>
+
+<pre><code>{ flags: 'r',
+  encoding: null,
+  fd: null,
+  mode: 0666,
+  bufferSize: 64 * 1024
+}
+</code></pre>
+
+<p><abbr title="options"><code>opciones</code></abbr> puede incluir los valores <abbr title="start"><code>inicio</code></abbr> y <abbr title="end"><code>fin</code></abbr> para leer una serie de bytes desde el archivo en lugar del archivo completo.  Tanto <abbr title="start"><code>inicio</code></abbr> como <abbr title="end"><code>fin</code></abbr> son inclusivas y comienzan en 0. La <abbr title="encoding"><code>codificacion</code></abbr> puede ser <code>'utf8'</code>, <code>'ascii'</code> o <code>'base64'</code>.</p>
+
+<p>Un ejemplo para leer los últimos 10 bytes de un archivo que es de 100 bytes de longitud:</p>
+
+<pre><code>sistemaDeArchivos.createReadStream('ejemplo.txt', {start: 90, end: 99});
+</code></pre>
+
+<h2>Clase: <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.ReadStream</code></h2>
+
+<p><code>ReadStream</code> es un <a href="stream.html#stream_readable_stream">Flujo de lectura</a>.</p>
+
+<h3>Evento: <code>'open'</code></h3>
+
+<ul>
+<li><abbr title="fd"><code>descriptorArchivo</code></abbr> {<abbr title="Integer">Entero</abbr>} el descriptor de archivo utilizado por <code>ReadStream</code>.</li>
+</ul>
+
+<p>Emitido cuando <code>ReadStream</code> abre el archivo.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.createWriteStream(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <code>WriteStream</code> (ve <abbr title="Writable Stream"><code>Flujo de escritura</code></abbr>).</p>
+
+<p><abbr title="options"><code>opciones</code></abbr> es un objeto con los siguientes valores predefinidos:</p>
+
+<pre><code>{ flags: 'w',
+  encoding: null,
+  mode: 0666 }
+</code></pre>
+
+<p><abbr title="options"><code>opciones</code></abbr> también puede incluir una opción <abbr title="start"><code>inicio</code></abbr> para permitir la escritura de datos en alguna posición más allá del comienzo del archivo.  La modificación de un archivo en lugar de reemplazarlo puede requerir <abbr title="flags"><code>indicadores</code></abbr> de modo <code>r+</code> en lugar del modo <code>w</code> predeterminado.</p>
+
+<h2><abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.WriteStream</code></h2>
+
+<p><code>WriteStream</code> es un <a href="stream.html#stream_writable_stream">Flujo de escritura</a>.</p>
+
+<h3>Evento: <code>'open'</code></h3>
+
+<ul>
+<li><abbr title="fd"><code>descriptorArchivo</code></abbr> {<abbr title="Integer">Entero</abbr>} el descriptor de archivo utilizado por <code>WriteStream</code>.</li>
+</ul>
+
+<p>Emitido cuando <code>WriteStream</code> abre el archivo.</p>
+
+<h3><code>file.bytesWritten</code></h3>
+
+<p>El número de bytes escritos hasta el momento. No incluye los datos que todavía están en la cola de escritura.</p>
+
+<h2>Clase: <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.FSWatcher</code></h2>
+
+<p>Los objetos devueltos por <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.watch()</code> son de este tipo.</p>
+
+<h3><code>watcher.close()</code></h3>
+
+<p>Deja de vigilar los cambios en el <abbr title="fs"><code>sistemaDeArchivos</code></abbr><code>.FSWatcher</code> dado.</p>
+
+<h3>Evento: <code>'change'</code></h3>
+
+<ul>
+<li><abbr title="event"><code>evento</code></abbr> {<abbr title="String">Cadena</abbr>} El tipo del sistema de archivos a cambiar</li>
+<li><abbr title="filename"><code>nombreArchivo</code></abbr> {<abbr title="String">Cadena</abbr>} El nombre del archivo que ha cambiado (si es pertinente / está disponible)</li>
+</ul>
+
+<p>Emitido cuando algo cambia en un directorio o archivo vigilado
+Ve más detalles en <a href="#fs_fs_watch_filename_options_listener"><abbr title="fs">sistemaDeArchivos</abbr>.watch</a>.</p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<ul>
+<li><code>error</code> {<abbr title="Object">Objeto</abbr> Error}</li>
+</ul>
+
+<p>Emitido cuando ocurre un error.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

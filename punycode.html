@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="punycode">Cifrado débil</abbr> con «punycode»</h1>
+
+<pre><code>Estabilidad: 2 — Inestable
+</code></pre>
+
+<p><a href="http://mths.be/punycode">Punycode.js</a> viene con Node.js v0.6.2+. Para acceder a este módulo usa:</p>
+
+<pre><code>var punycode = require('punycode'); // Este módulo hace un
+                                    // cifrado/decifrado débil 
+</code></pre>
+
+<p>(Para usarlo con otras versiones de Node.js, primero utiliza <code>npm</code> para instalar el módulo <code>punycode</code>).</p>
+
+<h2><code>punycode.decode(</code><abbr title="string"><code>cadena</code></abbr><code>)</code></h2>
+
+<p>Convierte una cadena <code>Punycode</code> en puntos de codificación ASCCI a puntos de codificación Unicode.</p>
+
+<pre><code>// decodifica las partes del nombre de dominio
+punycode.decode('maana-pta'); // 'mañana'
+punycode.decode('--dqo34k'); // '☃-⌘'
+</code></pre>
+
+<h2><code>punycode.encode(</code><abbr title="string"><code>cadena</code></abbr><code>)</code></h2>
+
+<p>Convierte una cadena en puntos de codificación Unicode a una cadena <code>Punycode</code> en puntos de codificación ASCII.</p>
+
+<pre><code>// codifica partes del nombre de dominio
+punycode.encode('mañana'); // 'maana-pta'
+punycode.encode('☃-⌘'); // '--dqo34k'
+</code></pre>
+
+<h2><code>punycode.toUnicode(</code><abbr title="domain"><code>dominio</code></abbr><code>)</code></h2>
+
+<p>Convierte una cadena <code>Punycode</code> que representa un nombre de dominio a Unicode. Sólo se convertirán las partes del nombre de dominio codificadas débilmente, es decir, no importa si la llamas con una cadena que ya se ha convertido a Unicode.</p>
+
+<pre><code>// decodifica nombres de dominio
+punycode.toUnicode('xn--maana-pta.com'); // 'mañana.com'
+punycode.toUnicode('xn----dqo34k.com'); // '☃-⌘.com'
+</code></pre>
+
+<h2><code>punycode.toASCII(</code><abbr title="domain"><code>dominio</code></abbr><code>)</code></h2>
+
+<p>Convierte una cadena Unicode que representa un nombre de dominio a <code>Punycode</code>. Sólo se convertirán las piezas no ASCII del nombre de dominio, es decir, no importa si la llamas con un dominio que ya está en ASCII.</p>
+
+<pre><code>// codifica nombres de dominio
+punycode.toASCII('mañana.com'); // 'xn--maana-pta.com'
+punycode.toASCII('☃-⌘.com'); // 'xn----dqo34k.com'
+</code></pre>
+
+<h2><code>punycode.ucs2</code></h2>
+
+<h3><code>punycode.ucs2.decode(</code><abbr title="string"><code>cadena</code></abbr><code>)</code></h3>
+
+<p>Crea un <abbr title="array">arreglo</abbr> conteniendo los puntos de codificación decimal de cada carácter Unicode en la cadena. Si bien <a href="http://mathiasbynens.be/notes/javascript-encoding">JavaScript internamente utiliza UCS-2</a>, esta función convertirá las mitades en un par suplementario (que UCS-2 expone como diferentes caracteres) en un único punto de código, coincidiendo con UTF-16.</p>
+
+<pre><code>punycode.ucs2.decode('abc'); // [97, 98, 99]
+// par suplementario del tetragrama U+1D306 para centrar:
+punycode.ucs2.decode('\uD834\uDF06'); // [0x1D306]
+</code></pre>
+
+<h3><code>punycode.ucs2.encode(</code><abbr title="codePoints"><code>puntosDeCodificacion</code></abbrh<code>)</code></h3>
+
+<p>Crea una cadena pasada en un arreglo en puntos de codificación decimal.</p>
+
+<pre><code>punycode.ucs2.encode([97, 98, 99]); // 'abc'
+punycode.ucs2.encode([0x1D306]); // '\uD834\uDF06'
+</code></pre>
+
+<h2><code>punycode.version</code></h2>
+
+<p>Una cadena que representa el número de versión actual de <code>Punycode.js</code>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

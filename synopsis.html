@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>Sinopsis</h1>
+
+<!-- type=misc -->
+
+<p>Un ejemplo de un <a href="http.html">servidor web</a>, escrito en Node que responde con un 'Hola mundo':</p>
+
+<pre><code>var http = require('http');
+
+http.createServer(function (peticion, respuesta) {
+  respuesta.writeHead(200, {'Content-Type': 'text/plain'});
+  respuesta.end('Hola, mundo
+</code></pre>
+
+<p>');
+    }).listen(8124);</p>
+
+<pre><code>console.log('Servidor escuchando en http://127.0.0.1:8124/');
+</code></pre>
+
+<p>Para ejecutar el servidor, guarda el código en un archivo llamado <code>holamundo.js</code> y ejecútalo con el intérprete de Node:</p>
+
+<pre><code>$ node holamundo.js
+Servidor escuchando en http://127.0.0.1:8124/
+</code></pre>
+
+<p>Todos los ejemplos en la documentación se pueden ejecutar de manera similar.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

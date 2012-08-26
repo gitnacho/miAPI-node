@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><code>console</code></h1>
+
+<pre><code>Estabilidad: 4 — API congelada
+</code></pre>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr>}</li>
+</ul>
+
+<!-- type=global -->
+
+<p>Para imprimir en la salida y error estándar (<code>'stdout'</code> y <code>'stderr'</code>, respectivamente).  Similar a las funciones del objeto <code>console</code> proporcionado por la mayoría de los navegadores web, aquí la salida se envía a <code>'stdout'</code> o a <code>'stderr'</code>.</p>
+
+<h2><code>console.log([</code><abbr title="data"><code>datos</code></abbr><code>], [...])</code></h2>
+
+<p>Imprime en la <abbr title="stdout">salida estándar</abbr> con salto de línea. Esta función puede tomar varios argumentos de manera similar a la forma en que los maneja <code>printf()</code>. Ejemplo:</p>
+
+<pre><code>console.log('cantidad: %d', cantidad);
+</code></pre>
+
+<p>Si los elementos de formato no se encuentran en la primera cadena se utiliza <code>util.inspect</code> en cada argumento.  Consulta <a href="util.html#util_util_format_format">util.format()</a> para más información.</p>
+
+<h2><code>console.info([</code><abbr title="data"><code>datos</code></abbr><code>], [...])</code></h2>
+
+<p>Igual que <code>console.log</code>.</p>
+
+<h2><code>console.error([</code><abbr title="data"><code>datos</code></abbr><code>], [...])</code></h2>
+
+<p>Igual que <code>console.log</code> pero imprime a la salida de error estándar —<code>stderr</code>.</p>
+
+<h2><code>console.warn([</code><abbr title="data"><code>datos</code></abbr><code>], [...])</code></h2>
+
+<p>Igual que <code>console.error</code>.</p>
+
+<h2><code>console.dir(</code><abbr title="obj"><code>objeto</code></abbr><code>)</code></h2>
+
+<p>Usa <code>util.inspect</code> en el objeto <abbr title="obj"><code>objeto</code></abbr> e imprime la cadena resultante a la <abbr title="stdout">salida estándar</abbr>.</p>
+
+<h2><code>console.time(</code><abbr title="label"><code>etiqueta</code></abbr><code>)</code></h2>
+
+<p>Marca un temporizador.</p>
+
+<h2><code>console.timeEnd(</code><abbr title="label"><code>etiqueta</code></abbr><code>)</code></h2>
+
+<p>Finaliza el temporizador, anotando la salida. Ejemplo:</p>
+
+<pre><code>console.time('100-elementos');
+for (var i = 0; i &lt; 100; i++) {
+  ;
+}
+console.timeEnd('100-elementos');
+</code></pre>
+
+<h2><code>console.trace(</code><abbr title="label"><code>etiqueta</code></abbr><code>)</code></h2>
+
+<p>Imprime el seguimiento de la pila hasta la posición actual en la salida de error estándar —<code>'stderr'</code>.</p>
+
+<h2><code>console.assert(</code><abbr title="expression"><code>expresion</code></abbr><code>, [</code><abbr title="message"><code>mensaje</code></abbr><code>])</code></h2>
+
+<p>Igual que <a href="assert.html#assert_assert_value_message_assert_ok_value_message">assert.ok()</a> dónde si la <abbr title="expression"><code>expresion</code></abbr> evalúa como <code>false</code> lanza un <code>AssertionError</code> con <abbr title="message"><code>mensaje</code></abbr>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

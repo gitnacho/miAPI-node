@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El módulo <code>net</code></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>El módulo <code>net</code> te ofrece una capa asincrónica de red. Contiene métodos para crear servidores y clientes (llamados <abbr title="streams"><code>flujos</code></abbr>). Puedes incluir este módulo usando:</p>
+
+<pre><code>var net = require('net');
+</code></pre>
+
+<h2><code>net.createServer([</code><abbr title="options"><code>opciones</code></abbr><code>], [</code><abbr title="connectionListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<p>Crea un nuevo servidor <abbr title="Protocolo de control de transmisión">TCP</abbr>. El argumento <abbr title="connectionListener"><code>escuchaDeConexion</code></abbr> automáticamente se define como un escucha del evento <a href="#net_event_connection">'connection'</a>.</p>
+
+<p><abbr title="options"><code>opciones</code></abbr> es un objeto con los siguientes valores predefinidos:</p>
+
+<pre><code>{ allowHalfOpen: false
+}
+</code></pre>
+
+<p>Si <code>allowHalfOpen</code> es <code>true</code>, entonces, la toma no enviará automáticamente un paquete FIN cuando su otro extremo envíe un paquete FIN. La toma ya no será de lectura, pero todavía será de escritura. Debes llamar explícitamente al método <code>end()</code>.
+Consulta el evento <a href="#net_event_end">'end'</a> para más información.</p>
+
+<p>Aquí está un ejemplo de un servidor de eco que escucha conexiones en el puerto 8124:</p>
+
+<pre><code>var net = require('net');
+var servidor = net.createServer(function (toma) { // escucha de 'connection'
+  console.log('servidor conectado');
+  toma.on('end', function () {
+    console.log('servidor desconectado');
+  });
+  toma.write('hola
+</code></pre>
+
+<p>');
+      toma.pipe(toma);
+    });
+    servidor.listen(8124, function () { // escucha del evento 'listening'
+      console.log('servidor vinculado');
+    });</p>
+
+<p>Para probarlo, usa `telnet:</p>
+
+<pre><code>telnet localhost 8124
+</code></pre>
+
+<p>Para escuchar en la toma '/tmp/eco.sock` deberás cambiar la tercera línea a lo siguiente</p>
+
+<pre><code>servidor.listen('/tmp/eco.sock', function () { // escuchando 'listening'
+</code></pre>
+
+<p>Usa <code>nc</code> para conectarte a un servidor de dominio UNIX:</p>
+
+<pre><code>nc -U /tmp/eco.sock
+</code></pre>
+
+<h2><code>net.connect(</code><abbr title="options"><code>opciones</code></abbr><code>, [</code><abbr title="connectionListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<h2><code>net.createConnection(</code><abbr title="options"><code>opciones</code></abbr><code>, [</code><abbr title="connectionListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<p>Construye un nuevo objeto <abbr title="socket"><code>toma</code></abbr> y lo abre en la ubicación dada.
+Al establecer la <abbr title="socket"><code>toma</code></abbr>, se emitirá el evento <a href="#net_event_connect">'connect'</a>.</p>
+
+<p>Para tomas <abbr title="Protocolo de control de transmisión">TCP</abbr>, el argumento <abbr title="options"><code>opciones</code></abbr> debe ser un objeto que especifique:</p>
+
+<ul>
+<li><p><code>port</code>: El puerto al cual se debe conectar el cliente (Requerido).</p></li>
+<li><p><code>host</code>: El servidor al cual se debe conectar el cliente. El valor predeterminado es <code>'localhost'</code>.</p></li>
+<li><p><code>localAddress</code>: Interfaz local para vincular las conexiones de red.</p></li>
+</ul>
+
+<p>Para tomas de dominio UNIX, el argumento <abbr title="options"><code>opciones</code></abbr> debe ser un objeto que especifique:</p>
+
+<ul>
+<li><code>path</code>: Es la ruta de acceso a la cual se debe conectar el cliente (Requerida).</li>
+</ul>
+
+<p>Las opciones comunes son las siguientes:</p>
+
+<ul>
+<li><code>allowHalfOpen</code>: si es <code>true</code>, la toma no enviará automáticamente un paquete FIN cuando el otro extremo de la toma envíe un paquete FIN.
+De manera predeterminada es <code>false</code>.  Consulta el evento <a href="#net_event_end">'end'</a> para más información.</li>
+</ul>
+
+<p>El argumento <abbr title="connectListener"><code>escuchaDeConexion</code></abbr> se añadirá como un escucha del evento <a href="#net_event_connect">'connect'</a>.</p>
+
+<p>Aquí está un ejemplo de un cliente del servidor de eco como se describió anteriormente:</p>
+
+<pre><code>var net = require('net');
+var cliente = net.connect({port: 8124},
+    function () { // escucha de 'connect'
+  console.log('cliente conectado');
+  cliente.write('mundo!
+</code></pre>
+
+<p>');
+    });
+    cliente.on('data', function (datos) {
+      console.log(datos.toString());
+      cliente.end();
+    });
+    cliente.on('end', function () {
+      console.log('cliente desconectado');
+    });</p>
+
+<p>Para conectar en la toma '/tmp/eco.sock` simplemente cambia la segunda línea a:</p>
+
+<pre><code>var cliente = net.connect({path: '/tmp/eco.sock'},
+</code></pre>
+
+<h2><code>net.connect(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<h2><code>net.createConnection(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<p>Crea una conexión <abbr title="Protocolo de control de transmisión">TCP</abbr> al <abbr title="port"><code>puerto</code></abbr> en <abbr title="host"><code>servidor</code></abbr>. Si omites <abbr title="host"><code>servidor</code></abbr>, se asumirá <code>'localhost'</code>.
+El argumento <abbr title="connectListener"><code>escuchaDeConexion</code></abbr> se añadirá como un escucha del evento <a href="#net_event_connect">'connect'</a>.</p>
+
+<h2><code>net.connect(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<h2><code>net.createConnection(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h2>
+
+<p>Crea una toma Unix conectada a <abbr title="path"><code>ruta</code></abbr>.
+El argumento <abbr title="connectListener"><code>escuchaDeConexion</code></abbr> se añadirá como un escucha del evento <a href="#net_event_connect">'connect'</a>.</p>
+
+<h2>Clase: <code>net.Server</code></h2>
+
+<p>Esta clase se utiliza para crear un servidor <abbr title="Protocolo de control de transmisión">TCP</abbr> o UNIX.
+Un servidor es un <code>net.Socket</code> que puede escuchar nuevas conexiones entrantes.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="backlog"><code>conexionesPendientes</code></abbr><code>], [</code><abbr title="listeningListener"><code>escuchaDeListening</code></abbr><code>])</code></h3>
+
+<p>Comenzará a aceptar conexiones en el <abbr title="port"><code>puerto</code></abbr> y <abbr title="host"><code>servidor</code></abbr> especificados.  Si omites <abbr title="host"><code>servidor</code></abbr>, el servidor aceptará las conexiones dirigidas a cualquier dirección IPv4 (<code>INADDR_ANY</code>). Un valor de cero para el <abbr title="port"><code>puerto</code></abbr> asignará un puerto aleatorio.</p>
+
+<p><abbr title="backlog"><code>conexionesPendientes</code></abbr> es la longitud máxima de la cola de conexiones pendientes.
+La longitud real será determinada por tu sistema operativo a través de la configuración de <code>sysctl</code> como <code>tcp_max_syn_backlog</code> y <code>SOMAXCONN</code> en linux. El valor predeterminado de este parámetro es 511 (no 512).</p>
+
+<p>Esta función es asíncrona.  Al vincular el servidor, será emitido el evento <a href="#net_event_listening">'listening'</a>.  El último argumento <abbr title="listeningListener"><code>escuchaDeListening</code></abbr> se añadirá como escucha del evento <a href="#net_event_listening">'listening'</a>.</p>
+
+<p>Uno de los problemas que algunos usuarios llegan a tener son los errores <code>'EADDRINUSE'</code>. Este significa que otro servidor ya se está ejecutando en el puerto solicitado. Una manera de manejar esto sería esperar un segundo y volver a intentarlo. Esto se puede hacer con:</p>
+
+<pre><code>servidor.on('error', function (error) {
+  if (error.code == 'EADDRINUSE') {
+    console.log('Dirección en uso, volviendo a intentarlo...');
+    setTimeout(function () {
+      servidor.close();
+      servidor.listen(PUERTO, SERVIDOR);
+    }, 1000);
+  }
+});
+</code></pre>
+
+<p>(Nota: Todas las tomas en Node ya están configuradas a <code>'SO_REUSEADDR'</code>)</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="listeningListener"><code>escuchaDeListening</code></abbr><code>])</code></h3>
+
+<p>Inicia una toma para el servidor UNIX escuchando las conexiones en la <abbr title="path"><code>ruta</code></abbr> dada.</p>
+
+<p>Esta función es asíncrona.  Al vincular el servidor, será emitido el evento <a href="#net_event_listening">'listening'</a>.  El último argumento <abbr title="listeningListener"><code>escuchaDeListening</code></abbr> se añadirá como escucha del evento <a href="#net_event_listening">'listening'</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.listen(</code><abbr title="handle"><code>controlador</code></abbr><code>, [</code><abbr title="listeningListener"><code>escuchaDeListening</code></abbr><code>])</code></h3>
+
+<ul>
+<li><abbr title="handle"><code>controlador</code></abbr> {<abbr title="Object">Objeto</abbr>}</li>
+<li><abbr title="listeningListener"><code>escuchaDeListening</code></abbr> {<abbr title="Function">Función</abbr>}</li>
+</ul>
+
+<p>El objeto <abbr title="handle"><code>controlador</code></abbr> se puede configurar como un servidor o una toma (cualquier cosa con un miembro <code>_handle</code> subyacente), o un objeto <code>{fd: &lt;n&gt;}</code>.</p>
+
+<p>Este hará que el servidor acepte conexiones en el <abbr title="handle"><code>controlador</code></abbr> especificado, pero se presume que el descriptor de archivo o controlador ya se ha vinculado a un puerto o a una toma del dominio.</p>
+
+<p>Escuchar en un descriptor de archivo no es compatible en Windows.</p>
+
+<p>Esta función es asíncrona.  Cuando el servidor está vinculado, emitirá el evento <a href="#event_listening_">'listening'</a>.
+El último argumento <abbr title="listeningListener"><code>escuchaDeListening</code></abbr> se añadirá como un escucha para el evento <a href="#event_listening_">'listening'</a>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.close([</code><abbr title="rt"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Hace que el servidor deje de aceptar nuevas conexiones y mantiene las conexiones existentes. Esta función es asíncrona, finalmente cierra el servidor al terminar todas las conexiones y el servidor emite un evento <code>'close'</code>. Opcionalmente, le puedes pasar una retrollamada para escuchar el evento <code>'close'</code>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.address()</code></h3>
+
+<p>Devuelve la dirección vinculada, el nombre de la familia de la dirección y el puerto del servidor según lo reportado por el sistema operativo.
+Útil para encontrar el puerto que se le asignó al conseguir una dirección asignada por el sistema operativo.
+Devuelve un objeto con tres propiedades, por ejemplo:
+<code>{ port: 12346, family: 'IPv4', address: '127.0.0.1' }</code></p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var servidor = red.createServer(function (toma) {
+  toma.end('hasta luego
+</code></pre>
+
+<p>');
+    });</p>
+
+<pre><code>// obtiene un puerto aleatorio.
+servidor.listen(function () {
+  direccion = servidor.address();
+  console.log('El servidor se abrió en %j', direccion);
+});
+</code></pre>
+
+<p>No llames a <code>servidor.address()</code> hasta que se haya emitido el evento <code>'listening'</code>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.unref()</code></h3>
+
+<p>Llamar a <code>unref</code> en un servidor permitirá al programa salir si este es el único servidor activo en el sistema de eventos. Si el servidor ya está <code>unref</code> llamar una vez más a <code>unref</code> no tiene ningún efecto.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.ref()</code></h3>
+
+<p>Contrario a <code>unref</code>, llamar a <code>ref</code> en un servidor previamente <code>unref</code> <em>no</em>
+dejará salir del programa si es el único servidor que queda (el comportamiento predeterminado). Si el servidor ya está <strong>ref</strong>erido llamar a <code>ref</code> una vez más no tiene ningún efecto.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.maxConnections</code></h3>
+
+<p>Establece esta propiedad para rechazar conexiones cuando la cantidad de conexiones al servidor se eleve.</p>
+
+<p>No es recomendable utilizar esta opción una vez que la toma se ha delegado en un hijo con <code>child_process.fork()</code>.</p>
+
+<h3><abbr title="server"><code>servidor</code></abbr><code>.connections</code></h3>
+
+<p>La cantidad de conexiones simultáneas en el servidor.</p>
+
+<p>Este se vuelve <abbr title="null"><code>nulo</code></abbr> cuando se envía una toma a un hijo con <code>child_process.fork()</code>.</p>
+
+<p><code>net.Server</code> es un <a href="events.html#events_class_events_eventemitter"><abbr title="EventEmitter">EmisorDeEventos</abbr></a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'listening'</code></h3>
+
+<p>Emitido cuando el servidor se ha vinculado después de llamar a <abbr title="server"><code>servidor</code></abbr><code>.listen</code>.</p>
+
+<h3>Evento: <code>'connection'</code></h3>
+
+<ul>
+<li>{<abbr title="Object"><code>Objeto</code></abbr> <code>Socket</code>} El objeto <code>connection</code></li>
+</ul>
+
+<p>Emitido cuando se hace una nueva conexión. <abbr title="toma"><code>socket</code></abbr> es una instancia de <code>net.Socket</code>.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p>Emitido cuando se cierra el servidor. Ten en cuenta que si existen conexiones, este evento no se emite hasta que todas las conexiones han terminado.</p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr> Error}</li>
+</ul>
+
+<p>Emitido cuando ocurre un error.  El evento <code>'close'</code> será llamado inmediatamente después de este evento.  Ve el ejemplo en la explicación de <abbr title="server"><code>servidor</code></abbr><code>.listen</code>.</p>
+
+<h2>Clase: <code>net.Socket</code></h2>
+
+<p>Este objeto es una abstracción de un puerto <abbr title="Protocolo de control de transmisión">TCP</abbr> o una toma UNIX.  <code>net.Socket</code> implementa una interfaz de flujo dúplex.  Lo puede crear el usuario y se utiliza como un cliente (con <code>connect()</code>) o lo puede crear Node y pasarlo al usuario a través del evento <code>'connection'</code> de un servidor.</p>
+
+<h3><code>new net.Socket([</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h3>
+
+<p>Construye un nuevo objeto <abbr title="socket"><code>toma</code></abbr>.</p>
+
+<p><abbr title="options"><code>opciones</code></abbr> es un objeto con los siguientes valores predefinidos:</p>
+
+<pre><code>{ fd: null
+  type: null
+  allowHalfOpen: false
+}
+</code></pre>
+
+<p><abbr title="descriptorArchivo"><code>fd</code></abbr> te permite especificar el descriptor de archivo existente de una toma. <code>type</code> el protocolo subyacente especificado. Este puede ser <code>'tcp4'</code>, <code>'tcp6'</code> o <code>'unix'</code>.
+Acerca de <code>allowHalfOpen</code>, se refiere a <code>createServer()</code> y el evento <code>'end'</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.connect(</code><abbr title="port"><code>puerto</code></abbr><code>, [</code><abbr title="host"><code>servidor</code></abbr><code>], [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h3>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.connect(</code><abbr title="path"><code>ruta</code></abbr><code>, [</code><abbr title="connectListener"><code>escuchaDeConexion</code></abbr><code>])</code></h3>
+
+<p>Abre la conexión para una determinada toma. Si suministras <abbr title="port"><code>puerto</code></abbr> y <abbr title="host"><code>servidor</code></abbr>, entonces, la toma se abre como una toma <abbr title="Protocolo de control de transmisión">TCP</abbr>, si omites <code>servidor</code>, se asume <code>localhost</code>. Si suministras una <abbr title="path"><code>ruta</code></abbr>, la toma se abrirá como una toma UNIX a esa ruta.</p>
+
+<p>Normalmente este método no es necesario, debido a que <code>net.createConnection</code> abre la toma. Usa esta opción sólo si vas a implementar una toma personalizada o si una toma está cerrada y deseas volver a utilizarla para conectarte a otro servidor.</p>
+
+<p>Esta función es asíncrona. Al emitir el evento <a href="#net_event_connect">'connect'</a> la toma está establecida. Si hay un problema de conexión, se emitirá el evento '<code>connect</code>', el evento <code>'error'</code> será emitido con la excepción.</p>
+
+<p>El argumento <abbr title="connectListener"><code>escuchaDeConexion</code></abbr> se añadirá como un escucha del evento <a href="#net_event_connect">'connect'</a>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.bufferSize</code></h3>
+
+<p><code>net.Socket</code> tiene la propiedad de que <abbr title="socket"><code>toma</code></abbr><code>.write()</code> siempre funciona. Esto es para ayudar a los usuarios a comenzar rápidamente. El equipo no siempre puede seguir el ritmo con la cantidad de datos que se escriben en una toma —simplemente la conexión de red podría ser demasiado lenta. Node internamente pondrá en la cola los datos escritos en una toma y los enviará a través del cable cuando sea posible. (Internamente es votado en el descriptor de archivo de la toma para ser de escritura).</p>
+
+<p>La consecuencia de esta memorización interna es que la memoria puede crecer. Esta propiedad muestra la cantidad de caracteres por escribir almacenados actualmente en el búfer.
+(El número de caracteres es aproximadamente igual al número de bytes a escribir, pero el búfer puede contener cadenas, y las cadenas están codificadas relajadamente, por lo tanto el número de bytes exacto no se conoce).</p>
+
+<p>Los usuarios que experimentan un <code>bufferSize</code> cada vez más grande deben de intentar «estrangular» los flujos de datos en su programa con <code>pause()</code> y <code>resume()</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.setEncoding([</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Establece la codificación de la toma como un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr>. Ve <a href="stream.html#stream_stream_setencoding_encoding">stream.setEncoding()</a> para más información.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.write(</code><abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="encoding"><code>codificacion</code></abbr><code>], [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Envía los datos a la toma. El segundo argumento especifica la codificación en el caso de una cadena —de manera predeterminada la codificación es UTF8.</p>
+
+<p>Devuelve <code>true</code> si todos los datos se drenaron satisfactoriamente al búfer del núcleo. Devuelve <code>false</code> si todo o parte de los datos se pusieron en la cola de la memoria del usuario.
+<code>'drain'</code> será emitido cuando el búfer de nuevo esté libre.</p>
+
+<p>El argumento opcional <abbr title="callback"><code>retrollamada</code></abbr> se ejecutará al escribir finalmente los datos —esto posiblemente no sea de inmediato.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.end([</code><abbr title="data"><code>datos</code></abbr><code>], [</code><abbr title="encoding"><code>codificacion</code></abbr><code>])</code></h3>
+
+<p>Cierra parcialmente la toma. Es decir, envía un paquete FIN. Es posible que el servidor siga enviando algunos datos.</p>
+
+<p>Si especificas <abbr title="data"><code>datos</code></abbr>, es equivalente a llamar a <abbr title="socket"><code>toma</code></abbr><code>.write(</code><abbr title="data"><code>datos</code></abbr><code>,</code> <abbr title="encoding"><code>codificacion</code></abbr><code>)</code> seguido por <abbr title="socket"><code>toma</code></abbr><code>.end()</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.destroy()</code></h3>
+
+<p>Garantiza que no sucede más actividad de E/S en esta toma. Sólo es necesario en caso de errores (error de análisis o algo así).</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.pause()</code></h3>
+
+<p>Interrumpe la lectura de datos. Es decir, no se emitirá el evento <code>'datos'</code>.
+Es útil para moderar el ritmo del proceso de carga.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.resume()</code></h3>
+
+<p>Reanuda la lectura después de una llamada a <code>pause()</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.setTimeout(</code><abbr title="timeout"><code>tiempoDeEspera</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h3>
+
+<p>Establece el tiempo de espera en inactividad especificado en los milisegundos de <abbr title="timeout"><code>tiempoDeEspera</code></abbr> en la toma. De manera predeterminada <code>net.Socket</code> no tiene un tiempo de espera.</p>
+
+<p>Cuando se activa el tiempo de espera de inactividad la toma recibirá un evento <code>'timeout'</code>, pero la conexión no se cortará. El usuario debe llamar manualmente al método <code>end()</code> o <code>destroy()</code> de la toma.</p>
+
+<p>Si <abbr title="timeout"><code>tiempoDeEspera</code></abbr> es 0, entonces el tiempo de espera existente está deshabilitado.</p>
+
+<p>El argumento <abbr title="callback"><code>retrollamada</code></abbr> opcional se agregará como un escucha para el evento <code>'timeout'</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.setNoDelay([</code><abbr title="noDelay"><code>sinDemora</code></abbr><code>])</code></h3>
+
+<p>Desactiva el algoritmo de Nagle. De manera predeterminada las conexiones <abbr title="Protocolo de control de transmisión">TCP</abbr> utilizan el algoritmo de Nagle, que guarda en un búfer los datos antes de enviarlos. Ponlo a  <code>true</code> para que <abbr title="noDelay"><code>sinDemora</code></abbr> llame a <abbr title="socket"><code>toma</code></abbr><code>.write()</code> para escribir los datos inmediatamente.
+<abbr title="noDelay"><code>sinDemora</code></abbr> por omisión es <code>true</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.setKeepAlive([</code><abbr title="enable"><code>activar</code></abbr><code>], [</code><abbr title="initialDelay"><code>demoraInicial</code></abbr><code>])</code></h3>
+
+<p>Activa/desactiva la funcionalidad <abbr title="keep-alive"><code>mantener-viva</code></abbr> y, opcionalmente, establece la demora inicial antes de enviar la primer prueba <abbr title="keepalive"><code>mantener-viva</code></abbr> en una toma inactiva.
+<abbr title="enable"><code>activar</code></abbr> de manera predeterminada es <code>false</code>.</p>
+
+<p>Configura <abbr title="initialDelay"><code>demoraInicial</code></abbr> (en milisegundos) para establecer el retraso entre el último paquete de datos recibido y la primer prueba de <abbr title="keepalive"><code>mantener-viva</code></abbr>. Ajustar <abbr title="initialDelay"><code>demoraInicial</code></abbr> a 0 dejará sin cambios el valor del ajuste predefinido (o el anterior). El valor predeterminado es <code>0</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.address()</code></h3>
+
+<p>Devuelve la dirección vinculada, el nombre de la familia la dirección y el puerto de la toma según lo reportado por el sistema operativo. Devuelve un objeto con tres propiedades, por ejemplo:
+<code>{ port: 12346, family: 'IPv4', address: '127.0.0.1' }</code></p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.unref()</code></h3>
+
+<p>Llamar a <code>unref</code> en una toma permitirá al programa salir si esta es la única toma activa en el sistema de eventos. Si la toma ya invocó a <code>unref</code> llamar una vez más a <code>unref</code> no tiene ningún efecto.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.ref()</code></h3>
+
+<p>Contrario a <code>unref</code>, llamar a <code>ref</code> en una toma que previamente había invocado a <code>unref</code> <em>no</em>
+lo dejará salir del programa si es la única toma que queda (el comportamiento predeterminado). Si la toma ya invocó a <code>ref</code> llamarlo una vez más no tiene ningún efecto.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.remoteAddress</code></h3>
+
+<p>La cadena con la representación de la dirección <abbr title="Protocolo de Internet">IP</abbr> remota. Por ejemplo, <code>'74.125.127.100'</code> o <code>2001:4860:A005::68'</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.remotePort</code></h3>
+
+<p>La representación numérica del puerto remoto. Por ejemplo, <code>80</code> o <code>21</code>.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.bytesRead</code></h3>
+
+<p>La cantidad de bytes recibidos.</p>
+
+<h3><abbr title="socket"><code>toma</code></abbr><code>.bytesWritten</code></h3>
+
+<p>La cantidad de bytes enviados.</p>
+
+<p><code>net.Socket</code> son instancias de <a href="events.html#events_class_events_eventemitter"><abbr title="EventEmitter">EmisorDeEventos</abbr></a> con los siguientes eventos:</p>
+
+<h3>Evento: <code>'connect'</code></h3>
+
+<p>Emitido cuando una conexión a la toma se ha establecido correctamente.
+Consulta <code>connect()</code>.</p>
+
+<h3>Evento: <code>'data'</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr> Buffer}</li>
+</ul>
+
+<p>Emitido cuando se reciben datos.  El argumento <abbr title="data"><code>datos</code></abbr> será un <code>Búfer</code> o una <abbr title="String"><code>Cadena</code></abbr>.  La codificación de los datos la determina <abbr title="socket"><code>toma</code></abbr><code>.setEncoding()</code>.
+(Consulta la sección <a href="stream.html#stream_readable_stream">Flujo de lectura</a> para más información).</p>
+
+<p>Ten en cuenta que <strong>se perderán datos</strong> si no hay escucha cuando una <abbr title="Socket"><code>Toma</code></abbr> emite un evento <code>'data'</code>.</p>
+
+<h3>Evento: <code>'end'</code></h3>
+
+<p>Emitido cuando el otro extremo de la toma envía un paquete FIN.</p>
+
+<p>De manera predeterminada la toma (<code>allowHalfOpen == false</code>) destruirá a su descriptor de archivo una vez que ha escrito su cola de escritura pendiente.  Sin embargo, al establecer <code>allowHalfOpen == true</code> la toma no enviará el evento <code>end()</code> automáticamente de su lado lo que permite al usuario escribir cantidades arbitrarias de datos, salvo que el usuario esté obligado a poner <code>end()</code> de su lado ahora.</p>
+
+<h3>Evento: <code>'timeout'</code></h3>
+
+<p>Emitido si el tiempo de espera de la toma rebasa el límite de inactividad. Este sólo es para notificar que la toma ha estado inactiva. El usuario debe cerrar la conexión manualmente.</p>
+
+<p>Ve también: <abbr title="socket"><code>toma</code></abbr><code>.setTimeout()</code></p>
+
+<h3>Evento: <code>'drain'</code></h3>
+
+<p>Emitido cuando el búfer de escritura se queda vacío. Lo puedes utilizar para estrangular las cargas.</p>
+
+<p>Ve también: los valores de retorno de <abbr title="socket"><code>toma</code></abbr><code>.write()</code></p>
+
+<h3>Evento: <code>'error'</code></h3>
+
+<ul>
+<li>{<abbr title="Object">Objeto</abbr> Error}</li>
+</ul>
+
+<p>Emitido cuando ocurre un error.  El evento <code>'close'</code> será llamado inmediatamente después de este evento.</p>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<ul>
+<li><code>had_error</code> {<abbr title="Boolean">Booleano</abbr>} <code>true</code> si la toma tenía un error de transmisión</li>
+</ul>
+
+<p>Emitido una vez que la toma esté cerrada completamente. El argumento <code>had_error</code> es un booleano que indica si la toma fue cerrada debido a un error de transmisión.</p>
+
+<h2><code>net.isIP(</code><abbr title="input"><code>entrada</code></abbr><code>)</code></h2>
+
+<p>Comprueba si <abbr title="input"><code>entrada</code></abbr> es una dirección <abbr title="Protocolo de Internet">IP</abbr>. Devuelve 0 para las cadenas no válidas, devuelve 4 para direcciones IP versión 4 y devuelve 6 para la versión 6 de direcciones <abbr title="Protocolo de Internet">IP</abbr>.</p>
+
+<h2><code>net.isIPv4(</code><abbr title="input"><code>entrada</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si <abbr title="input"><code>entrada</code></abbr> es una direcciones <abbr title="Protocolo de Internet">IP</abbr> versión 4, de lo contrario devuelve <code>false</code>.</p>
+
+<h2><code>net.isIPv6(</code><abbr title="input"><code>entrada</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si <abbr title="input"><code>entrada</code></abbr> es una direcciones <abbr title="Protocolo de Internet">IP</abbr> versión 6, de lo contrario devuelve <code>false</code>.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

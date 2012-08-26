@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>HTTPS</h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<p>HTTPS es el protocolo HTTP sobre <abbr title="Secure Sockets Layer">SSL</abbr>/<abbr title="Transport Layer Security">TLS</abbr>. En Node está implementado como un módulo independiente.</p>
+
+<h2>Clase: <code>https.Server</code></h2>
+
+<p>Esta clase es una subclase de <code>tls.Server</code> y emite los mismos eventos que <code>http.Server</code>. Ve <code>http.Server</code> para más información.</p>
+
+<h2><code>https.createServer(</code><abbr title="options"><code>opciones</code></abbr><code>, [</code><abbr title="requestListener"><code>escuchaDePeticion</code></abbr><code>])</code></h2>
+
+<p>Devuelve un nuevo objeto <abbr title="web server"><code>servidor web</code></abbr> HTTPS. Las <abbr title="options"><code>opciones</code></abbr> son similares a <a href="tls.html#tls_tls_createserver_options_secureconnectionlistener">tls.createServer()</a>.  <abbr title="requestListener"><code>escuchaDePeticion</code></abbr> es una función que se añade automáticamente al evento <code>'request'</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>// curl -k https://localhost:8000/
+var https = require('https');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  key: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-key.pem'),
+  cert: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-cert.pem')
+};
+
+https.createServer(opciones, function (peticion, respuesta) {
+  respuesta.writeHead(200);
+  respuesta.end('Hola mundo
+</code></pre>
+
+<p>');
+    }).listen(8000);</p>
+
+<p>O</p>
+
+<pre><code>var https = require('https');
+var sistemaDeArchivos = require('fs');
+
+var opciones = {
+  pfx: sistemaDeArchivos.readFileSync('servidor.pfx')
+};
+
+https.createServer(opciones, function (peticion, respuesta) {
+  respuesta.writeHead(200);
+  respuesta.end('Hola mundo
+</code></pre>
+
+<p>');
+    }).listen(8000);</p>
+
+<h2><code>https.request(</code><abbr title="options"><code>opciones</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Realiza una petición a un servidor web seguro.  Todas las opciones de <a href="http.html#http_http_request_options_callback">http.request()</a> son válidas.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var https = require('https');
+
+var opciones = {
+  host: 'encrypted.google.com',
+  port: 443,
+  path: '/',
+  method: 'GET'
+};
+
+var peticion = https.request(opciones, function (respuesta) {
+  console.log('Código de estado: ', respuesta.statusCode);
+  console.log('cabeceras: ', respuesta.headers);
+
+  respuesta.on('data', function (datos) {
+    process.stdout.write(datos);
+  });
+});
+peticion.end();
+
+peticion.on('error', function (error) {
+  console.error(error);
+});
+</code></pre>
+
+<p>El argumento <abbr title="options"><code>opciones</code></abbr> tiene los siguientes elementos</p>
+
+<ul>
+<li><code>host</code>: <abbr title="Protocolo de Internet">IP</abbr> o dominio del servidor al cual hacer la petición. El valor predeterminado es <code>'localhost'</code>.</li>
+<li><code>port</code>: puerto del servidor para las peticiones. Predefinido a 443.</li>
+<li><code>path</code>: Ruta de la petición. Predefinida <code>'/'</code>.</li>
+<li><p><code>method</code>: método HTTP de la petición. Predefinido a <code>'GET'</code>.</p></li>
+<li><p><code>host</code>: Un nombre de dominio o dirección <abbr title="Protocolo de Internet">IP</abbr> del servidor al cual emitir la petición.
+El valor predeterminado es <code>'localhost'</code>.</p></li>
+<li><code>hostname</code>: Para apoyar a <code>url.parse()</code> se prefiere <code>hostname</code> sobre <code>host</code></li>
+<li><code>port</code>: Puerto del servidor remoto. Predefinido a 443.</li>
+<li><code>method</code>: Una cadena que especifica el método de la petición HTTP. El valor predeterminado es <code>'GET'</code>.</li>
+<li><code>path</code>: Ruta de la petición. Predefinido a <code>'/'</code>. Debe incluir la cadena de consulta, si existe.
+Por ejemplo, <code>'/index.html?pagina=12'</code></li>
+<li><code>headers</code>: Un objeto que contiene las cabeceras de la petición.</li>
+<li><code>auth</code>: Autenticación básica, es decir, <code>'usuario:contraseña'</code> para calcular una cabecera <code>'Authorization'</code>.</li>
+<li><code>agent</code>: Controla la conducta del [Agente][]. Cuando se utiliza un agente, de manera predeterminada es una petición <code>Connection: keep-alive</code>. Valores posibles:
+<ul><li><abbr title="undefined"><code>indefinido</code></abbr> (predeterminado): usa <a href="#https_https_globalagent">globalAgent</a> para este servidor y puerto.</li>
+<li>Objeto <abbr title="Agent"><code>Agente</code></abbr>: utiliza explícitamente el <abbr title="Agent"><code>Agente</code></abbr> suministrado.</li>
+<li><code>false</code>: opta por la conexión común con un agente, por omisión la petición es <code>Connection: close</code>.</li></ul></li>
+</ul>
+
+<p>También puedes especificar las siguientes opciones de <a href="tls.html#tls_tls_connect_options_secureconnectlistener">tls.connect()</a>. No obstante, <a href="#https_https_globalagent">globalAgent</a> las descarta silenciosamente.</p>
+
+<ul>
+<li><code>pfx</code>: Certificados, claves privadas y certificados <abbr title="Autoridad certificadora">CA</abbr> para que los use <abbr title="Secure Sockets Layer">SSL</abbr>. Predefinido a <abbr title="null"><code>nulo</code></abbr>.</li>
+<li><code>key</code>: La clave privada que utilizará <abbr title="Secure Sockets Layer">SSL</abbr>. Predefinido a <abbr title="null"><code>nulo</code></abbr>.</li>
+<li><code>passphrase</code>: Una cadena con una frase de contraseña para la clave privada o pfx. Predefinido a <abbr title="null"><code>nulo</code></abbr>.</li>
+<li><code>cert</code>: Certificado público X509 a usar. Predefinido a <abbr title="null"><code>nulo</code></abbr>.</li>
+<li><code>ca</code>: Un certificador de autoridad o un arreglo de certificadores de autoridad contra los cuales verificar el servidor remoto.</li>
+<li><code>ciphers</code>: Una cadena describiendo las claves a utilizar o excluir. Consulta <a href="http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT">http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT</a> para detalles del formato.</li>
+<li><abbr title="rejectUnauthorized"><code>rechazaNoAutorizado</code></abbr>: Si es <code>true</code>, el certificado del servidor se verifica contra la lista suministrada de entidades emisoras de certificados. Emite un evento <code>'error'</code> si la verificación falla. La verificación sucede en el nivel de conexión, <em>antes</em> de enviar la petición HTTP. El valor predefinido es <code>false</code>.</li>
+</ul>
+
+<p>Con el fin de especificar estas opciones, utiliza un <code>Agent</code> personalizado.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var opciones = {
+  host: 'encrypted.google.com',
+  port: 443,
+  path: '/',
+  method: 'GET',
+  key: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-key.pem'),
+  cert: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-cert.pem')
+};
+opciones.agent = new https.Agent(opciones);
+
+var peticion = https.request(opciones, function (respuesta) {
+  ...
+}
+</code></pre>
+
+<p>O no utilices un <code>Agente</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var opciones = {
+  host: 'encrypted.google.com',
+  port: 443,
+  path: '/',
+  method: 'GET',
+  key: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-key.pem'),
+  cert: sistemaDeArchivos.readFileSync('test/fixtures/keys/agent2-cert.pem'),
+  agent: false
+};
+
+var peticion = https.request(opciones, function (respuesta) {
+  ...
+}
+</code></pre>
+
+<h2><code>https.get(</code><abbr title="options"><code>opciones</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>Similar a <code>http.get()</code> pero para HTTPS.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>var https = require('https');
+
+https.get({ host: 'encrypted.google.com', path: '/' }, function (respuesta) {
+  console.log('Código de estado: ', respuesta.statusCode);
+  console.log('cabeceras: ', respuesta.headers);
+
+  respuesta.on('data', function (datos) {
+    process.stdout.write(datos);
+  });
+
+}).on('error', function (error) {
+  console.error(error);
+});
+</code></pre>
+
+<h2>Clase: <code>https.Agent</code></h2>
+
+<p>Un objeto <code>Agente</code> para HTTPS similar a <a href="http.html#http_class_http_agent">http.Agent</a>.  Consulta [https.request()][] para más información.</p>
+
+<h2><code>https.globalAgent</code></h2>
+
+<p>Instancia global de <a href="#https_class_https_agent">https.Agent</a> para todas las peticiones HTTPS de los clientes.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

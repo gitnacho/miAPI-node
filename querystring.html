@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Query String">Cadena de consulta</abbr></h1>
+
+<pre><code>Estabilidad: 3 — Estable
+</code></pre>
+
+<!-- name=querystring -->
+
+<p>Este módulo proporciona utilidades para procesar cadenas de consulta. Para acceder a él usa:</p>
+
+<pre><code>var cadenaDeConsulta = require('querystring');
+</code></pre>
+
+<p>Este provee los siguientes métodos:</p>
+
+<h2><abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.stringify(</code><abbr title="obj"><code>objeto</code></abbr><code>, [</code><abbr title="sep"><code>separador</code></abbr><code>], [</code><abbr title="eq"><code>asignacion</code></abbr><code>])</code></h2>
+
+<p>Serializa un <abbr title="object"><code>objeto</code></abbr> a una cadena de consulta.
+Opcionalmente sustituye los caracteres predefinidos del <abbr title="sep"><code>separador</code></abbr> (<code>'&amp;'</code>) y de <abbr title="eq"><code>asignacion</code></abbr> (<code>'='</code>).</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>cadenaDeConsulta.stringify({ loquesea: 'bar',
+  baz: ['qux', 'quux'], corge: ''
+})
+// regresa
+'loquesea=bar&amp;baz=qux&amp;baz=quux&amp;corge='
+
+cadenaDeConsulta.stringify({loquesea: 'bar',
+    baz: 'qux'}, ';', ':')
+// regresa
+'loquesea:bar;baz:qux'
+</code></pre>
+
+<h2><abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.parse(</code><abbr title="string"><code>cadena</code></abbr><code>, [</code><abbr title="sep"><code>separador</code></abbr><code>], [</code><abbr title="eq"><code>asignacion</code></abbr><code>], [</code><abbr title="options"><code>opciones</code></abbr><code>])</code></h2>
+
+<p>Deserializa una cadena de consulta a un objeto.
+Opcionalmente sustituye los caracteres predefinidos del <abbr title="sep"><code>separador</code></abbr> (<code>'&amp;'</code>) y de <abbr title="eq"><code>asignacion</code></abbr> (<code>'='</code>).</p>
+
+<p>Las opciones del objeto pueden contener la propiedad <code>maxKeys</code> (igual a 1000 de manera predeterminada), la cual utilizará para limitar las claves procesadas. Ponla a 0 para eliminar la limitación de claves.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>cadenaDeConsulta.parse('loquesea=bar&amp;baz=qux&amp;baz=quux&amp;corge')
+// regresa
+{ loquesea: 'bar',
+  baz: ['qux', 'quux'], corge: '' }
+</code></pre>
+
+<h2><abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.escape</code></h2>
+
+<p>La función de escape utilizada por <abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.stringify</code>, proporcionada a modo de que se pueda anular de ser necesario.</p>
+
+<h2><abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.unescape</code></h2>
+
+<p>La función <code>unescape</code> utilizada por <abbr title="querystring"><code>cadenaDeConsulta</code></abbr><code>.parse</code>, proporcionada a modo de que se pueda anular de ser necesario.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

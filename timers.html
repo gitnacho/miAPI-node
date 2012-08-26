@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Timers">Temporizadores</abbr></h1>
+
+<pre><code>Estabilidad: 5 — Cerrada
+</code></pre>
+
+<p>Todas las funciones temporizadoras son globales.  No necesitas <code>require()</code> en este módulo a fin de usarlas.</p>
+
+<h2><code>setTimeout(</code><abbr title="callback"><code>retrollamada</code></abbr><code>,</code> <abbr title="delay"><code>demora</code></abbr><code>, [arg], [...])</code></h2>
+
+<p>Para programar una única ejecución de la <abbr title="callback"><code>retrollamada</code></abbr> después de transcurridos los milisegundos especificados por <abbr title="delay"><code>demora</code></abbr>. Devuelve un <abbr title="timeoutId"><code>idDeTiempoDeEspera</code></abbr> para su posible uso con <code>clearTimeout()</code>. Opcionalmente también puedes suministrar argumentos a la retrollamada.</p>
+
+<p>Es importante señalar que la retrollamada probablemente no se llame exactamente a los milisegundos especificados por <abbr title="delay"><code>demora</code></abbr> — Node.js no ofrece ninguna garantía sobre el momento exacto de cuándo se activará la retrollamada, ni el orden en el que ocurra. La retrollamada será invocada tan cerca como sea posible al tiempo especificado.</p>
+
+<h2><code>clearTimeout(</code><abbr title="timeoutId"><code>idDeTiempoDeEspera</code></abbr><code>)</code></h2>
+
+<p>Evita la activación de un tiempo de espera.</p>
+
+<h2><code>setInterval(</code><abbr title="callback"><code>retrollamada</code></abbr><code>,</code> <abbr title="delay"><code>demora</code></abbr><code>, [arg], [...])</code></h2>
+
+<p>Para programar la ejecución repetida de la <abbr title="callback"><code>retrollamada</code></abbr> cada que transcurran los milisegundos especificados por <abbr title="delay"><code>demora</code></abbr>.
+Devuelve un <abbr title="intervalID"><code>idDeIntervalo</code></abbr> para su posible uso con <code>clearInterval()</code>. Opcionalmente también puedes suministrar argumentos a la retrollamada.</p>
+
+<h2><code>clearInterval(</code><abbr title="intervalID"><code>idDeIntervalo</code></abbr><code>)</code></h2>
+
+<p>Detiene la activación de un intervalo.</p>
+
+<h2><code>unref()</code></h2>
+
+<p>El valor opaco devuelto por <code>setTimeout</code> y <code>setInterval</code> también tiene el método
+<code>timer.unref()</code>, que te permitirá crear un temporizador que se activa, pero si es el único elemento que queda en el bucle de eventos no mantendrá el programa en ejecución.
+Si el temporizador ya invocó a <code>unref</code> llamar una vez más a <code>unref</code> no tiene ningún efecto.</p>
+
+<p>En el caso de <code>setTimeout</code> cuando invocas a <code>unref</code> creas un temporizador independiente que despierta el bucle de eventos, ademas, crear muchos de estos puede afectar adversamente el rendimiento del bucle de eventos —utilízalo inteligentemente.</p>
+
+<h2><code>ref()</code></h2>
+
+<p>Si previamente habías invocado a un temporizador que mantenga el programa abierto. Si el temporizador ya invocó a <code>ref</code> llamarlo una vez más no tiene ningún efecto.</p>
+
+<h2><code>setImmediate(</code><abbr title="callback"><code>retrollamada</code></abbr><code>, [arg], [...])</code></h2>
+
+<p>Para programar la ejecución «inmediata» de <abbr title="callback"><code>retrollamada</code></abbr>. Devuelve un <abbr title="immediateId"><code>idInmediato</code></abbr> para su posible uso con <code>clearImmediate()</code>. Opcionalmente, también puedes suministrar argumentos a la retrollamada.</p>
+
+<p>Las funciones inmediatas se ponen en la cola en el orden en que se crean y se extraen de ella una por una en cada iteración del bucle. Esto es diferente de <code>process.nextTick</code> que ejecuta <code>process.maxTickDepth</code> retrollamadas en la cola por iteración. <code>setImmediate</code> cederá el bucle de eventos después de lanzar una retrollamada de la cola para asegurarse de que la E/S no muera de hambre. Aunque la orden se conserva para su ejecución, se pueden desencadenar otros eventos de E/S entre dos retrollamadas inmediatas programadas.</p>
+
+<h2><code>clearImmediate(</code><abbr title="immediateId"><code>idInmediato</code></abbr><code>)</code></h2>
+
+<p>Detiene la activación de una retrollamada inmediata.</p>
+
+      </section>
+    </div>
+  </body>
+</html>

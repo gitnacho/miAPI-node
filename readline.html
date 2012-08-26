@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El programa «readline»</h1>
+
+<pre><code>Estabilidad: 2 — Inestable
+</code></pre>
+
+<p>Para acceder a este módulo, usa:</p>
+
+<pre><code>var readline = require('readline'); 
+</code></pre>
+
+<p><code>Readline</code> te permite leer desde un flujo (tal como <code>process.stdin</code>) en base a línea por línea.</p>
+
+<p>Ten en cuenta que una vez hayas invocado este módulo, tu programa Node no terminará hasta que hayas cerrado la interfaz. Aquí tienes un ejemplo de cómo permitir una salida elegante de tu programa:</p>
+
+<pre><code>var readline = require('readline');
+
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+rl.question('¿Qué piensas de node.js ', function (respuesta) {
+  // TODO: Registrar la respuesta en una base de datos
+  console.log('gracias por tus valiosos comentarios: ', respuesta);
+
+  rl.close();
+});
+</code></pre>
+
+<h2><code>readline.createInterface(</code><abbr title="options"><code>opciones</code></abbr><code>)</code></h2>
+
+<p>Crea una instancia de la <code>Interfaz</code> de <code>readline</code>. Acepta un objeto <abbr title="options"><code>opciones</code></abbr> que toma los siguientes valores:</p>
+
+<ul>
+<li><p><code>input</code> — el flujo de lectura a escuchar (Requerido).</p></li>
+<li><p><code>output</code> — el flujo de escritura al cual escribir los datos leídos (Requerido).</p></li>
+<li><p><code>completer</code> — una función opcional utilizada para el completado automático al pulsar la tecla <code>TAB</code>. Ve un ejemplo de su uso más adelante.</p></li>
+<li><p><code>terminal</code> — pasa <code>true</code> si los <abbr title="streams">flujos</abbr> estándar <code>'input'</code> y <code>'output'</code> se deben tratar como <abbr title="teletypewriter">tty</abbr> y tienen códigos de escape ANSI/VT100 escritos en ellos.
+De manera predeterminada al crear la instancia verifica si el flujo de salida estándar —<code>'output</code>'— es <code>isTTY</code>.</p></li>
+</ul>
+
+<p>A la función de completado —<code>completer</code>— se le suministra la línea actual ingresada por el usuario y se espera que devuelva un arreglo con 2 entradas:</p>
+
+<ol>
+<li><p>Un arreglo con entradas para el completado.</p></li>
+<li><p>La subcadena utilizada para concordancia.</p></li>
+</ol>
+
+<p>La cual termina buscando algo como:
+<code>[[subcadena1, subcadena2, ...], subcadenaoriginal]</code>.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>function completer(linea) {
+  var complementos = '.help .error .exit .quit .q'.split(' ')
+  var pulsaciones = complementos.filter(function (c) { return c.indexOf(linea) == 0 })
+  // muestra todos los complementos si no encuentra ninguno
+  return [pulsaciones.length ? pulsaciones : complementos, linea]
+}
+</code></pre>
+
+<p>Además, <code>completer</code> se puede ejecutar en modo asíncrono si acepta dos argumentos:</p>
+
+<pre><code>function completer(lineaParcial, retrollamada) {
+  retrollamada(null, [['123'], lineaParcial]);
+}
+</code></pre>
+
+<p><code>createInterface</code> se usa frecuentemente con <code>process.stdin</code> y <code>process.stdout</code> para aceptar entradas del usuario:</p>
+
+<pre><code>var readline = require('readline');
+var rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+</code></pre>
+
+<p>Una vez que tengas una instancia de <code>readline</code>, comúnmente escuchas el evento <code>'line'</code>.</p>
+
+<p>Si <code>terminal</code> es <code>true</code> para esta instancia, entonces el flujo de salida estándar —<code>'output'</code>— obtendrá la mejor compatibilidad si defines una propiedad <code>output.columns</code> y emites un evento <code>'resize'</code> en la salida si/cuando las columnas alguna vez cambian (<code>process.stdout</code> lo hace automáticamente cuando es un <abbr title="Teletypewriter">TTY</abbr>).</p>
+
+<h2>Clase: <code>Interface</code></h2>
+
+<p>La clase que representa una interfaz de <code>readline</code> con un flujo de entrada y salida.</p>
+
+<h3><code>rl.setPrompt(</code><abbr title="prompt"><code>indicador</code></abbr><code>,</code> <abbr title="length"><code>largo</code></abbr><code>)</code></h3>
+
+<p>Establece la invitación a <abbr title="prompt"><code>indicador</code></abbr>, por ejemplo al ejecutar <code>node</code> en la línea de ordenes, verás <code>&gt;</code>, que es el símbolo del sistema de Node.</p>
+
+<h3><code>rl.prompt([</code><abbr title="preserveCursor"><code>preservaCursor</code></abbr><code>])</code></h3>
+
+<p>Alista a <code>readline</code> para la entrada del usuario, poniendo las opciones actuales de <code>setPrompt</code> en una nueva línea, dando al usuario un nuevo espacio para escribir. Establece <code>preserveCursor</code> a <code>true</code> para evitar colocar el cursor restablecido a <code>0</code>.</p>
+
+<p>Esto también reanudará el flujo <code>'input'</code> utilizado con <code>createInterface</code> si se ha interrumpido.</p>
+
+<h3><code>rl.question(</code><abbr title="query"><code>pregunta</code></abbr><code>,</code> <abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h3>
+
+<p>Sufija con <abbr title="query"><code>pregunta</code></abbr> la invitación e invoca a la <abbr title="callback"><code>retrollamada</code></abbr> con la respuesta del usuario. Muestra la pregunta al usuario y luego invoca la <abbr title="callback"><code>retrollamada</code></abbr> con la respuesta del usuario después de que la haya escrito.</p>
+
+<p>Esto también reanudará el flujo <code>'input'</code> utilizado con <code>createInterface</code> si se ha interrumpido.</p>
+
+<p>Ejemplo de uso:</p>
+
+<pre><code>interfaz.question('¿cuál es tu comida favorita?', function (respuesta) {
+  console.log('Oh, así que tu comida favorita es ' + respuesta);
+});
+</code></pre>
+
+<h3><code>rl.pause()</code></h3>
+
+<p>Hace una pausa en el <code>flujo</code> de entrada —<code>'input'</code>— de <code>readline</code>, y te permite reanudarlo más tarde si es necesario.</p>
+
+<h3><code>rl.resume()</code></h3>
+
+<p>Reanuda el flujo de entrada —<code>'input'</code>— de <code>readline</code>.</p>
+
+<h3><code>rl.close()</code></h3>
+
+<p>Cierra la instancia de <code>Interface</code>, cediendo el control sobre los flujos de entrada y salida; <code>'input'</code> y <code>'output'</code> respectivamente. También emitirá el evento <code>'close'</code>.</p>
+
+<h3><code>rl.write(</code><abbr title="data"><code>datos</code></abbr><code>, [</code><abbr title="key"><code>tecla</code></abbr><code>])</code></h3>
+
+<p>Escribe <abbr title="data"><code>datos</code></abbr> en el flujo de salida estándar —<code>'output'</code>. <abbr title="key"><code>tecla</code></abbr> es un objeto literal para representar una secuencia de teclas; disponible si la terminal es <abbr title="Teletypewriter">TTY</abbr>.</p>
+
+<p>Esto también reanudará el flujo de entrada —<code>'input'</code>— si se ha interrumpido.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>rl.write('¡Elimíname!');
+// Simula ctrl+u para borrar la línea escrita previamente
+rl.write(null, {ctrl: true, name: 'u'});
+</code></pre>
+
+<h2>Eventos</h2>
+
+<h3>Evento: <code>'line'</code></h3>
+
+<p><code>function (</code><abbr title="line"><code>linea</code></abbr><code>) {}</code></p>
+
+<p>Emitido cada vez que el flujo de entrada —<code>'input'</code>— recibe un carácter <code>'
+'</code>, recibido normalmente cuando los usuarios pulsan <code>Entrar</code> o <code>Retorno</code>. Este es un buen gancho para escuchar la entrada del usuario.</p>
+
+<p>Ejemplo del escucha de <code>'line'</code>:</p>
+
+<pre><code>rl.on('line', function (orden) {
+  console.log('Acabas de escribir: ' + orden);
+});
+</code></pre>
+
+<h3>Evento: <code>'pause'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido cada vez que se interrumpe el flujo de entrada —<code>'input'</code>—.</p>
+
+<p>Emitido también siempre que el flujo de entrada —<code>'input'</code>— no está en pausa y recibe el evento <code>SIGCONT</code>. (Ve los eventos <code>SIGTSTP</code> y <code>SIGCONT</code>)</p>
+
+<p>Ejemplo del escucha de <code>'pause'</code>:</p>
+
+<pre><code>rl.on('pause', function () {
+  console.log('Lee línea en pausa.');
+});
+</code></pre>
+
+<h3>Evento: <code>'resume'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido cada vez que se reanuda el flujo de entrada —<code>'input'</code>—.</p>
+
+<p>Ejemplo de escucha para <code>'resume'</code>:</p>
+
+<pre><code>rl.on('resume', function () {
+  console.log('Readline reanudado.');
+});
+</code></pre>
+
+<h3>Evento: <code>'close'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido cuando se llama a <code>close()</code>.</p>
+
+<p>También se emite cuando el flujo de entrada —<code>'input'</code>— recibe su evento <code>'end'</code>. La instancia de <code>Interface</code> se debe considerar <code>'finished'</code> una vez difundido este evento. Por ejemplo, cuando el flujo de entrada —<code>'input'</code>— recibe <code>'^D'</code>, conocido como <code>'EOT'</code> respectivamente.</p>
+
+<p>También se llama a este evento si no está presente ningún flujo de entrada —<code>'input'</code>— recibe un <code>^C</code>, conocido como <code>SIGINT</code> respectivamente.</p>
+
+<h3>Evento: <code>'SIGINT'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p>Emitido cada vez que el flujo de entrada —<code>'input'</code>— recibe un <code>^C</code>, conocido como <code>SIGINT</code> respectivamente. Si no hay presente un escucha del evento <code>SIGINT</code> cuando el flujo de entrada —<code>'input'</code>— recibe un <code>SIGINT</code>, se emitirá el evento <code>'pause'</code>.</p>
+
+<p>Ejemplo de escucha para <code>SIGINT</code>:</p>
+
+<pre><code>rl.on('SIGINT', function () {
+  rl.question('Estás seguro de que deseas salir?', function (respuesta) {
+    if (respuesta.match(/^s(i)?$/i)) rl.pause();
+  });
+});
+</code></pre>
+
+<h3>Evento: <code>'SIGTSTP'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p><strong>Este no funciona en Windows.</strong></p>
+
+<p>Emitido cada vez que el flujo de entrada —<code>'input'</code>— recibe un <code>^Z</code>, conocido como <code>SIGTSTP</code> respectivamente. Si no hay presente algún flujo de entrada —<code>'input'</code>— recibe un <code>SIGTSTP</code>, el programa se enviará a segundo plano.</p>
+
+<p>Al reanudar el programa con <code>fg</code>, emitirá los eventos <code>SIGCONT</code> y <code>'pause'</code>. Puedes utilizar cualquiera para reanudar el flujo.</p>
+
+<p>Los eventos <code>'SIGCONT'</code> y <code>'pause'</code> no se emitirán si el flujo fue detenido antes de que el programa fuera enviado a segundo plano.</p>
+
+<p>Ejemplo de escucha para <code>'SIGTSTP'</code>:</p>
+
+<pre><code>rl.on('SIGTSTP', function () {
+  // Esto anulará SIGTSTP e impedirá que el programa
+  // vuelva a segundo plano.
+  console.log('Capturé el evento SIGTSTP.');
+});
+</code></pre>
+
+<h3>Evento: <code>'SIGCONT'</code></h3>
+
+<p><code>function () {}</code></p>
+
+<p><strong>Este no funciona en Windows.</strong></p>
+
+<p>Emitido siempre que el flujo de entrada —<code>'input'</code>— se envía a segundo plano con <code>^Z</code>, conocido como <code>'SIGTSTP'</code> respectivamente y luego continúa con <code>fg(1)</code>. Este evento sólo se emite si el flujo no estaba en pausa antes de enviar el programa a segundo plano.</p>
+
+<p>Ejemplo de escucha para <code>'SIGCONT'</code>:</p>
+
+<pre><code>rl.on('SIGCONT', function () {
+  // `prompt` reanudará el flujo automáticamente
+  rl.prompt();
+});
+</code></pre>
+
+<h2>Ejemplo: Tiny CLI</h2>
+
+<p>Aquí está un ejemplo de cómo utilizar todo esto junto para elaborar una pequeña interfaz de línea de ordenes:</p>
+
+<pre><code>var readline = require('readline'),
+    rl = readline.createInterface(process.stdin, process.stdout);
+
+rl.setPrompt('MEX&gt; ');
+rl.prompt();
+
+rl.on('line', function (linea) {
+  switch(linea.trim()) {
+    case 'hola':
+      console.log('mundo!');
+      break;
+    default:
+      console.log('¿Decir qué? Podría haber escuchado `' + linea.trim() + '`');
+      break;
+  }
+  rl.prompt();
+}).on('close', function () {
+  console.log('¡Que tengas un gran día!');
+  process.exit(0);
+});
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

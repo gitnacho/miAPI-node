@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1><abbr title="Util">Útil</abbr></h1>
+
+<pre><code>Estabilidad: 5 — Cerrada
+</code></pre>
+
+<p>Estas funciones están en el módulo <code>'util'</code>. Para acceder a ellas usa:</p>
+
+<pre><code>var util = require('util');
+</code></pre>
+
+<h2><code>util.format(</code><abbr title="format">formato</abbr><code>, [...])</code></h2>
+
+<p>Devuelve una cadena con formato utilizando el primer argumento igual al formato de una <code>printf</code>.</p>
+
+<p>El primer argumento es una <abbr title="string">cadena</abbr> que contiene cero o más <em><abbr title="placeholder">marcadores de posición</abbr></em>.
+Cada <abbr title="placeholder">marcador de posición</abbr> se sustituye por el valor convertido de su argumento correspondiente. Los <abbr title="placeholder">marcadores de posición</abbr> compatibles son:</p>
+
+<ul>
+<li><code>%s</code> — <abbr title="String">Cadena</abbr>.</li>
+<li><code>%d</code> — <abbr title="Number">Número</abbr> (ambos enteros y de punto flotante).</li>
+<li><code>%j</code> — JSON.</li>
+<li><code>%%</code> — un sólo signo de porcentaje (<code>'%'</code>). Este no consume ningún argumento.</li>
+</ul>
+
+<p>Si el <abbr title="placeholder">marcador de posición</abbr> no tiene un argumento correspondiente, el <abbr title="placeholder">marcador de posición</abbr> no se reemplaza.</p>
+
+<pre><code>util.format('%s:%s', 'loquesea'); // 'loquesea:%s'
+</code></pre>
+
+<p>Si hay más argumentos que <abbr title="placeholder">marcadores de posición</abbr>, los argumentos adicionales se convierten a cadenas con <code>util.inspect()</code> y esas cadenas se concatenan, delimitadas por un espacio en blanco.</p>
+
+<pre><code>util.format('%s:%s', 'loquesea', 'bar', 'baz'); // 'loquesea:bar baz'
+</code></pre>
+
+<p>Si el primer argumento no es una cadena de formato entonces <code>util.format()</code> devuelve una cadena que es la concatenación de todos sus argumentos separados por espacios.
+Cada argumento se convierte en una cadena con <code>util.inspect()</code>.</p>
+
+<pre><code>util.format(1, 2, 3); // '1 2 3'
+</code></pre>
+
+<h2><code>util.debug(</code><abbr title="string"><code>cadena</code></abbr><code>)</code></h2>
+
+<p>Una función de salida sincrónica. Bloquea el proceso e inmediatamente imprime la <abbr title="string"><code>cadena</code></abbr> a la salida de error estándar <code>—'stderr'—</code>.</p>
+
+<pre><code>require('util').debug('mensaje en stderr');
+</code></pre>
+
+<h2><code>util.error([...])</code></h2>
+
+<p>Igual a <code>util.debug()</code> salvo que esta imprime inmediatamente todos los argumentos en <code>'stderr'</code>.</p>
+
+<h2><code>util.puts([...])</code></h2>
+
+<p>Una función de salida sincrónica. Bloquea el proceso e imprime todos los argumentos a la <abbr title="stdout">salida estándar</abbr> con saltos de línea después de cada argumento.</p>
+
+<h2><code>util.print([...])</code></h2>
+
+<p>Una función de salida sincrónica. Bloquea el proceso, convirtiendo cada argumento a una cadena y luego la imprime en la <abbr title="stdout">salida estándar</abbr>. No inserta saltos de línea después de cada argumento.</p>
+
+<h2><code>util.log(</code><abbr title="string"><code>cadena</code></abbr><code>)</code></h2>
+
+<p>Imprime la cadena con fecha y hora en la <abbr title="stdout">salida estándar</abbr>.</p>
+
+<pre><code>require('util').log('Mensaje con fecha y hora.');
+</code></pre>
+
+<h2><code>util.inspect(</code><abbr title="object"><code>objeto</code></abbr><code>, [</code><abbr title="showHidden"><code>muestraOculto</code></abbr><code>], [</code><abbr title="depth"><code>profundidad</code></abbr><code>], [</code><abbr title="colors"><code>colores</code></abbr><code>])</code></h2>
+
+<p>Devuelve una cadena representando al <abbr title="object"><code>objeto</code></abbr>, esta es útil para depurar.</p>
+
+<p>Si <abbr title="showHidden"><code>muestraOculto</code></abbr> es <code>true</code>, entonces, también mostrará las propiedades no enumerables del objeto. De manera predeterminada es <code>false</code>.</p>
+
+<p>Si proporcionas <abbr title="depth"><code>profundidad</code></abbr>, esta instruye a <code>inspect</code> sobre cuantas veces aplicar formato al objeto. Esta es útil para inspeccionar objetos grandes y complicados.</p>
+
+<p>El valor predeterminado es repetir dos veces solamente.  Para hacer la repetición indefinida, pasa <abbr title="null"><code>nulo</code></abbr> para <abbr title="depth"><code>profundidad</code></abbr>.</p>
+
+<p>Si <abbr title="colors"><code>colores</code></abbr> es <code>true</code>, la salida será estilizada con códigos de color ANSI.
+De manera predeterminada es <code>false</code>.
+Los colores son personalizables, ve más adelante.</p>
+
+<p>Ejemplo de inspeccionar todas las propiedades del objeto <code>util</code>:</p>
+
+<pre><code>var util = require('util');
+
+console.log(util.inspect(util, true, null));
+</code></pre>
+
+<h3>Personalizando los colores de <code>util.inspect</code></h3>
+
+<p>Colorear la salida de <code>util.inspect</code> (si está habilitada) es personalizable a nivel global a través de los objetos <code>util.inspect.styles</code> y <code>util.inspect.colors</code>.</p>
+
+<p><code>util.inspect.styles</code> es un mapa para asignar un color a cada estilo de <code>util.inspect.colors</code>.
+Los estilos de resaltado y sus valores predefinidos son:
+ * <abbr title="Number"><code>número</code></abbr> (<abbr title="yellow">amarillo</abbr>)
+ * <abbr title="boolean"><code>booleano</code></abbr> (<abbr title="yellow">amarillo</abbr>)
+ * <abbr title="string"><code>cadena</code></abbr> (<abbr title="green">verde</abbr>)
+ * <abbr title="date"><code>fecha</code></abbr> (<abbr title="magenta">magenta</abbr>)
+ * <abbr title="regexp"><code>expresión regular</code></abbr> (<abbr title="red">rojo</abbr>)
+ * <code>null</code> (en <abbr title="bold">negrita</abbr>)
+ * <abbr title="undefined"><code>indefinido</code></abbr> (<abbr title="grey">gris</abbr>)
+ * <code>especial</code> — sólo <abbr title="function"><code>función</code></abbr> en este momento (<abbr title="cyan">cían</abbr>)
+ * <abbr title="name"><code>nombre</code></abbr> (intencionalmente ningún estilo)</p>
+
+<p>Los códigos de color predefinidos son: <code>white</code>, <code>grey</code>, <code>black</code>, <code>blue</code>, <code>cyan</code>, 
+<code>green</code>, <code>magenta</code>, <code>red</code> y <code>yellow</code>.
+También hay códigos para subrayado <code>'underline'</code>, negrita <code>'bold'</code>, cursiva <code>'italic'</code> e inverso <code>'inverse'</code>.</p>
+
+<h2><code>util.isArray(</code><abbr title="object"><code>objeto</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si el arreglo. <code>false</code> en caso contrario.</p>
+
+<pre><code>var util = require('util');
+
+util.isArray([])
+  // true
+util.isArray(new Array)
+  // true
+util.isArray({})
+  // false
+</code></pre>
+
+<h2><code>util.isRegExp(</code><abbr title="object"><code>objeto</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si el <code>objeto</code> dado es una expresión regular, <code>RegExp</code>. <code>false</code> en caso contrario.</p>
+
+<pre><code>var util = require('util');
+
+util.isRegExp(/alguna expresión regular/)
+  // true
+util.isRegExp(new RegExp('otra expresión regular'))
+  // true
+util.isRegExp({})
+  // false
+</code></pre>
+
+<h2><code>util.isDate(</code><abbr title="object"><code>objeto</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si el <code>objeto</code> dado es una fecha (<code>'Date'</code>). <code>false</code> en caso contrario.</p>
+
+<pre><code>var util = require('util');
+
+util.isDate(new Date())
+  // true
+util.isDate(Date())
+  // false (sin 'new' devuelve una cadena)
+util.isDate({})
+  // false
+</code></pre>
+
+<h2><code>util.isError(</code><abbr title="object"><code>objeto</code></abbr><code>)</code></h2>
+
+<p>Devuelve <code>true</code> si el <code>objeto</code> dado es un <code>Error</code>. <code>false</code> en caso contrario.</p>
+
+<pre><code>var util = require('util');
+
+util.isError(new Error())
+  // true
+util.isError(new TypeError())
+  // true
+util.isError({ nombre: 'Error', mensaje: 'ocurrió un error' })
+  // false
+</code></pre>
+
+<h2><code>util.pump(</code><abbr title="readableStream"><code>flujoDeLectura</code></abbr><code>,</code> <abbr title="writableStream"><code>flujoDeEscritura</code></abbr><code>, [</code><abbr title="callback"><code>retrollamada</code></abbr><code>])</code></h2>
+
+<pre><code>Estabilidad: 0 — Desaconsejada: 
+</code></pre>
+
+<p>En su lugar usa <code>readableStream.pipe(writableStream)</code></p>
+
+<p>Lee los datos desde el <abbr title="readableStream"><code>flujoDeLectura</code></abbr> y los envía al <abbr title="writableStream"><code>flujoDeEscritura</code></abbr>.
+Cuando <abbr title="writableStream"><code>flujoDeEscritura</code></abbr><code>.write(</code><abbr title="data"><code>datos</code></abbr><code>)</code> devuelva <code>false</code> <abbr title="readableStream"><code>flujoDeLectura</code></abbr> entrará en pausa hasta que ocurra el evento <code>'drain'</code> en el <abbr title="writableStream"><code>flujoDeEscritura</code></abbr>. <abbr title="callback"><code>retrollamada</code></abbr> obtiene un error como único argumento y se llama al cerrar el <abbr title="writableStream"><code>flujoDeEscritura</code></abbr> o cuando se produce un error.</p>
+
+<h2><code>util.inherits(constructor, superConstructor)</code></h2>
+
+<p>Hereda los métodos del prototipo de un
+<a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor">constructor</a> en otro.  El <code>constructor</code> del prototipo se establecerá en un nuevo objeto creado a partir del <code>superConstructor</code>.</p>
+
+<p>Como una comodidad adicional, el <code>superConstructor</code> será accesible a través de la propiedad <code>constructor.super_</code>.</p>
+
+<pre><code>var util = require('util');
+var eventos = require('events');
+
+function MiFlujo() {
+    eventos.EventEmitter.call(this);
+}
+
+util.inherits(MiFlujo, eventos.EventEmitter);
+
+MiFlujo.prototype.write = function (datos) {
+    this.emit('data', datos);
+}
+
+var flujo = new MiFlujo();
+
+console.log(flujo instanceof eventos.EventEmitter); // true
+console.log(MiFlujo.super_ === eventos.EventEmitter); // true
+
+flujo.on('data', function (datos) {
+    console.log('Datos recibidos: «' + datos + '»');
+})
+flujo.write('¡Esto funciona!'); // Datos recibidos: «¡Esto funciona!»
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <title>Miapi-node por Nacho Pacheco</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Miapi-node</h1>
+        <h2>Mi interpretación de la API de Node v0.8.8</h2>
+      </div>
+    </header>
+    <div class="container">
+      <section id="main_content">
+<h1>El objeto «process»</h1>
+
+<!-- type=global -->
+
+<p>El objeto «process» es un objeto global y se puede acceder desde cualquier lugar.
+Se trata de una instancia de <a href="events.html#events_class_events_eventemitter">EventEmitter</a>.</p>
+
+<h2>Evento: <code>'exit'</code></h2>
+
+<p>Emitido cuando está a punto de salir del proceso.  Este es un buen gancho para llevar a cabo un control permanente del tiempo de estadía en el módulo (por ejemplo, para las pruebas unitarias).  El bucle de eventos principal ya no se ejecuta después de finalizar la retrollamada a <code>'exit'</code>, por lo que no se pueden programar temporizadores.</p>
+
+<p>Ejemplo de escucha para <code>'exit'</code>:</p>
+
+<pre><code>process.on('exit', function () {
+  setTimeout(function () {
+    console.log('Esto no funciona');
+  }, 0);
+  console.log('A punto de salir.');
+});
+</code></pre>
+
+<h2>Evento: <code>'uncaughtException'</code></h2>
+
+<p>Emitido cuando una excepción remonta paso a paso el camino de regreso al ciclo de eventos. Si añades un escucha a esta excepción, la acción predeterminada (la cual es imprimir un seguimiento de la pila y salir) no se producirá.</p>
+
+<p>Ejemplo de escucha para <code>'uncaughtException'</code>:</p>
+
+<pre><code>process.on('uncaughtException', function (error) {
+  console.log('Se detectó una excepción: ' + error);
+});
+
+setTimeout(function () {
+  console.log('Esto aún funciona.');
+}, 500);
+
+// Provoca una excepción intencionalmente, pero no la captura.
+funcionInexistente();
+console.log('Esto no va a funcionar.');
+</code></pre>
+
+<p>Ten en cuenta que <code>'uncaughtException'</code> es un mecanismo muy tosco para manejar excepciones y se puede eliminar en el futuro.</p>
+
+<p>No lo uses, en su lugar utiliza <a href="domain.html">dominios</a>. Si lo usas, ¡reinicia la aplicación después de cada excepción no controlada!</p>
+
+<p><em>No</em> lo utilices como el equivalente de Node para <em>'En error reanuda en seguida'</em> (<code>On Error Resume Next</code>). Una excepción no controlada significa que tu aplicación —y consecuentemente node.js mismo— se encuentra en un estado indefinido. Reanudación a ciegas significa que <em>cualquier cosa</em> podría suceder.</p>
+
+<p>Piensa en la reanudación como quitar el cable de alimentación cuando vas a actualizar tu sistema.
+Nueve de cada diez veces no pasa nada —pero la 10ª vez, el sistema se estropea.</p>
+
+<p>Estás advertido.</p>
+
+<h2>Eventos señalizadores</h2>
+
+<!-- type=event -->
+<!-- name=SIGINT, SIGUSR1, etc. -->
+
+<p>Emitidos cuando los procesos reciben una señal. Consulta <code>sigaction(2)</code> para ver una lista de nombres de señales <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> estándar, como SIGINT, SIGUSR1, etc.</p>
+
+<p>Ejemplo de escucha para <code>SIGINT</code>:</p>
+
+<pre><code>// Comienza a leer desde la entrada estándar, por
+// lo tanto no sale.
+process.stdin.resume();
+
+process.on('SIGINT', function () {
+  console.log('Obtuve SIGINT.  Pulsa Control+D para salir.');
+});
+</code></pre>
+
+<p>Una manera fácil de enviar la señal <code>SIGINT</code> es con <code>Control-C</code> en la mayoría de los programas de terminal.</p>
+
+<h2><code>process.stdout</code></h2>
+
+<p>Un <abbr title="Writable Stream"><code>Flujo de escritura</code></abbr> a <code>'stdout'</code>.</p>
+
+<p>Ejemplo: la definición de <code>console.log</code></p>
+
+<pre><code>console.log = function (datos) {
+  process.stdout.write(datos + '
+</code></pre>
+
+<p>');
+    };</p>
+
+<p><code>process.stderr</code> y <code>process.stdout</code> son parecidos a otros flujos en Node en que la escritura en ellos usualmente es bloqueante.  Se bloquean en caso de que se refieran a archivos regulares o descriptores de archivos <abbr title="teletypewriter">tty</abbr>. En caso que se refieran a tuberías, no son bloqueantes como otros flujos.</p>
+
+<h2><code>process.stderr</code></h2>
+
+<p>Un flujo de escritura que escribe a la salida de error estándar — <code>'stderr'</code>.</p>
+
+<p><code>process.stderr</code> y <code>process.stdout</code> son parecidos a otros flujos en Node en que la escritura en ellos usualmente es bloqueante.  Se bloquean en caso de que se refieran a archivos regulares o descriptores de archivos <abbr title="teletypewriter">tty</abbr>. En caso que se refieran a tuberías, no son bloqueantes como otros flujos.</p>
+
+<h2><code>process.stdin</code></h2>
+
+<p>Un <abbr title="Readable Stream"><code>Flujo de lectura</code></abbr> para la <abbr title="stdin">entrada estándar</abbr>. El <abbr title="stream">flujo</abbr> de <abbr title="stdin">entrada estándar</abbr> de manera predefinida está en pausa, así que debes llamar a <code>process.stdin.resume()</code> para reanudarlo y poder leer de él.</p>
+
+<p>Ejemplo de apertura de la entrada estándar y escucha de ambos eventos:</p>
+
+<pre><code>process.stdin.resume();
+process.stdin.setEncoding('utf8');
+
+process.stdin.on('data', function (fragmento) {
+  process.stdout.write('datos: ' + fragmento);
+});
+
+process.stdin.on('end', function () {
+  process.stdout.write('end');
+});
+</code></pre>
+
+<h2><code>process.argv</code></h2>
+
+<p>Un arreglo que contiene los argumentos de la línea de ordenes.  El primer elemento será <code>'node'</code>, el segundo elemento será el nombre del archivo JavaScript.  Los siguientes elementos serán los argumentos adicionales de la línea de ordenes.</p>
+
+<pre><code>// imprime process.argv
+process.argv.forEach(function (valor, indice, arreglo) {
+  console.log(indice + ': ' + valor);
+});
+</code></pre>
+
+<p>Esto generará:</p>
+
+<pre><code>$ node proceso-2.js uno dos=tres cuatro
+0: node
+1: /Users/mjr/trabajo/node/proceso-2.js
+2: uno
+3: dos=tres
+4: cuatro
+</code></pre>
+
+<h2><code>process.execPath</code></h2>
+
+<p>Esta es la ruta absoluta del nombre del ejecutable que inició el proceso.</p>
+
+<p>Ejemplo:</p>
+
+<pre><code>/usr/local/bin/node
+</code></pre>
+
+<h2><code>process.abort()</code></h2>
+
+<p>Este hace que Node emita una interrupción. Esto hará que Node salga y genere un archivo del núcleo.</p>
+
+<h2><code>process.chdir(</code><abbr title="directory"><code>directorio</code></abbr><code>)</code></h2>
+
+<p>Cambia el directorio de trabajo actual del proceso o produce una excepción si eso no funciona.</p>
+
+<pre><code>console.log('Directorio de inicio: ' + process.cwd());
+try {
+  process.chdir('/tmp');
+  console.log('Nuevo directorio: ' + process.cwd());
+}
+catch (error) {
+  console.log('chdir: ' + error);
+}
+</code></pre>
+
+<h2><code>process.cwd()</code></h2>
+
+<p>Devuelve el directorio de trabajo actual del proceso.</p>
+
+<pre><code>console.log('Directorio actual: ' + process.cwd());
+</code></pre>
+
+<h2><code>process.env</code></h2>
+
+<p>Un objeto que contiene el entorno de usuario. Consulta entorno(7).</p>
+
+<h2><code>process.exit([</code><abbr title="code"><code>codigo</code></abbr><code>])</code></h2>
+
+<p>Finaliza el proceso con el <abbr title="code"><code>codigo</code></abbr> especificado.  Si se omite, utiliza el código de salida <code>0</code>, <code>'success'</code>.</p>
+
+<p>Para salir con un código de <code>'failure'</code>:</p>
+
+<pre><code>process.exit(1);
+</code></pre>
+
+<p>De ese modo el intérprete del sistema que está ejecutando Node debe ver el código de salida como 1.</p>
+
+<h2><code>process.getgid()</code></h2>
+
+<p>Nota: esta función sólo está disponible en ambientes <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> (es decir, distintos de Windows)</p>
+
+<p>Obtiene la identidad del grupo del proceso. (Consulta getgid(2)).
+Este es el ID numérico del grupo, no el nombre del grupo.</p>
+
+<pre><code>if (process.getgid) {
+  console.log('Gid actual: ' + process.getgid());
+}
+</code></pre>
+
+<h2><code>process.setgid(id)</code></h2>
+
+<p>Nota: esta función sólo está disponible en ambientes <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> (es decir, distintos de Windows)</p>
+
+<p>Establece la identidad del grupo del proceso. (Consulta setgid(2)). Este acepta un identificador numérico o una cadena con el nombre del grupo. Si especificas un nombre de grupo, este método se bloquea mientras que lo resuelve a un identificador numérico.</p>
+
+<pre><code>if (process.getgid &amp;&amp; process.setgid) {
+  console.log('Gid actual: ' + process.getgid());
+  try {
+    process.setgid(501);
+    console.log('Nuevo gid: ' + process.getgid());
+  }
+  catch (error) {
+    console.log('Error al establecer el gid: ' + error);
+  }
+}
+</code></pre>
+
+<h2><code>process.getuid()</code></h2>
+
+<p>Nota: esta función sólo está disponible en ambientes <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> (es decir, distintos de Windows)</p>
+
+<p>Obtiene la identidad del usuario del proceso. (Consulta getuid(2)).
+Este es el identificador numérico del usuario, no el nombre de usuario.</p>
+
+<pre><code>if (process.getuid) {
+  console.log('Uid actual: ' + process.getuid());
+}
+</code></pre>
+
+<h2><code>process.setuid(id)</code></h2>
+
+<p>Nota: esta función sólo está disponible en ambientes <abbr title="Interfaz portable del sistema operativo">POSIX</abbr> (es decir, distintos de Windows)</p>
+
+<p>Establece la identidad del usuario del proceso. (Consulta setuid(2)).  Si se especifica un nombre de usuario, este método se bloquea mientras que resuelve a un identificador numérico.</p>
+
+<pre><code>if (process.getuid &amp;&amp; process.setuid) {
+  console.log('Uid actual: ' + process.getuid());
+  try {
+    process.setuid(501);
+    console.log('Nuevo uid: ' + process.getuid());
+  }
+  catch (error) {
+    console.log('No se pudo establecer el uid: ' + error);
+  }
+}
+</code></pre>
+
+<h2><code>process.version</code></h2>
+
+<p>Una propiedad compilada que expone la constante <code>NODE_VERSION</code>.</p>
+
+<pre><code>console.log('Versión: ' + process.version);
+</code></pre>
+
+<h2><code>process.versions</code></h2>
+
+<p>Una propiedad exponiendo la cadena de versión de Node y sus dependencias.</p>
+
+<pre><code>console.log(process.versions);
+</code></pre>
+
+<p>Esta produce:</p>
+
+<pre><code>{ node: '0.4.12',
+  v8: '3.1.8.26',
+  ares: '1.7.4',
+  ev: '4.4',
+  openssl: '1.0.0e-fips' }
+</code></pre>
+
+<h2><code>process.config</code></h2>
+
+<p>Un objeto que contiene la representación en JavaScript de las opciones de configuración que se utilizan para compilar el ejecutable de Node actual. Este es el mismo que el archivo «config.gypi» producido al ejecutar el programa <code>./configure</code>.</p>
+
+<p>Un ejemplo de una posible salida se ve así:</p>
+
+<pre><code>{ target_defaults:
+   { cflags: [],
+     default_configuration: 'Release',
+     defines: [],
+     include_dirs: [],
+     libraries: [] },
+  variables:
+   { host_arch: 'x64',
+     node_install_npm: 'true',
+     node_prefix: '',
+     node_shared_v8: 'false',
+     node_shared_zlib: 'false',
+     node_use_dtrace: 'false',
+     node_use_openssl: 'true',
+     node_shared_openssl: 'false',
+     strict_aliasing: 'true',
+     target_arch: 'x64',
+     v8_use_snapshot: 'true' } }
+</code></pre>
+
+<h2><code>process.kill(pid, [</code><abbr title="signal"><code>senial</code></abbr><code>])</code></h2>
+
+<p>Envía una señal a un proceso. <code>pid</code> es el identificador del proceso y <abbr title="signal"><code>senial</code></abbr> la cadena que describe la señal a enviar.  Los nombres de señal son cadenas como 'SIGINT' o 'SIGUSR1'.  Si la omites, la señal será 'SIGTERM'.
+Consulta <code>kill(2)</code> para más información.</p>
+
+<p>Ten en cuenta que sólo porque el nombre de esta función es <code>process.kill</code>, en realidad sólo es un transmisor de señales, como la llamada a <code>kill</code> del sistema.  La señal que se envía puede hacer algo más que finalizar el proceso destino.</p>
+
+<p>Ejemplo de un envío de señal a sí mismo:</p>
+
+<pre><code>process.on('SIGHUP', function () {
+  console.log('Detecté la señal SIGHUP.');
+});
+
+setTimeout(function () {
+  console.log('Saliendo.');
+  process.exit(0);
+}, 100);
+
+process.kill(process.pid, 'SIGHUP');
+</code></pre>
+
+<h2><code>process.pid</code></h2>
+
+<p>El <code>PID</code> del proceso.</p>
+
+<pre><code>console.log('El pid de este proceso es ' + process.pid);
+</code></pre>
+
+<h2><code>process.title</code></h2>
+
+<p>Captador/definidor para establecer lo que se muestra en <code>'ps'</code>.</p>
+
+<h2><code>process.arch</code></h2>
+
+<p>¿En qué arquitectura de procesador se está ejecutando: <code>'arm'</code>, <code>'ia32'</code>, o <code>'x64'</code>.</p>
+
+<pre><code>console.log('Esta arquitectura del procesador es ' + process.arch);
+</code></pre>
+
+<h2><code>process.platform</code></h2>
+
+<p>¿En qué ambiente se está ejecutando:
+<code>'darwin'</code>, <code>'freebsd'</code>, <code>'linux'</code>, <code>'solaris'</code> o <code>'win32'</code></p>
+
+<pre><code>console.log('Este ambiente es ' + process.platform);
+</code></pre>
+
+<h2><code>process.memoryUsage()</code></h2>
+
+<p>Devuelve un objeto que describe el uso de memoria del proceso Node medido en bytes.</p>
+
+<pre><code>var util = require('util');
+
+console.log(util.inspect(process.memoryUsage()));
+</code></pre>
+
+<p>Esto generará:</p>
+
+<pre><code>{ rss: 4935680,
+  heapTotal: 1826816,
+  heapUsed: 650472 }
+</code></pre>
+
+<p><code>heapTotal</code> y <code>heapUsed</code> se refieren a la memoria usada por V8.</p>
+
+<h2><code>process.nextTick(</code><abbr title="callback"><code>retrollamada</code></abbr><code>)</code></h2>
+
+<p>En el siguiente bucle en torno al bucle de eventos invocamos a esta retrollamada.
+Este <em>no</em> es un simple alias para <code>setTimeout(</code><abbr title="fn"><code>funcion</code></abbr><code>, 0)</code>, este es mucho más eficiente.  Típicamente se ejecuta antes de lanzar cualquier otro evento de E/S, pero hay algunas excepciones.  Consulta <code>process.maxTickDepth</code> más adelante.</p>
+
+<pre><code>process.nextTick(function () {
+  console.log('Retrollamada nextTick');
+});
+</code></pre>
+
+<p>Este es importante en el desarrollo de la <abbr title="Interfaz para Programar la Aplicación">API</abbr> en la que desees ofrecer al usuario la posibilidad de asignar controladores de eventos después de haber construido un objeto, pero antes de que se produzca alguna E/S.</p>
+
+<pre><code>function MiReceta(opciones) {
+  this.setupOptions(opciones);
+
+  process.nextTick(function () {
+    this.comienzaHaciendoAlgo();
+  }.bind(this));
+}
+
+var receta = new MiReceta();
+receta.estaListaParaHacerAlgo();
+
+// receta.comienzaHaciendoAlgo() se llama ahora, no antes.
+</code></pre>
+
+<p>Es muy importante que las <abbr title="Interfaz para Programar la Aplicación">API</abbr> sean 100% sincrónicas o 100% asíncronas.  Considera este ejemplo:</p>
+
+<pre><code>// ¡ATENCIÓN!  ¡NO LA USES!  ¡INCORRECTA, MUY PELIGROSA!
+function puedeSerSinc(arg, rt) {
+  if (arg) {
+    rt();
+    return;
+  }
+
+  sistemaDeArchivos.stat('file', retrollamada);
+}
+</code></pre>
+
+<p>Esta <abbr title="Interfaz para Programar la Aplicación">API</abbr> es peligrosa.  Si la usas:</p>
+
+<pre><code>puedeSerSinc(true, function () {
+  loquesea();
+});
+bar();
+</code></pre>
+
+<p>entonces no es claro si en primer lugar se llamará a <code>loquesea()</code> o a <code>bar()</code>.</p>
+
+<p>Este enfoque es mucho mejor:</p>
+
+<pre><code>function definitivamenteAsinc(arg, retrollamada) {
+  if (arg) {
+    process.nextTick(retrollamada);
+    return;
+  }
+
+  sistemaDeArchivos.stat('file', retrollamada);
+}
+</code></pre>
+
+<h2><code>process.maxTickDepth</code></h2>
+
+<ul>
+<li>{<abbr title="Number">Número</abbr>} Predeterminado = 1000</li>
+</ul>
+
+<p>La retrollamada pasada a <code>process.nextTick</code> <em>normalmente</em> se llama al final del flujo de ejecución actual, por lo que son casi tan rápidas como llamar sincrónicamente a una función.  Al no verificarlas, le harás pasar hambre al bucle de eventos, evitando que se produzca cualquier E/S.</p>
+
+<p>Considera este código:</p>
+
+<pre><code>process.nextTick(function loquesea() {
+  process.nextTick(loquesea);
+});
+</code></pre>
+
+<p>A fin de evitar la situación en la que Node es bloqueado por un bucle infinito de una serie de llamadas recursivas a <code>nextTick</code>, esta se difiere para, de vez en cuando, permitir hacer algunas operaciones de E/S.</p>
+
+<p>El valor de <code>process.maxTickDepth</code> es la profundidad máxima de llamadas a <code>nextTick</code> — <code>nextTick</code> retrollamadas que serán evaluadas antes de permitir que se produzcan otras formas de E/S.</p>
+
+<h2><code>process.umask([</code><abbr title="mask"><code>mascara</code></abbr><code>])</code></h2>
+
+<p>Establece o lee la máscara de modo que usará «process» para crear archivos. Los procesos hijo heredan la máscara del proceso padre. Devuelve la máscara anterior si suministras el argumento <abbr title="mask"><code>mascara</code></abbr>, de lo contrario devuelve la máscara actual.</p>
+
+<pre><code>var mascaraAnt, nuevaMascara = 0644;
+
+mascaraAnt = process.umask(nuevaMascara);
+console.log('Cambió la umask de: ' + mascaraAnt.toString(8) +
+            ' a ' + nuevaMascara.toString(8));
+</code></pre>
+
+<h2><code>process.uptime()</code></h2>
+
+<p>La cantidad de segundos en que Node ha estado funcionando.</p>
+
+<h2><code>process.hrtime()</code></h2>
+
+<p>Devuelve la resolución superior del tiempo real en <code>[segundos, nanosegundos]</code> de la dupla del arreglo. Es relativo a un momento arbitrario en el pasado. No se relaciona con la hora del día y por lo tanto no está sujeta a un reloj a la deriva. Su uso principal es para medir el rendimiento entre intervalos.</p>
+
+<p>Le puedes pasar el resultado de una llamada anterior a <code>process.hrtime()</code> para obtener la diferencia de las lecturas, útil para la medición de puntos de referencia e intervalos:</p>
+
+<pre><code>var instante = process.hrtime();
+// [ 1800216, 927643717 ]
+
+setTimeout(function () {
+  instante = process.hrtime(instante);
+  // [ 1, 6962306 ]
+
+  console.log('El punto de referencia tomó %d segundos y %d nanosegundos',
+              instante[0],
+              instante[1]);
+  // El punto de referencia tomó 1 segundos y 6962306 nanosegundos
+}, 1000);
+</code></pre>
+
+      </section>
+    </div>
+  </body>
+</html>
